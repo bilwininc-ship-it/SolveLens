@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
+import 'presentation/theme/app_theme.dart';
+import 'presentation/screens/home/home_screen.dart';
 
 // Add your Firebase configuration
 // import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Set system UI overlay style
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppTheme.deepBlack,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   
   // Initialize Firebase
   await Firebase.initializeApp(
@@ -23,15 +35,9 @@ class SolveLensApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SolveLens',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const Scaffold(
-        body: Center(
-          child: Text('SolveLens - AI Homework Helper'),
-        ),
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkTheme,
+      home: const HomeScreen(),
     );
   }
 }

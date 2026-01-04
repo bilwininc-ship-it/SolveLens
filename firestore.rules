@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if isOwner(userId);
+      
+      // Users can create their own document
+      allow create: if isOwner(userId) && 
+                       request.resource.data.userId == userId &&
+                       request.resource.data.subscriptionType == 'free'; // Default to free
+      
+      // Users can update certain fields only
+      allow update: if isOwner(userId) && 
+                       // These fields cannot be modified by client
+                       !request.resource.data.diff(resource.data).affectedKeys()
+                         .hasAny(['subscriptionType', 'dailyLimit', 'subscriptionExpiryDate']);
+      
+      // Users cannot delete their own document
+      allow delete: if false;
+    }
+    
+    // Questions collection
+    match /questions/{questionId} {
+      // Users can only read their own questions
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Users can create questions for themselves
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['userId', 'question', 'answer', 'subject', 'createdAt']);
+      
+      // Questions cannot be updated or deleted by clients
+      allow update, delete: if false;
+    }
+    
+    // Subscriptions collection (server-side only)
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscription
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Only server can write subscriptions
+      allow write: if false;
+    }
+    
+    // Admin collection (server-side only)
+    match /admin/{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
