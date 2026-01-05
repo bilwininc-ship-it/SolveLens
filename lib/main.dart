@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_wrapper.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'core/di/service_locator.dart';
 
 // Add your Firebase configuration
 // import 'firebase_options.dart';
@@ -32,6 +33,9 @@ void main() async {
   await Firebase.initializeApp(
     // options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Initialize Service Locator (DI)
+  await setupServiceLocator();
   
   runApp(const SolveLensApp());
 }

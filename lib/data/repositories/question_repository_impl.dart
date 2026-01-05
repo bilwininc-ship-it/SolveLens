@@ -1,4 +1,5 @@
 // Repository implementation for question analysis (Data Layer)
+// Updated to use Firebase Realtime Database
 import 'package:dartz/dartz.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
@@ -6,16 +7,16 @@ import '../../core/errors/failures.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/repositories/question_repository.dart';
 import '../../services/ai/ai_service.dart';
+import '../../services/database/realtime_database_service.dart';
 import '../models/question_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuestionRepositoryImpl implements QuestionRepository {
   final AIService aiService;
-  final FirebaseFirestore firestore;
+  final RealtimeDatabaseService databaseService;
 
   QuestionRepositoryImpl({
     required this.aiService,
-    required this.firestore,
+    required this.databaseService,
   });
 
   @override
@@ -27,19 +28,19 @@ class QuestionRepositoryImpl implements QuestionRepository {
       // Analyze question using AI service
       final result = await aiService.analyzeQuestion(imageFile);
       
-      // Create question entity
+      // Create question entity (NO IMAGE URL stored)
       final question = QuestionModel(
         id: const Uuid().v4(),
         userId: userId,
-        imageUrl: imageFile.path, // TODO: Upload to Cloud Storage
+        imageUrl: '', // NO IMAGE stored in database
         question: result['question']!,
         answer: result['solution']!,
         createdAt: DateTime.now(),
         subject: result['subject']!,
       );
 
-      // Save to Firestore (fire and forget)
-      _saveToFirestore(question).ignore();
+      // Save to Realtime Database (fire and forget, TEXT ONLY)
+      _saveToDatabase(question).ignore();
 
       return Right(question);
       
@@ -52,7 +53,7 @@ class QuestionRepositoryImpl implements QuestionRepository {
         return Left(ServerFailure(e.message));
       }
     } catch (e) {
-      return Left(ServerFailure('Failed to analyze question: '));
+      return Left(ServerFailure('Failed to analyze question: $e'));
     }
   }
 
@@ -62,20 +63,14 @@ class QuestionRepositoryImpl implements QuestionRepository {
     int limit = 20,
   }) async {
     try {
-      final snapshot = await firestore
-          .collection('questions')
-          .where('userId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      final questions = snapshot.docs
-          .map((doc) => QuestionModel.fromFirestore(doc))
-          .toList();
+      final questions = await databaseService.getQuestionHistory(
+        userId: userId,
+        limit: limit,
+      );
 
       return Right(questions);
     } catch (e) {
-      return Left(ServerFailure('Failed to retrieve history: '));
+      return Left(ServerFailure('Failed to retrieve history: $e'));
     }
   }
 
@@ -84,19 +79,18 @@ class QuestionRepositoryImpl implements QuestionRepository {
     required Question question,
   }) async {
     try {
-      await _saveToFirestore(question);
+      await _saveToDatabase(question);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure('Failed to save question: '));
+      return Left(ServerFailure('Failed to save question: $e'));
     }
   }
 
-  /// Internal method to save question to Firestore
-  Future<void> _saveToFirestore(Question question) async {
-    final model = QuestionModel.fromEntity(question);
-    await firestore
-        .collection('questions')
-        .doc(question.id)
-        .set(model.toFirestore());
+  /// Internal method to save question to Realtime Database (TEXT ONLY)
+  Future<void> _saveToDatabase(Question question) async {
+    await databaseService.saveQuestionHistory(
+      userId: question.userId,
+      question: question,
+    );
   }
 }

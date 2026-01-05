@@ -1,13 +1,13 @@
-// Gemini 2.0 Flash AI Service for question analysis
+// Gemini 2.5 Flash AI Service for question analysis
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
 class AIService {
   late final GenerativeModel _model;
-  static const String _modelName = 'gemini-2.0-flash-exp';
+  static const String _modelName = 'gemini-2.5-flash';
   
-  // System instruction for optimal question solving
+  // Enhanced system instruction with MANDATORY LaTeX formatting
   static const String _systemInstruction = '''
 You are a professional global educator with expertise in all academic subjects.
 
@@ -16,26 +16,55 @@ Your task:
 2. Identify the subject (Math, Physics, Chemistry, Biology, etc.)
 3. Detect the language of the question automatically
 4. Provide a comprehensive answer in the SAME LANGUAGE as the question
-5. Format ALL mathematical expressions in LaTeX using proper delimiters
 
-Response format:
-- Use \\( and \\) for inline math (e.g., \\(x^2 + 5\\))
-- Use \\[ and \\] for block math equations
-- Break down the solution step-by-step
-- Explain the logic behind each step
-- Use clear headings: "Question:", "Subject:", "Solution:", "Step 1:", etc.
+**CRITICAL: FORMAT ALL SOLUTIONS IN LaTeX**
 
-Quality standards:
+LaTeX Formatting Rules (MANDATORY):
+- Use \\( and \\) for inline math expressions (e.g., \\(x^2 + 5\\))
+- Use \\[ and \\] for block/display math equations
+- ALWAYS break down solutions step-by-step
+- Number each step clearly: Step 1:, Step 2:, etc.
+- Use proper LaTeX notation for all mathematical expressions
+- Use \\frac{}{} for fractions, ^{} for exponents, _{} for subscripts
+- Use \\sqrt{} for square roots, \\sum for summations, \\int for integrals
+
+Response Format:
+**Subject:** [Subject Name]
+
+**Question:** [Restate the question clearly]
+
+**Solution:**
+
+**Step 1:** [First step with LaTeX]
+Explanation in plain text with inline math \\(like this\\)
+
+**Step 2:** [Second step with LaTeX]
+\\[
+\\text{Display equation here}
+\\]
+
+**Step 3:** [Continue step-by-step]
+...
+
+**Final Answer:**
+\\[
+\\boxed{\\text{Final result}}
+\\]
+
+Quality Standards:
 - Be thorough but concise
-- Use proper mathematical notation
+- Explain the logic behind each step
+- Use proper mathematical notation in LaTeX
 - Maintain educational tone
 - If image is unclear or contains no question, respond: "I cannot detect a clear question in this image. Please ensure the image is well-lit and the text is readable."
 
-Language detection:
-- English question  English answer
-- Turkish question › Turkish answer
-- Spanish question › Spanish answer
+Language Detection:
+- English question â†’ English answer
+- Turkish question â†’ Turkish answer
+- Spanish question â†’ Spanish answer
 - Automatically adapt to any language detected
+
+**REMEMBER: All mathematical expressions MUST be in LaTeX format!**
 ''';
 
   /// Initializes the AI service with API key
@@ -59,7 +88,7 @@ Language detection:
     );
   }
 
-  /// Analyzes a question image and returns detailed solution
+  /// Analyzes a question image and returns detailed solution in LaTeX format
   /// Throws AIServiceException on failure
   Future<Map<String, String>> analyzeQuestion(File imageFile) async {
     Uint8List? imageBytes;
@@ -79,9 +108,11 @@ Language detection:
       // Create image part
       final imagePart = DataPart(mimeType, imageBytes);
       
-      // Create prompt
+      // Create prompt with LaTeX emphasis
       final prompt = TextPart(
-        'Analyze this homework question and provide a detailed step-by-step solution.'
+        'Analyze this homework question and provide a detailed step-by-step solution. '
+        'IMPORTANT: Format ALL mathematical expressions using LaTeX notation '
+        'with \\( \\) for inline math and \\[ \\] for display equations.'
       );
       
       // Generate content
@@ -110,10 +141,10 @@ Language detection:
           'Content policy violation. Please ensure the image contains appropriate educational content.',
         );
       } else {
-        throw AIServiceException('AI service error: ');
+        throw AIServiceException('AI service error: ${e.message}');
       }
     } catch (e) {
-      throw AIServiceException('Failed to analyze question: ');
+      throw AIServiceException('Failed to analyze question: $e');
     } finally {
       // Clean up memory
       imageBytes = null;
@@ -142,7 +173,7 @@ Language detection:
   Map<String, String> _parseAIResponse(String response) {
     // Extract subject if mentioned
     String subject = 'General';
-    final subjectMatch = RegExp(r'Subject:\s*(.+)', caseSensitive: false)
+    final subjectMatch = RegExp(r'\*\*Subject:\*\*\s*(.+)', caseSensitive: false)
         .firstMatch(response);
     if (subjectMatch != null) {
       subject = subjectMatch.group(1)?.trim() ?? 'General';
@@ -150,7 +181,7 @@ Language detection:
 
     // Extract question if mentioned
     String question = '';
-    final questionMatch = RegExp(r'Question:\s*(.+?)(?=\n|Solution:|$)', 
+    final questionMatch = RegExp(r'\*\*Question:\*\*\s*(.+?)(?=\n|\*\*Solution|$)', 
         caseSensitive: false, dotAll: true).firstMatch(response);
     if (questionMatch != null) {
       question = questionMatch.group(1)?.trim() ?? '';

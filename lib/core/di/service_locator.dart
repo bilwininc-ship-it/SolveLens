@@ -1,16 +1,18 @@
 // Service locator for dependency injection
 import 'package:get_it/get_it.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/ai/ai_service.dart';
-import '../services/payment/payment_service.dart';
-import '../services/user/user_service.dart';
-import '../services/config/remote_config_service.dart';
-import '../data/repositories/question_repository_impl.dart';
-import '../domain/repositories/question_repository.dart';
-import '../domain/usecases/analyze_question_usecase.dart';
-import '../domain/usecases/get_question_history_usecase.dart';
-import '../presentation/providers/solution_provider.dart';
-import '../core/constants/app_constants.dart';
+import 'package:firebase_database/firebase_database.dart';
+import '../../services/ai/ai_service.dart';
+import '../../services/payment/payment_service.dart';
+import '../../services/user/user_service.dart';
+import '../../services/config/remote_config_service.dart';
+import '../../services/database/realtime_database_service.dart';
+import '../../data/repositories/question_repository_impl.dart';
+import '../../domain/repositories/question_repository.dart';
+import '../../domain/usecases/analyze_question_usecase.dart';
+import '../../domain/usecases/get_question_history_usecase.dart';
+import '../../presentation/providers/solution_provider.dart';
+import '../constants/app_constants.dart';
 
 final getIt = GetIt.instance;
 
@@ -19,6 +21,11 @@ Future<void> setupServiceLocator() async {
   // External dependencies
   getIt.registerLazySingleton<FirebaseFirestore>(
     () => FirebaseFirestore.instance,
+  );
+
+  // Firebase Realtime Database
+  getIt.registerLazySingleton<FirebaseDatabase>(
+    () => FirebaseDatabase.instance,
   );
 
   // Remote Config Service
@@ -40,18 +47,23 @@ Future<void> setupServiceLocator() async {
     () => UserService(getIt<FirebaseFirestore>()),
   );
 
-  // AI Service (with Remote Config key)
+  // AI Service (with Remote Config key, Gemini 2.5 Flash)
   getIt.registerLazySingleton<AIService>(
     () => AIService(
       remoteConfigService.getGeminiApiKey(AppConstants.geminiApiKey),
     ),
   );
 
+  // Realtime Database Service
+  getIt.registerLazySingleton<RealtimeDatabaseService>(
+    () => RealtimeDatabaseService(getIt<FirebaseDatabase>()),
+  );
+
   // Repositories
   getIt.registerLazySingleton<QuestionRepository>(
     () => QuestionRepositoryImpl(
       aiService: getIt<AIService>(),
-      firestore: getIt<FirebaseFirestore>(),
+      databaseService: getIt<RealtimeDatabaseService>(),
     ),
   );
 
