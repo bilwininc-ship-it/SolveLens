@@ -1,236 +1,444 @@
-# SolveLens - AI Homework Helper
+# ğŸ“ SolveLens - AI-Powered Homework Helper
 
-Global ölçekte hizmet veren, Gemini API destekli ödev yardımcısı uygulaması.
+<div align="center">
 
-##  Architecture
+![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B?logo=flutter)
+![Firebase](https://img.shields.io/badge/Firebase-Latest-FFCA28?logo=firebase)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-lightgrey)
 
-Bu proje Clean Architecture prensiplerine uygun olarak tasarlanmıştır:
+**Premium AI Tutor Application with Gemini 2.5 Flash Integration**
 
-### Katmanlar
+</div>
 
-#### 1. Presentation Layer (lib/presentation/)
-- UI komponenleri, ekranlar ve state management
-- Provider pattern kullanılarak state yönetimi
-- Kullanıcı etkileşimlerini handle eder
+---
 
-#### 2. Domain Layer (lib/domain/)
-- Business logic ve use cases
-- Entity tanımları
-- Repository interface'leri
-- Framework bağımsız pure Dart kodu
+## âœ¨ Features
 
-#### 3. Data Layer (lib/data/)
-- Repository implementasyonları
-- Data source'lar (Remote: Firebase, Local: SharedPreferences)
-- Model sınıfları (Entity -> Model dönüşümleri)
+### ğŸ” Authentication
+- âœ… **Google Sign-In** - One-tap authentication
+- âœ… **Email/Password** - Traditional authentication
+- âœ… **User Management** - Profile and preferences
+- âœ… **Auto Login** - Persistent authentication state
 
-#### 4. Core Layer (lib/core/)
-- Uygulama genelinde kullanılan utilities
-- Constants, theme, custom widgets
-- Error handling
+### ğŸ¨ Design
+- âœ… **Premium Dark Theme** - Material Design 3
+- âœ… **Deep Black (#000000)** - OLED-optimized
+- âœ… **Gold Accents (#D4AF37)** - Luxury feel
+- âœ… **Smooth Animations** - Polished user experience
 
-##  IAP (In-App Purchase) Güvenlik Mimarisi
+### ğŸ“¸ Core Features
+- ğŸ“· **Camera Integration** - Scan homework questions
+- ğŸ¤– **AI Solutions** - Powered by Gemini 2.5 Flash
+- ğŸ“š **Question History** - Track solved problems
+- â­ **Premium Subscription** - Unlimited access
+- ğŸ¯ **Smart Recognition** - Advanced OCR
 
-### RevenueCat Entegrasyonu
+### ğŸ—ï¸ Architecture
+- âœ… **Clean Architecture** - Scalable and maintainable
+- âœ… **Provider Pattern** - Efficient state management
+- âœ… **Dependency Injection** - GetIt service locator
+- âœ… **Repository Pattern** - Clean data layer
 
-1. **Client-Side Validation**
-   - RevenueCat SDK otomatik olarak receipt'leri Apple/Google'a gönderir
-   - purchases_flutter paketi kullanılır
-   
-\\\dart
-import 'package:purchases_flutter/purchases_flutter.dart';
+---
 
-// Initialize
-await Purchases.configure(
-  PurchasesConfiguration(AppConstants.revenueCatApiKey)
-);
+## ğŸ“± Screenshots
 
-// Satın alma
-try {
-  CustomerInfo customerInfo = await Purchases.purchasePackage(package);
-  // Subscription aktif kontrolü
-  if (customerInfo.entitlements.all['pro']?.isActive == true) {
-    // Pro özelliklere erişim ver
-  }
-} catch (e) {
-  // Hata yönetimi
+<div align="center">
+
+| Login Screen | Home Screen | Camera Screen | Subscription |
+|:---:|:---:|:---:|:---:|
+| ğŸ” | ğŸ  | ğŸ“¸ | â­ |
+
+</div>
+
+---
+
+## ğŸš€ Quick Start
+
+### Prerequisites
+
+```bash
+# Flutter SDK
+Flutter 3.0.0 or higher
+
+# Development Environment
+Android Studio / VS Code
+Xcode (for iOS)
+
+# Firebase Account
+Google Account for Firebase Console
+```
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/solvelens.git
+cd solvelens
+```
+
+2. **Install dependencies**
+```bash
+flutter pub get
+```
+
+3. **Configure Firebase**
+```bash
+# Install FlutterFire CLI
+dart pub global activate flutterfire_cli
+
+# Configure Firebase
+flutterfire configure
+```
+See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions.
+
+4. **Run the app**
+```bash
+flutter run
+```
+
+---
+
+## ğŸ“‚ Project Structure
+
+```
+lib/
+â”œâ”€â”€ ğŸ¯ core/                    # Core functionality
+â”‚   â”œâ”€â”€ constants/              # App-wide constants
+â”‚   â”œâ”€â”€ errors/                 # Error handling
+â”‚   â”œâ”€â”€ utils/                  # Utility functions
+â”‚   â””â”€â”€ di/                     # Dependency injection
+â”‚
+â”œâ”€â”€ ğŸ’¾ data/                    # Data layer
+â”‚   â”œâ”€â”€ models/                 # Data models
+â”‚   â”œâ”€â”€ repositories/           # Repository implementations
+â”‚   â””â”€â”€ datasources/            # Remote & local data sources
+â”‚
+â”œâ”€â”€ ğŸ¯ domain/                  # Domain layer (Business Logic)
+â”‚   â”œâ”€â”€ entities/               # Business entities
+â”‚   â”œâ”€â”€ repositories/           # Repository interfaces
+â”‚   â””â”€â”€ usecases/               # Business use cases
+â”‚
+â”œâ”€â”€ ğŸ¨ presentation/            # Presentation layer (UI)
+â”‚   â”œâ”€â”€ screens/                # App screens
+â”‚   â”‚   â”œâ”€â”€ auth/               # Authentication screens
+â”‚   â”‚   â”œâ”€â”€ home/               # Home screen
+â”‚   â”‚   â”œâ”€â”€ camera/             # Camera screen
+â”‚   â”‚   â””â”€â”€ subscription/       # Subscription screen
+â”‚   â”œâ”€â”€ widgets/                # Reusable widgets
+â”‚   â”œâ”€â”€ providers/              # State management
+â”‚   â””â”€â”€ theme/                  # App theme & styling
+â”‚
+â””â”€â”€ ğŸ”§ services/                # Services
+    â”œâ”€â”€ auth/                   # Authentication service
+    â”œâ”€â”€ ai/                     # AI/Gemini service
+    â”œâ”€â”€ payment/                # Payment service
+    â”œâ”€â”€ user/                   # User service
+    â””â”€â”€ config/                 # Remote config service
+```
+
+---
+
+## ğŸ› ï¸ Tech Stack
+
+### Frontend
+- **Flutter** - UI framework
+- **Material 3** - Design system
+- **Provider** - State management
+
+### Backend & Services
+- **Firebase Auth** - Authentication
+- **Cloud Firestore** - Database
+- **Firebase Remote Config** - Feature flags
+- **Google Generative AI** - Gemini 2.5 Flash
+- **RevenueCat** - Subscription management
+
+### Tools & Libraries
+- **GetIt** - Dependency injection
+- **Dartz** - Functional programming
+- **Camera** - Image capture
+- **Image Picker** - Gallery access
+- **Flutter TeX** - LaTeX rendering
+- **Google Mobile Ads** - Monetization
+
+---
+
+## ğŸ”§ Configuration
+
+### Android Configuration
+
+**Minimum SDK:** 21 (Android 5.0 Lollipop)  
+**Target SDK:** 34 (Android 14)  
+**Compile SDK:** 34
+
+Location: `android/app/build.gradle.kts`
+
+### Firebase Setup
+
+1. Create Firebase project
+2. Add Android/iOS apps
+3. Download config files
+4. Enable Authentication methods
+5. Create Firestore database
+
+See detailed guide: [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+
+### Environment Variables
+
+Create `.env` file in project root:
+
+```env
+# Gemini AI
+GEMINI_API_KEY=your_gemini_api_key
+
+# RevenueCat
+REVENUECAT_API_KEY=your_revenuecat_key
+
+# Google Ads
+ADMOB_APP_ID=your_admob_app_id
+```
+
+---
+
+## ğŸ¨ Theme Customization
+
+### Color Palette
+
+```dart
+// Premium Dark Theme
+Deep Black:     #000000
+Slate Grey:     #121212
+Dark Grey:      #1E1E1E
+Accent Gold:    #D4AF37
+Light Gold:     #E5C158
+Pale Gold:      #F5E6C8
+
+// Status Colors
+Success Green:  #4CAF50
+Error Red:      #E53935
+Warning Orange: #FF9800
+```
+
+### Customize Theme
+
+Edit `lib/presentation/theme/app_theme.dart`
+
+---
+
+## ğŸ“ Development Guide
+
+### Running Setup Script
+
+**Windows (PowerShell):**
+```powershell
+.\setup_solvelens.ps1
+```
+
+This script creates:
+- Clean Architecture folder structure
+- Firebase configuration placeholders
+- Documentation files
+- Asset folders
+
+### Adding New Features
+
+1. **Create Use Case** in `domain/usecases/`
+2. **Implement Repository** in `data/repositories/`
+3. **Create Screen** in `presentation/screens/`
+4. **Register Dependencies** in `core/di/service_locator.dart`
+
+### State Management
+
+```dart
+// 1. Create Provider
+class MyProvider extends ChangeNotifier {
+  // State and methods
 }
-\\\
 
-2. **Server-Side Validation (Firebase Cloud Functions)**
-   
-\\\javascript
-// Firebase Cloud Function
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+// 2. Register in main.dart
+ChangeNotifierProvider(create: (_) => MyProvider())
 
-exports.updateSubscription = functions.https.onCall(async (data, context) => {
-  // RevenueCat Webhook'tan gelen veriyi doğrula
-  const userId = data.userId;
-  const subscriptionType = data.subscriptionType;
-  const expiryDate = data.expiryDate;
-  
-  // Firestore'da kullanıcı subscription bilgisini güncelle
-  await admin.firestore()
-    .collection('users')
-    .doc(userId)
-    .update({
-      subscriptionType: subscriptionType,
-      subscriptionExpiryDate: expiryDate,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-  
-  return { success: true };
-});
-\\\
+// 3. Use in widgets
+Consumer<MyProvider>(
+  builder: (context, provider, child) {
+    // Build UI
+  }
+)
+```
 
-3. **RevenueCat Webhook Configuration**
-   - RevenueCat Dashboard > Integrations > Webhooks
-   - Firebase Cloud Function URL'inizi ekleyin
-   - Events: Initial Purchase, Renewal, Cancellation, Expiration
+---
 
-### Firebase Security Rules
+## ğŸ§ª Testing
 
-\\\javascript
+### Run Tests
+
+```bash
+# Unit tests
+flutter test
+
+# Widget tests
+flutter test test/widget
+
+# Integration tests
+flutter test test/integration
+```
+
+### Test Coverage
+
+```bash
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+```
+
+---
+
+## ğŸš€ Deployment
+
+### Android (Google Play Store)
+
+1. **Build Release APK**
+```bash
+flutter build apk --release
+```
+
+2. **Build App Bundle**
+```bash
+flutter build appbundle --release
+```
+
+3. **Upload to Play Console**
+- Create app in Google Play Console
+- Upload signed app bundle
+- Complete store listing
+- Submit for review
+
+### iOS (App Store)
+
+1. **Build iOS Archive**
+```bash
+flutter build ios --release
+```
+
+2. **Open Xcode**
+```bash
+open ios/Runner.xcworkspace
+```
+
+3. **Archive & Upload**
+- Product â†’ Archive
+- Distribute App
+- Upload to App Store
+
+---
+
+## ğŸ“Š Performance Optimization
+
+### Build Optimizations
+
+```gradle
+// android/app/build.gradle.kts
+buildTypes {
+    release {
+        minifyEnabled = true
+        shrinkResources = true
+        proguardFiles(...)
+    }
+}
+```
+
+### Image Optimization
+
+- Use `.webp` format for images
+- Optimize with `flutter_image_compress`
+- Use `CachedNetworkImage` for remote images
+
+---
+
+## ğŸ” Security
+
+### API Keys
+
+- Store in Remote Config (production)
+- Use `.env` files (development)
+- Never commit API keys to repository
+
+### Firestore Rules
+
+```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Kullanıcı sadece kendi verilerini okuyabilir/yazabilir
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Questions collection - sadece kendi sorularını görebilir
-    match /questions/{questionId} {
-      allow read: if request.auth != null && 
-                     resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && 
-                       request.resource.data.userId == request.auth.uid;
-    }
-    
-    // Subscriptions - read-only client-side
-    match /subscriptions/{subscriptionId} {
-      allow read: if request.auth != null && 
-                     resource.data.userId == request.auth.uid;
-      allow write: if false; // Sadece server-side güncellenebilir
+      allow read, write: if request.auth.uid == userId;
     }
   }
 }
-\\\
+```
 
-### Google Cloud Configuration
+---
 
-1. **API Keys Güvenliği**
-   - Gemini API Key'i environment variable'dan alın
-   - Firebase'de API key restrictions ekleyin
-   - Android: SHA-1/SHA-256 fingerprint kısıtlaması
-   - iOS: Bundle ID kısıtlaması
+## ğŸ¤ Contributing
 
-2. **Cloud Functions Deployment**
-\\\ash
-# Firebase CLI kurulumu
-npm install -g firebase-tools
-firebase login
-firebase init functions
+Contributions are welcome! Please follow these steps:
 
-# Deploy
-firebase deploy --only functions
-\\\
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
-3. **Rate Limiting (Cloud Functions)**
-\\\javascript
-const rateLimit = require('express-rate-limit');
+---
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 dakika
-  max: 100 // Her IP için maksimum 100 istek
-});
+## ğŸ“„ License
 
-exports.askQuestion = functions.https.onCall(async (data, context) => {
-  // Authentication kontrolü
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'User must be authenticated'
-    );
-  }
-  
-  // Günlük soru limitini kontrol et
-  const userId = context.auth.uid;
-  const userDoc = await admin.firestore()
-    .collection('users')
-    .doc(userId)
-    .get();
-    
-  const subscriptionType = userDoc.data().subscriptionType;
-  const questionsUsedToday = userDoc.data().questionsUsedToday || 0;
-  
-  // Limit kontrolü
-  const limits = {
-    'free': 3,
-    'basic': 10,
-    'pro': 50,
-    'elite': -1 // unlimited
-  };
-  
-  if (limits[subscriptionType] !== -1 && 
-      questionsUsedToday >= limits[subscriptionType]) {
-    throw new functions.https.HttpsError(
-      'resource-exhausted',
-      'Daily question limit reached'
-    );
-  }
-  
-  // Gemini API'ye istek gönder
-  // ...
-  
-  return { answer: result };
-});
-\\\
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ?? Abonelik Paketleri
+---
 
-| Paket | Fiyat | Günlük Soru | Detaylı Açıklama | Adım Adım Çözüm | Reklamsız |
-|-------|-------|-------------|------------------|-----------------|-----------|
-| Free  |     | 3           |                |               |         |
-| Basic | .99| 10          | ?               | ?              |         |
-| Pro   | .99| 50          |                |               |         |
-| Elite | .99| Sınırsız    |                |               |         |
+## ğŸ‘¥ Authors
 
-##  Kurulum
+- **Your Name** - Initial work - [YourGitHub](https://github.com/yourusername)
 
-1. Flutter SDK'yı yükleyin (3.0.0+)
-2. Firebase projesini oluşturun
-3. FlutterFire CLI ile Firebase'i yapılandırın:
-\\\ash
-firebase login
-flutterfire configure
-\\\
+---
 
-4. Bağımlılıkları yükleyin:
-\\\ash
-flutter pub get
-\\\
+## ğŸ™ Acknowledgments
 
-5. Environment variables'ı ayarlayın (.env dosyası)
-\\\
-GEMINI_API_KEY=your_key_here
-REVENUECAT_API_KEY=your_key_here
-\\\
+- Flutter Team for the amazing framework
+- Firebase for backend services
+- Google Gemini for AI capabilities
+- Material Design for design guidelines
+- Open source community
 
-##  Çalıştırma
+---
 
-\\\ash
-flutter run
-\\\
+## ğŸ“ Support
 
-##  Geliştirme Notları
+For support and questions:
 
-- Gemini API rate limiting'e dikkat edin
-- Firebase Firestore için composite index'ler oluşturun
-- RevenueCat sandbox ortamında test edin
-- App Store/Google Play IAP test kullanıcıları oluşturun
+- ğŸ“§ Email: support@solvelens.com
+- ğŸ› Issues: [GitHub Issues](https://github.com/yourusername/solvelens/issues)
+- ğŸ’¬ Discord: [Join Community](https://discord.gg/solvelens)
 
-##  Lisans
+---
 
-Proprietary - Tüm hakları saklıdır
+## ğŸ—ºï¸ Roadmap
+
+- [ ] Multi-language support
+- [ ] Offline mode
+- [ ] Social sharing
+- [ ] Study groups
+- [ ] Gamification
+- [ ] Teacher dashboard
+- [ ] Parent monitoring
+- [ ] Video solutions
+
+---
+
+<div align="center">
+
+**Made with â¤ï¸ and Flutter**
+
+â­ Star this repo if you find it helpful!
+
+</div>

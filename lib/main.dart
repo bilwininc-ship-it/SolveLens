@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'presentation/theme/app_theme.dart';
-import 'presentation/screens/home/home_screen.dart';
+import 'presentation/screens/auth/auth_wrapper.dart';
+import 'presentation/providers/auth_provider.dart';
 
 // Add your Firebase configuration
 // import 'firebase_options.dart';
@@ -20,6 +22,12 @@ void main() async {
     ),
   );
   
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
   // Initialize Firebase
   await Firebase.initializeApp(
     // options: DefaultFirebaseOptions.currentPlatform,
@@ -33,11 +41,16 @@ class SolveLensApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SolveLens',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const HomeScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
+        title: 'SolveLens',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        home: const AuthWrapper(),
+      ),
     );
   }
 }
