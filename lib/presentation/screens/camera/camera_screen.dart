@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'dart:io';
 import '../../theme/app_theme.dart';
-import '../widgets/scan_animation_overlay.dart';
+import '../../widgets/scan_animation_overlay.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -62,7 +62,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         setState(() => _isInitialized = true);
       }
     } catch (e) {
-      debugPrint('Camera initialization error: \');
+      debugPrint('Camera initialization error: $e');
     }
   }
 
@@ -82,7 +82,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         Navigator.pop(context, File(image.path));
       }
     } catch (e) {
-      debugPrint('Capture error: \');
+      debugPrint('Capture error: $e');
       setState(() => _isScanning = false);
     }
   }

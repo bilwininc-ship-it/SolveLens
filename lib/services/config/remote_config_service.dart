@@ -34,7 +34,7 @@ class RemoteConfigService {
       
       _isInitialized = true;
     } catch (e) {
-      throw RemoteConfigException('Failed to initialize Remote Config: \');
+      throw RemoteConfigException('Failed to initialize Remote Config: $e');
     }
   }
 

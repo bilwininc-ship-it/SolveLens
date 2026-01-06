@@ -68,7 +68,7 @@ class PaymentService {
       );
       
     } catch (e) {
-      throw PaymentServiceException('Failed to check subscription: \');
+      throw PaymentServiceException('Failed to check subscription: $e');
     }
   }
 
@@ -85,7 +85,7 @@ class PaymentService {
       return offerings.current!.availablePackages;
       
     } catch (e) {
-      throw PaymentServiceException('Failed to fetch packages: \');
+      throw PaymentServiceException('Failed to fetch packages: $e');
     }
   }
 
@@ -107,10 +107,10 @@ class PaymentService {
       } else if (errorCode == PurchasesErrorCode.paymentPendingError) {
         throw PaymentServiceException('Payment pending');
       } else {
-        throw PaymentServiceException('Purchase failed: \');
+        throw PaymentServiceException('Purchase failed: ${e.message}');
       }
     } catch (e) {
-      throw PaymentServiceException('Purchase error: \');
+      throw PaymentServiceException('Purchase error: $e');
     }
   }
 
@@ -120,7 +120,7 @@ class PaymentService {
       final CustomerInfo customerInfo = await Purchases.restorePurchases();
       return await checkSubscriptionStatus();
     } catch (e) {
-      throw PaymentServiceException('Failed to restore purchases: \');
+      throw PaymentServiceException('Failed to restore purchases: $e');
     }
   }
 
@@ -129,7 +129,7 @@ class PaymentService {
     try {
       await Purchases.logIn(userId);
     } catch (e) {
-      throw PaymentServiceException('Failed to identify user: \');
+      throw PaymentServiceException('Failed to identify user: $e');
     }
   }
 
@@ -138,7 +138,7 @@ class PaymentService {
     try {
       await Purchases.logOut();
     } catch (e) {
-      throw PaymentServiceException('Failed to logout user: \');
+      throw PaymentServiceException('Failed to logout user: $e');
     }
   }
 }

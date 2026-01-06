@@ -17,7 +17,7 @@ class UserService {
       
       return UserModel.fromFirestore(doc);
     } catch (e) {
-      throw UserServiceException('Failed to get user: \');
+      throw UserServiceException('Failed to get user: $e');
     }
   }
 
@@ -42,7 +42,7 @@ class UserService {
       return user.questionsUsedToday >= dailyLimit;
       
     } catch (e) {
-      throw UserServiceException('Failed to check daily limit: \');
+      throw UserServiceException('Failed to check daily limit: $e');
     }
   }
 
@@ -84,7 +84,7 @@ class UserService {
         }
       });
     } catch (e) {
-      throw UserServiceException('Failed to increment counter: \');
+      throw UserServiceException('Failed to increment counter: $e');
     }
   }
 
@@ -117,7 +117,7 @@ class UserService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      throw UserServiceException('Failed to sync subscription: \');
+      throw UserServiceException('Failed to sync subscription: $e');
     }
   }
 }

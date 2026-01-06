@@ -1,6 +1,6 @@
 // Neon scanning line animation overlay
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
 class ScanAnimationOverlay extends StatefulWidget {
   const ScanAnimationOverlay({super.key});

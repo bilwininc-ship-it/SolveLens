@@ -99,7 +99,7 @@ class SolutionProvider extends ChangeNotifier {
       );
       
     } catch (e) {
-      _setState(SolutionError(message: 'An error occurred: \'));
+      _setState(SolutionError(message: 'An error occurred: $e'));
     }
   }
 
@@ -109,11 +109,11 @@ class SolutionProvider extends ChangeNotifier {
     
     switch (_subscriptionStatus!.tier) {
       case SubscriptionTier.free:
-        return 'Basic (\.99/mo)';
+        return 'Basic (\$4.99/mo)';
       case SubscriptionTier.basic:
-        return 'Pro (\.99/mo)';
+        return 'Pro (\$9.99/mo)';
       case SubscriptionTier.pro:
-        return 'Elite (\.99/mo)';
+        return 'Elite (\$19.99/mo)';
       case SubscriptionTier.elite:
         return 'Elite'; // Already at max
     }
