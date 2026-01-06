@@ -1,16 +1,15 @@
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Google Services plugin for Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.solvelens"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -27,11 +26,11 @@ android {
         applicationId = "com.example.solvelens"
         
         // Google Play Store Requirements
-        minSdk = 21  // Android 5.0 (Lollipop)
-        targetSdk = 34  // Android 14
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
         
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
         
         // Enable multidex support
         multiDexEnabled = true
@@ -40,8 +39,8 @@ android {
     buildTypes {
         release {
             // Optimizations for release build
-            minifyEnabled = true
-            shrinkResources = true
+            isMinifyEnabled = true
+            isShrinkResources = true
             
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -54,8 +53,8 @@ android {
         }
         
         debug {
-            minifyEnabled = false
-            debuggable = true
+            isMinifyEnabled = false
+            isDebuggable = true
         }
     }
     

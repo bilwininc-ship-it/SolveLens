@@ -54,6 +54,13 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
+# Firebase Configuration Files (Keep these locally, do not commit)
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+firebase.json
+.firebaserc
+
 # Cloud Functions
 functions/node_modules/
 functions/.eslintrc.json

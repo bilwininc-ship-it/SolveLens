@@ -6,9 +6,7 @@ import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_wrapper.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'core/di/service_locator.dart';
-
-// Add your Firebase configuration
-// import 'firebase_options.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +29,7 @@ void main() async {
   
   // Initialize Firebase
   await Firebase.initializeApp(
-    // options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform,
   );
   
   // Initialize Service Locator (DI)
