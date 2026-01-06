@@ -8,6 +8,7 @@ class User extends Equatable {
   final String subscriptionType; // 'free', 'basic', 'pro', 'elite'
   final DateTime? subscriptionExpiryDate;
   final int questionsUsedToday;
+  final DateTime? lastQuestionDate; // Added field
   
   const User({
     required this.id,
@@ -16,6 +17,7 @@ class User extends Equatable {
     required this.subscriptionType,
     this.subscriptionExpiryDate,
     required this.questionsUsedToday,
+    this.lastQuestionDate,
   });
   
   @override
@@ -25,6 +27,7 @@ class User extends Equatable {
     displayName, 
     subscriptionType, 
     subscriptionExpiryDate,
-    questionsUsedToday
+    questionsUsedToday,
+    lastQuestionDate,
   ];
 }

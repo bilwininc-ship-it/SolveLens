@@ -1,4 +1,5 @@
 // RevenueCat payment service for subscription management
+import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/subscription_constants.dart';

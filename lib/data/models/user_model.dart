@@ -3,8 +3,6 @@ import '../../domain/entities/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel extends User {
-  final DateTime? lastQuestionDate;
-
   const UserModel({
     required super.id,
     required super.email,
@@ -12,7 +10,7 @@ class UserModel extends User {
     required super.subscriptionType,
     super.subscriptionExpiryDate,
     required super.questionsUsedToday,
-    this.lastQuestionDate,
+    super.lastQuestionDate,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {

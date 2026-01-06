@@ -7,9 +7,11 @@ class AppTheme {
   static const Color deepBlack = Color(0xFF000000);
   static const Color slateGrey = Color(0xFF121212);
   static const Color darkGrey = Color(0xFF1E1E1E);
+  static const Color cardDark = Color(0xFF1E1E1E); // Added missing color
   static const Color accentGold = Color(0xFFD4AF37);
   static const Color lightGold = Color(0xFFE5C158);
   static const Color paleGold = Color(0xFFF5E6C8);
+  static const Color primaryPurple = Color(0xFF9C27B0); // Added missing color
   
   // Status Colors
   static const Color successGreen = Color(0xFF4CAF50);
@@ -32,12 +34,10 @@ class AppTheme {
         primary: accentGold,
         secondary: lightGold,
         surface: slateGrey,
-        background: deepBlack,
         error: errorRed,
         onPrimary: deepBlack,
         onSecondary: deepBlack,
         onSurface: textPrimary,
-        onBackground: textPrimary,
         onError: textPrimary,
       ),
       
@@ -56,10 +56,10 @@ class AppTheme {
       ),
       
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: slateGrey,
         elevation: 8,
-        shadowColor: Colors.black.withOpacity(0.3),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -174,7 +174,7 @@ class AppTheme {
       
       // Divider Theme
       dividerTheme: DividerThemeData(
-        color: textTertiary.withOpacity(0.2),
+        color: textTertiary.withValues(alpha: 0.2),
         thickness: 1,
       ),
     );

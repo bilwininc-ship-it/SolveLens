@@ -97,7 +97,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryPurple),
         ),
@@ -145,14 +145,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             Icon(
               Icons.history,
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               size: 80,
             ),
             const SizedBox(height: 16),
             Text(
               'Henüz geçmiş yok',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
               ),
@@ -161,7 +161,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Text(
               'Çözülen sorular burada görünecek',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 14,
               ),
             ),
@@ -212,15 +212,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple.withOpacity(0.2),
+                      color: AppTheme.primaryPurple.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.primaryPurple.withOpacity(0.5),
+                        color: AppTheme.primaryPurple.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Text(
                       question.subject,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppTheme.primaryPurple,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -230,7 +230,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Text(
                     dateFormat.format(question.createdAt),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),
@@ -255,7 +255,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 _getAnswerPreview(question.answer),
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
                 maxLines: 3,
@@ -351,7 +351,7 @@ class QuestionDetailScreen extends StatelessWidget {
             Text(
               dateFormat.format(question.createdAt),
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
             ),
@@ -365,13 +365,13 @@ class QuestionDetailScreen extends StatelessWidget {
                 color: AppTheme.cardDark,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.primaryPurple.withOpacity(0.3),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Soru',
                     style: TextStyle(
                       color: AppTheme.primaryPurple,
@@ -403,7 +403,7 @@ class QuestionDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Çözüm',
                     style: TextStyle(
                       color: AppTheme.primaryPurple,
@@ -415,13 +415,12 @@ class QuestionDetailScreen extends StatelessWidget {
                   TeXView(
                     child: TeXViewDocument(
                       question.answer,
-                      style: const TeXViewStyle(
+                      style: TeXViewStyle(
                         contentColor: Colors.white,
                         backgroundColor: AppTheme.cardDark,
-                        fontSize: 16,
                       ),
                     ),
-                    style: const TeXViewStyle(
+                    style: TeXViewStyle(
                       backgroundColor: AppTheme.cardDark,
                       elevation: 0,
                     ),

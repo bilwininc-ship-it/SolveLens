@@ -1,7 +1,7 @@
 // Premium subscription packages screen with animated Elite tier
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../../core/constants/subscription_constants.dart';
+import '../../../core/constants/subscription_constants.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -63,10 +63,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     _buildSubscriptionCard(
                       index: 0,
                       title: 'Basic',
-                      price: '\Yellow{SubscriptionConstants.basicPrice}',
+                      price: '\$${SubscriptionConstants.basicPrice}',
                       period: '/month',
                       features: [
-                        ' questions per day',
+                        '${SubscriptionConstants.basicQuestionsPerDay} questions per day',
                         'Basic explanations',
                         'Standard support',
                         'Ads included',
@@ -78,10 +78,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     _buildSubscriptionCard(
                       index: 1,
                       title: 'Pro',
-                      price: '\Yellow{SubscriptionConstants.proPrice}',
+                      price: '\$${SubscriptionConstants.proPrice}',
                       period: '/month',
                       features: [
-                        ' questions per day',
+                        '${SubscriptionConstants.proQuestionsPerDay} questions per day',
                         'Detailed explanations',
                         'Step-by-step solutions',
                         'Ad-free experience',
@@ -93,7 +93,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     _buildSubscriptionCard(
                       index: 2,
                       title: 'Elite',
-                      price: '\Yellow{SubscriptionConstants.elitePrice}',
+                      price: '\$${SubscriptionConstants.elitePrice}',
                       period: '/month',
                       features: [
                         'Unlimited questions',
@@ -119,7 +119,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   end: Alignment.topCenter,
                   colors: [
                     AppTheme.deepBlack,
-                    AppTheme.deepBlack.withOpacity(0.9),
+                    AppTheme.deepBlack.withValues(alpha: 0.9),
                   ],
                 ),
               ),
@@ -127,7 +127,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Implement subscription purchase
                     _handleSubscription();
                   },
                   child: const Text('Subscribe Now'),
@@ -161,8 +160,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               gradient: isRecommended
                   ? LinearGradient(
                       colors: [
-                        AppTheme.accentGold.withOpacity(0.3 + _glowController.value * 0.2),
-                        AppTheme.lightGold.withOpacity(0.2 + _glowController.value * 0.15),
+                        AppTheme.accentGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
+                        AppTheme.lightGold.withValues(alpha: 0.2 + _glowController.value * 0.15),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -170,14 +169,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   : null,
               border: isRecommended
                   ? Border.all(
-                      color: AppTheme.accentGold.withOpacity(0.5 + _glowController.value * 0.5),
+                      color: AppTheme.accentGold.withValues(alpha: 0.5 + _glowController.value * 0.5),
                       width: 2,
                     )
                   : null,
               boxShadow: isRecommended
                   ? [
                       BoxShadow(
-                        color: AppTheme.accentGold.withOpacity(0.3 + _glowController.value * 0.2),
+                        color: AppTheme.accentGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -293,7 +292,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         backgroundColor: AppTheme.slateGrey,
         title: const Text('Confirm Subscription'),
         content: Text(
-          'You are about to subscribe to  plan.',
+          'You are about to subscribe to ${packages[_selectedIndex]} plan.',
         ),
         actions: [
           TextButton(

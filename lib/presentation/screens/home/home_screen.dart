@@ -1,6 +1,5 @@
 // Home Screen with Bottom Navigation
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_theme.dart';
 import '../history/history_screen.dart';
 import '../camera/camera_screen.dart';
@@ -35,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: AppTheme.cardDark,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -53,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               backgroundColor: Colors.transparent,
               selectedItemColor: AppTheme.primaryPurple,
-              unselectedItemColor: Colors.white.withOpacity(0.5),
+              unselectedItemColor: Colors.white.withValues(alpha: 0.5),
               selectedFontSize: 12,
               unselectedFontSize: 12,
               type: BottomNavigationBarType.fixed,
