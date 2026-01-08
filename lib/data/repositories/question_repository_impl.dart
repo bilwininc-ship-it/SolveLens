@@ -25,8 +25,8 @@ class QuestionRepositoryImpl implements QuestionRepository {
     required String userId,
   }) async {
     try {
-      // Analyze question using AI service
-      final result = await aiService.analyzeQuestion(imageFile);
+      // Analyze question using AI service with personalized context
+      final result = await aiService.analyzeQuestion(imageFile, userId);
       
       // Create question entity (NO IMAGE URL stored)
       final question = QuestionModel(

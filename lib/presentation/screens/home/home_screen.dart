@@ -60,17 +60,17 @@ class _HomeScreenState extends State<HomeScreen> {
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home),
-                  label: 'Ana Sayfa',
+                  label: 'Dashboard',
                   backgroundColor: Colors.transparent,
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.history),
-                  label: 'Geçmiş',
+                  label: 'History',
                   backgroundColor: Colors.transparent,
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
-                  label: 'Profil',
+                  label: 'Profile',
                   backgroundColor: Colors.transparent,
                 ),
               ],

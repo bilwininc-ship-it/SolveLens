@@ -75,7 +75,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         backgroundColor: AppTheme.deepBlack,
         elevation: 0,
         title: const Text(
-          'Geçmiş',
+          'History',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
@@ -87,7 +87,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
               onPressed: _loadHistory,
-              tooltip: 'Yenile',
+              tooltip: 'Refresh',
             ),
         ],
       ),
@@ -131,7 +131,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Tekrar Dene'),
+              child: const Text('Try Again'),
             ),
           ],
         ),
@@ -150,7 +150,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Henüz geçmiş yok',
+              'No history yet',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 18,
@@ -159,7 +159,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Çözülen sorular burada görünecek',
+              'Solved questions will appear here',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 14,
@@ -185,7 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildHistoryCard(Question question) {
-    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'tr_TR');
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'en_US');
     
     return Card(
       color: AppTheme.cardDark,
@@ -278,7 +278,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Detayları Gör'),
+                      Text('View Details'),
                       SizedBox(width: 4),
                       Icon(Icons.arrow_forward, size: 16),
                     ],
@@ -295,13 +295,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String _getAnswerPreview(String answer) {
     // Remove LaTeX formatting for preview
     String preview = answer
-        .replaceAll(RegExp(r'\\\[.*?\\\]', dotAll: true), '[Matematik İfadesi]')
-        .replaceAll(RegExp(r'\\\(.*?\\\)', dotAll: true), '[İfade]')
+        .replaceAll(RegExp(r'\\\[.*?\\\]', dotAll: true), '[Math Expression]')
+        .replaceAll(RegExp(r'\\\(.*?\\\)', dotAll: true), '[Expression]')
         .replaceAll('**', '')
         .replaceAll('##', '')
         .trim();
     
-    return preview.isNotEmpty ? preview : 'Çözüm görüntüleyin...';
+    return preview.isNotEmpty ? preview : 'View solution...';
   }
 
   void _showQuestionDetail(Question question) {
@@ -322,7 +322,7 @@ class QuestionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd MMMM yyyy, HH:mm', 'tr_TR');
+    final dateFormat = DateFormat('dd MMMM yyyy, HH:mm', 'en_US');
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
@@ -372,7 +372,7 @@ class QuestionDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Soru',
+                    'Question',
                     style: TextStyle(
                       color: AppTheme.primaryPurple,
                       fontSize: 16,
@@ -404,7 +404,7 @@ class QuestionDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Çözüm',
+                    'Solution',
                     style: TextStyle(
                       color: AppTheme.primaryPurple,
                       fontSize: 16,

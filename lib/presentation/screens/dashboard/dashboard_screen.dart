@@ -49,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final userName = user?.displayName ?? 'Öğrenci';
+    final userName = user?.displayName ?? 'Student';
     final firstName = userName.split(' ').first;
 
     return Scaffold(
@@ -87,11 +87,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String greeting;
     
     if (hour < 12) {
-      greeting = 'Günaydın';
+      greeting = 'Good Morning';
     } else if (hour < 18) {
-      greeting = 'İyi günler';
+      greeting = 'Good Afternoon';
     } else {
-      greeting = 'İyi akşamlar';
+      greeting = 'Good Evening';
     }
 
     return Column(
@@ -124,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-           'Bugün ne öğrenmek istersin?',
+          'What shall we explore today?',
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.6),
             fontSize: 16,
@@ -159,7 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildStatItem(
             icon: Icons.check_circle,
             value: _isLoading ? '...' : '$_solvedQuestionsCount',
-            label: 'Çözülen Soru',
+            label: 'Solved',
             color: AppTheme.primaryPurple,
           ),
           Container(
@@ -170,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildStatItem(
             icon: Icons.local_fire_department,
             value: '0',
-            label: 'Günlük Seri',
+            label: 'Streak',
             color: Colors.orange,
           ),
           Container(
@@ -181,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _buildStatItem(
             icon: Icons.star,
             value: '0',
-            label: 'Kayıtlı Not',
+            label: 'Notes',
             color: Colors.amber,
           ),
         ],
@@ -224,7 +224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Özellikler',
+          'Features',
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -233,11 +233,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Card 1: Photo & Solve
+        // Card 1: Scan & Solve
         DashboardCard(
           icon: Icons.camera_alt,
-          title: 'Fotoğraf Çek ve Çöz',
-          subtitle: 'Sorunun fotoğrafını çek, AI mentor anında çözsün',
+          title: '📸 Scan & Solve',
+          subtitle: 'Take a photo of your question, get instant AI mentor help',
           iconColor: AppTheme.primaryPurple,
           onTap: () {
             Navigator.push(
@@ -251,10 +251,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Card 2: Voice Mentor
         DashboardCard(
           icon: Icons.mic,
-          title: 'Sesli Mentor',
-          subtitle: 'Sorunu sesle sor, cevabı dinle veya oku',
+          title: '🎤 Voice Mentor',
+          subtitle: 'Ask your question by voice, listen or read the answer',
           iconColor: Colors.blue,
-          badge: 'YENİ',
+          badge: 'NEW',
           onTap: () {
             Navigator.push(
               context,
@@ -264,11 +264,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Card 3: Important Notes
+        // Card 3: My Smart Notes
         DashboardCard(
           icon: Icons.bookmark,
-          title: 'Önemli Notlarım',
-          subtitle: 'Kaydettiğin önemli çözümlere hızlıca eriş',
+          title: '📝 My Smart Notes',
+          subtitle: 'Quickly access your starred important solutions',
           iconColor: Colors.amber,
           onTap: () {
             Navigator.push(

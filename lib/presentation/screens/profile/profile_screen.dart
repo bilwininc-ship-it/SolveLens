@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: AppTheme.deepBlack,
         elevation: 0,
         title: const Text(
-          'Profil',
+          'Profile',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24,
@@ -52,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildUserHeader(User? user) {
-    final displayName = user?.displayName ?? 'Kullanıcı';
+    final displayName = user?.displayName ?? 'User';
     final email = user?.email ?? 'email@example.com';
     final photoUrl = user?.photoURL;
 
@@ -110,7 +110,7 @@ class ProfileScreen extends StatelessWidget {
       color: AppTheme.primaryPurple.withValues(alpha: 0.3),
       child: Center(
         child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : 'K',
+          name.isNotEmpty ? name[0].toUpperCase() : 'U',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 40,
@@ -153,7 +153,7 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Abonelik Durumu',
+                        'Subscription Status',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -162,7 +162,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Ücretsiz Plan',
+                        'Free Plan',
                         style: TextStyle(
                           color: Colors.amber,
                           fontSize: 14,
@@ -178,7 +178,7 @@ class ProfileScreen extends StatelessWidget {
             
             // Premium Features Info
             Text(
-              'Premium\'a yükselterek sınırsız soru çözümü, sesli asistan ve özel özelliklerden faydalanın.',
+              'Upgrade to Premium for unlimited questions, voice assistant, and exclusive features.',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -212,7 +212,7 @@ class ProfileScreen extends StatelessWidget {
                     Icon(Icons.upgrade, size: 20),
                     SizedBox(width: 8),
                     Text(
-                      'Premium\'a Yükselt',
+                      'Upgrade to Premium',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -239,10 +239,10 @@ class ProfileScreen extends StatelessWidget {
         children: [
           _buildSettingsTile(
             icon: Icons.notifications,
-            title: 'Bildirimler',
+            title: 'Notifications',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Yakında eklenecek!')),
+                const SnackBar(content: Text('Coming soon!')),
               );
             },
           ),
@@ -252,10 +252,10 @@ class ProfileScreen extends StatelessWidget {
           ),
           _buildSettingsTile(
             icon: Icons.language,
-            title: 'Dil Ayarları',
+            title: 'Language Settings',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Yakında eklenecek!')),
+                const SnackBar(content: Text('Coming soon!')),
               );
             },
           ),
@@ -265,10 +265,10 @@ class ProfileScreen extends StatelessWidget {
           ),
           _buildSettingsTile(
             icon: Icons.help_outline,
-            title: 'Yardım & Destek',
+            title: 'Help & Support',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Yakında eklenecek!')),
+                const SnackBar(content: Text('Coming soon!')),
               );
             },
           ),
@@ -319,7 +319,7 @@ class ProfileScreen extends StatelessWidget {
             Icon(Icons.logout, size: 20),
             SizedBox(width: 8),
             Text(
-              'Çıkış Yap',
+              'Logout',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -337,17 +337,17 @@ class ProfileScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.cardDark,
         title: const Text(
-          'Çıkış Yap',
+          'Logout',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'Çıkış yapmak istediğinizden emin misiniz?',
+          'Are you sure you want to logout?',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -355,7 +355,7 @@ class ProfileScreen extends StatelessWidget {
               Provider.of<AuthProvider>(context, listen: false).signOut();
             },
             child: const Text(
-              'Çıkış Yap',
+              'Logout',
               style: TextStyle(color: Colors.red),
             ),
           ),

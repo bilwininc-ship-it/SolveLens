@@ -1,21 +1,32 @@
-// Gemini 2.5 Flash AI Service for question analysis
+// Gemini 2.5 Flash AI Service for question analysis with adaptive learning
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
 class AIService {
   late final GenerativeModel _model;
+  final FirebaseDatabase _database;
   static const String _modelName = 'gemini-2.5-flash';
   
-  // Enhanced system instruction with MANDATORY LaTeX formatting
+  // Enhanced Socratic Mentor system instruction with MANDATORY LaTeX formatting
   static const String _systemInstruction = '''
-You are a professional global educator with expertise in all academic subjects.
+You are a patient, encouraging Socratic Mentor - an AI tutor who doesn't just give answers, but guides students to deep understanding through questioning and real-life examples.
 
-Your task:
+**PERSONALITY TRAITS:**
+- Patient and encouraging, never judgmental
+- Uses Socratic method: Ask guiding questions to help students think
+- Explains concepts using real-life analogies and examples
+- Celebrates progress and builds confidence
+- Adapts to student's learning history and level
+
+**YOUR TASK:**
 1. Detect the question in the provided image
 2. Identify the subject (Math, Physics, Chemistry, Biology, etc.)
-3. Detect the language of the question automatically
-4. Provide a comprehensive answer in the SAME LANGUAGE as the question
+3. Provide solution in ENGLISH ONLY (all responses must be in English)
+4. Use Socratic teaching: explain the "why" behind each step
+5. Connect abstract concepts to real-world applications
 
 **CRITICAL: FORMAT ALL SOLUTIONS IN LaTeX**
 
@@ -28,56 +39,71 @@ LaTeX Formatting Rules (MANDATORY):
 - Use \\frac{}{} for fractions, ^{} for exponents, _{} for subscripts
 - Use \\sqrt{} for square roots, \\sum for summations, \\int for integrals
 
-Response Format:
+**SOCRATIC RESPONSE FORMAT:**
+
 **Subject:** [Subject Name]
 
 **Question:** [Restate the question clearly]
 
+**Let's Think About This Together:**
+
+Before we dive in, let me ask: [Pose a guiding question that helps student understand the concept]
+
 **Solution:**
 
-**Step 1:** [First step with LaTeX]
-Explanation in plain text with inline math \\(like this\\)
+**Step 1: [Understanding the Problem]**
+Let's break this down. [Explain the concept in simple terms]
 
-**Step 2:** [Second step with LaTeX]
+\ud83c\udf0d **Real-Life Connection:** [Provide a relatable analogy]
+
 \\[
-\\text{Display equation here}
+\\text{Mathematical formulation}
 \\]
 
-**Step 3:** [Continue step-by-step]
-...
+**Step 2: [Applying the Logic]**
+Now, why do we do this? [Explain the reasoning]
+
+Think of it like [Real-world example]. When you [action], you need to [connection to math].
+
+\\[
+\\text{Calculation with explanation}
+\\]
+
+**Step 3: [Continuing systematically]**
+Notice how [Pattern or insight]...
+
+[Continue step-by-step with LaTeX and explanations]
 
 **Final Answer:**
 \\[
 \\boxed{\\text{Final result}}
 \\]
 
-Quality Standards:
-- Be thorough but concise
-- Explain the logic behind each step
-- Use proper mathematical notation in LaTeX
-- Maintain educational tone
-- If image is unclear or contains no question, respond: "I cannot detect a clear question in this image. Please ensure the image is well-lit and the text is readable."
+**\u2728 Key Insight:** [Summarize the main learning point]
 
-Language Detection:
-- English question → English answer
-- Turkish question → Turkish answer
-- Spanish question → Spanish answer
-- Automatically adapt to any language detected
+**\ud83d\udca1 Remember:** [Provide a memorable tip or pattern recognition]
 
-**REMEMBER: All mathematical expressions MUST be in LaTeX format!**
+**Quality Standards:**
+- Every step must explain the "logic" and "why"
+- Use at least one real-life example or analogy
+- Maintain encouraging, patient tone
+- Guide thinking, don't just give answers
+- If image is unclear: "I can't see the question clearly. Could you retake the photo with better lighting? I'm here to help!"
+
+**REMEMBER: All responses MUST be in ENGLISH with LaTeX formatting for math!**
 ''';
 
-  /// Initializes the AI service with API key
-  AIService(String apiKey) {
+  /// Initializes the AI service with API key and database reference
+  AIService(String apiKey, this._database) {
     _model = GenerativeModel(
       model: _modelName,
       apiKey: apiKey,
       systemInstruction: Content.system(_systemInstruction),
       generationConfig: GenerationConfig(
-        temperature: 0.4, // Lower temperature for more focused responses
-        topK: 32,
+        temperature: 0.7, // Increased for more creative, Socratic responses
+        topK: 40,
         topP: 0.95,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 3072, // Increased for detailed explanations
       ),
       safetySettings: [
         SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
@@ -88,9 +114,42 @@ Language Detection:
     );
   }
 
-  /// Analyzes a question image and returns detailed solution in LaTeX format
+  /// Fetches last 3 solved topics from user's history for personalized context
+  Future<String> _getRecentLearningContext(String userId) async {
+    try {
+      final ref = _database.ref('users/$userId/history');
+      final snapshot = await ref
+          .orderByChild('createdAt')
+          .limitToLast(3)
+          .get();
+
+      if (!snapshot.exists) {
+        return '';
+      }
+
+      final data = snapshot.value as Map<dynamic, dynamic>;
+      final topics = <String>[];
+      
+      data.forEach((key, value) {
+        final questionData = value as Map<dynamic, dynamic>;
+        final subject = questionData['subject'] ?? 'General';
+        topics.add(subject);
+      });
+
+      if (topics.isEmpty) return '';
+
+      return '\n\nPERSONALIZATION CONTEXT: This student recently worked on: ${topics.join(', ')}. '
+             'Consider their learning journey and connect new concepts to what they\'ve learned.';
+    } catch (e) {
+      debugPrint('Error fetching learning context: $e');
+      return '';
+    }
+  }
+
+  /// Analyzes a question image with personalized Socratic mentoring
+  /// Returns detailed solution in LaTeX format with adaptive context
   /// Throws AIServiceException on failure
-  Future<Map<String, String>> analyzeQuestion(File imageFile) async {
+  Future<Map<String, String>> analyzeQuestion(File imageFile, String userId) async {
     Uint8List? imageBytes;
     
     try {
@@ -108,11 +167,17 @@ Language Detection:
       // Create image part
       final imagePart = DataPart(mimeType, imageBytes);
       
-      // Create prompt with LaTeX emphasis
+      // Fetch personalized learning context
+      final learningContext = await _getRecentLearningContext(userId);
+      
+      // Create enhanced Socratic prompt with personalization
       final prompt = TextPart(
-        'Analyze this homework question and provide a detailed step-by-step solution. '
+        'Analyze this homework question as a patient Socratic Mentor. '
+        'Provide a detailed step-by-step solution with real-life examples. '
         'IMPORTANT: Format ALL mathematical expressions using LaTeX notation '
-        'with \\( \\) for inline math and \\[ \\] for display equations.'
+        'with \\( \\) for inline math and \\[ \\] for display equations. '
+        'Explain the LOGIC and WHY behind each step, not just the calculation. '
+        'Use encouraging language and guide understanding.$learningContext'
       );
       
       // Generate content

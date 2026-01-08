@@ -47,10 +47,11 @@ Future<void> setupServiceLocator() async {
     () => UserService(getIt<FirebaseFirestore>()),
   );
 
-  // AI Service (with Remote Config key, Gemini 2.5 Flash)
+  // AI Service (with Remote Config key, Gemini 2.5 Flash, and Firebase Database)
   getIt.registerLazySingleton<AIService>(
     () => AIService(
       remoteConfigService.getGeminiApiKey(AppConstants.geminiApiKey),
+      getIt<FirebaseDatabase>(),
     ),
   );
 

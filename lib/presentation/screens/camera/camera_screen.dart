@@ -1,6 +1,7 @@
-// Camera screen with custom viewfinder and scan overlay
+// Camera screen with custom viewfinder, robust error handling, and full features
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../theme/app_theme.dart';
 import '../../widgets/scan_animation_overlay.dart';
@@ -17,6 +18,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   List<CameraDescription>? _cameras;
   bool _isInitialized = false;
   bool _isScanning = false;
+  bool _isFlashOn = false;
+  String? _errorMessage;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -48,30 +52,112 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   Future<void> _initializeCamera() async {
     try {
+      setState(() {
+        _errorMessage = null;
+        _isInitialized = false;
+      });
+
       _cameras = await availableCameras();
-      if (_cameras!.isEmpty) return;
+      
+      if (_cameras == null || _cameras!.isEmpty) {
+        setState(() {
+          _errorMessage = 'No cameras found on this device';
+        });
+        return;
+      }
 
       _controller = CameraController(
         _cameras![0],
         ResolutionPreset.high,
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _controller!.initialize();
+      
       if (mounted) {
-        setState(() => _isInitialized = true);
+        setState(() {
+          _isInitialized = true;
+        });
       }
     } catch (e) {
       debugPrint('Camera initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Camera initialization failed. Please check permissions.';
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFlash() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    try {
+      final newFlashMode = _isFlashOn ? FlashMode.off : FlashMode.torch;
+      await _controller!.setFlashMode(newFlashMode);
+      
+      if (mounted) {
+        setState(() {
+          _isFlashOn = !_isFlashOn;
+        });
+      }
+    } catch (e) {
+      debugPrint('Flash toggle error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Flash not available on this device'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null && mounted) {
+        Navigator.pop(context, File(image.path));
+      }
+    } catch (e) {
+      debugPrint('Gallery picker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to pick image from gallery'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _captureAndProcess() async {
-    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (_controller == null || !_controller!.value.isInitialized) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera not ready. Please wait...')),
+      );
+      return;
+    }
     
+    if (_isScanning) return;
+
     setState(() => _isScanning = true);
 
     try {
+      // Turn off flash before capture if it was on
+      if (_isFlashOn) {
+        await _controller!.setFlashMode(FlashMode.off);
+      }
+
       final XFile image = await _controller!.takePicture();
       
       // Wait for animation to complete
@@ -83,7 +169,15 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       }
     } catch (e) {
       debugPrint('Capture error: $e');
-      setState(() => _isScanning = false);
+      if (mounted) {
+        setState(() => _isScanning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -93,28 +187,115 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       backgroundColor: AppTheme.deepBlack,
       body: Stack(
         children: [
-          // Camera Preview
-          if (_isInitialized && _controller != null)
+          // Camera Preview or Error
+          if (_errorMessage != null)
+            _buildErrorView()
+          else if (_isInitialized && _controller != null)
             SizedBox.expand(
               child: CameraPreview(_controller!),
             )
           else
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.accentGold,
-              ),
-            ),
+            _buildLoadingView(),
 
           // Custom Overlay
-          _buildOverlay(),
+          if (_isInitialized && _errorMessage == null)
+            _buildOverlay(),
 
           // Scan Animation
           if (_isScanning)
             const ScanAnimationOverlay(),
 
           // Controls
-          _buildControls(),
+          if (_isInitialized && _errorMessage == null)
+            _buildControls(),
+
+          // Back Button
+          _buildBackButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingView() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: AppTheme.accentGold,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Initializing camera...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.camera_alt_outlined,
+              color: Colors.red,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage ?? 'Unknown error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _initializeCamera,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryPurple,
+                foregroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: _pickFromGallery,
+              icon: const Icon(Icons.photo_library),
+              label: const Text('Pick from Gallery Instead'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.accentGold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 16,
+      left: 16,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.deepBlack.withOpacity(0.6),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
     );
   }
@@ -250,9 +431,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             // Gallery Button
             _buildControlButton(
               icon: Icons.photo_library,
-              onTap: () {
-                // TODO: Implement gallery picker
-              },
+              onTap: _pickFromGallery,
             ),
 
             // Capture Button
@@ -280,10 +459,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
             // Flash Button
             _buildControlButton(
-              icon: Icons.flash_off,
-              onTap: () {
-                // TODO: Implement flash toggle
-              },
+              icon: _isFlashOn ? Icons.flash_on : Icons.flash_off,
+              onTap: _toggleFlash,
+              isActive: _isFlashOn,
             ),
           ],
         ),
@@ -294,6 +472,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Widget _buildControlButton({
     required IconData icon,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -302,11 +481,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppTheme.slateGrey.withOpacity(0.8),
+          color: isActive 
+              ? AppTheme.accentGold.withOpacity(0.3)
+              : AppTheme.slateGrey.withOpacity(0.8),
         ),
         child: Icon(
           icon,
-          color: AppTheme.accentGold,
+          color: isActive ? AppTheme.lightGold : AppTheme.accentGold,
           size: 28,
         ),
       ),
