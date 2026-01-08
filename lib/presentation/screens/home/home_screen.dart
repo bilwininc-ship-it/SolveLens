@@ -1,9 +1,9 @@
-// Home Screen with Bottom Navigation
+// Home Screen with Bottom Navigation - Updated for Dashboard
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../dashboard/dashboard_screen.dart';
 import '../history/history_screen.dart';
-import '../camera/camera_screen.dart';
-import '../subscription/subscription_screen.dart';
+import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,9 +16,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const CameraScreen(),
+    const DashboardScreen(),
     const HistoryScreen(),
-    const SubscriptionScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -59,8 +59,8 @@ class _HomeScreenState extends State<HomeScreen> {
               elevation: 0,
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.camera_alt),
-                  label: 'Çöz',
+                  icon: Icon(Icons.home),
+                  label: 'Ana Sayfa',
                   backgroundColor: Colors.transparent,
                 ),
                 BottomNavigationBarItem(
@@ -69,8 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: Colors.transparent,
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.star),
-                  label: 'Premium',
+                  icon: Icon(Icons.person),
+                  label: 'Profil',
                   backgroundColor: Colors.transparent,
                 ),
               ],
