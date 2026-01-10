@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../../services/ai/ai_service.dart';
 import '../../services/payment/payment_service.dart';
 import '../../services/user/user_service.dart';
+import '../../services/device/device_service.dart';
 import '../../services/config/remote_config_service.dart';
 import '../../services/database/realtime_database_service.dart';
 import '../../data/repositories/question_repository_impl.dart';
@@ -42,9 +43,17 @@ Future<void> setupServiceLocator() async {
     () => paymentService,
   );
 
-  // User Service
+  // Device Service (for anti-fraud)
+  getIt.registerLazySingleton<DeviceService>(
+    () => DeviceService(getIt<FirebaseFirestore>()),
+  );
+
+  // User Service (with Device Service for anti-fraud)
   getIt.registerLazySingleton<UserService>(
-    () => UserService(getIt<FirebaseFirestore>()),
+    () => UserService(
+      getIt<FirebaseFirestore>(),
+      getIt<DeviceService>(),
+    ),
   );
 
   // AI Service (with Remote Config key, Gemini 2.5 Flash, and Firebase Database)

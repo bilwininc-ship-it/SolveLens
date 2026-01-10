@@ -302,22 +302,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin(AuthProvider authProvider) async {
     if (_formKey.currentState!.validate()) {
-      final success = await authProvider.signInWithEmailAndPassword(
+      await authProvider.signInWithEmailAndPassword(
         _emailController.text,
         _passwordController.text,
       );
-
-      if (success && mounted) {
-        Navigator.pop(context);
-      }
+      // AuthWrapper will handle navigation automatically via stream
     }
   }
 
   Future<void> _handleGoogleSignIn(AuthProvider authProvider) async {
-    final success = await authProvider.signInWithGoogle();
-    if (success && mounted) {
-      Navigator.pop(context);
-    }
+    await authProvider.signInWithGoogle();
+    // AuthWrapper will handle navigation automatically via stream
   }
 
   void _showForgotPasswordDialog(

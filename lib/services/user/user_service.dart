@@ -2,11 +2,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user.dart';
 import '../../data/models/user_model.dart';
+import '../device/device_service.dart';
 
 class UserService {
   final FirebaseFirestore _firestore;
+  final DeviceService _deviceService;
 
-  UserService(this._firestore);
+  UserService(this._firestore, this._deviceService);
 
   /// Gets user document from Firestore
   Future<User?> getUser(String userId) async {
@@ -21,34 +23,46 @@ class UserService {
     }
   }
 
-  /// Checks if user has exceeded daily limit
+  /// Checks if user OR device has exceeded daily limit (Anti-fraud: Both must pass)
   Future<bool> hasExceededDailyLimit(String userId, int dailyLimit) async {
     try {
+      // Check user-based limit
       final user = await getUser(userId);
+      bool userExceeded = false;
       
-      if (user == null) return false;
-      
-      // Check if it's a new day (reset counter)
-      final lastUpdate = user.lastQuestionDate ?? DateTime(2000);
-      final today = DateTime.now();
-      
-      if (!_isSameDay(lastUpdate, today)) {
-        // New day, reset counter
-        await _resetDailyCounter(userId);
-        return false;
+      if (user != null) {
+        // Check if it's a new day (reset counter)
+        final lastUpdate = user.lastQuestionDate ?? DateTime(2000);
+        final today = DateTime.now();
+        
+        if (!_isSameDay(lastUpdate, today)) {
+          // New day, reset counter
+          await _resetDailyCounter(userId);
+        } else {
+          // Check against limit
+          userExceeded = user.questionsUsedToday >= dailyLimit;
+        }
       }
-      
-      // Check against limit
-      return user.questionsUsedToday >= dailyLimit;
+
+      // Check device-based limit (Anti-fraud)
+      final deviceId = await _deviceService.getDeviceId();
+      final deviceExceeded = await _deviceService.hasDeviceExceededDailyLimit(
+        deviceId,
+        dailyLimit,
+      );
+
+      // If EITHER user OR device exceeded limit, return true (trigger paywall)
+      return userExceeded || deviceExceeded;
       
     } catch (e) {
       throw UserServiceException('Failed to check daily limit: $e');
     }
   }
 
-  /// Increments user's daily question counter
+  /// Increments user's daily question counter (and device counter for anti-fraud)
   Future<void> incrementQuestionCounter(String userId) async {
     try {
+      // Increment user counter
       final userRef = _firestore.collection('users').doc(userId);
       
       await _firestore.runTransaction((transaction) async {
@@ -83,6 +97,10 @@ class UserService {
           }
         }
       });
+
+      // Also increment device counter (Anti-fraud)
+      final deviceId = await _deviceService.getDeviceId();
+      await _deviceService.incrementDeviceQuestionCounter(deviceId);
     } catch (e) {
       throw UserServiceException('Failed to increment counter: $e');
     }
