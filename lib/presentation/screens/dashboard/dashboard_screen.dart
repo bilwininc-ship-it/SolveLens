@@ -8,6 +8,10 @@ import '../../widgets/dashboard_card.dart';
 import '../../theme/app_theme.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../domain/usecases/get_question_history_usecase.dart';
+import 'dart:io';
+import 'package:provider/provider.dart';
+import '../solution/ai_solution_screen.dart';
+import '../../providers/solution_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -239,11 +243,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: '📸 Scan & Solve',
           subtitle: 'Take a photo of your question, get instant AI mentor help',
           iconColor: AppTheme.primaryPurple,
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            // Navigate to camera and get the captured image
+            final File? capturedImage = await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CameraScreen()),
             );
+
+            // If image was captured, navigate to AI Solution Screen
+            if (capturedImage != null && mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChangeNotifierProvider(
+                    create: (_) => getIt<SolutionProvider>(),
+                    child: AISolutionScreen(imageFile: capturedImage),
+                  ),
+                ),
+              );
+            }
           },
         ),
         const SizedBox(height: 16),
