@@ -59,6 +59,59 @@ class UserService {
     }
   }
 
+  /// CHECK CREDIT AND PROCEED - Core 5-Question Trial Logic
+  /// Returns true if user has credits, false if paywall needed
+  /// Automatically decrements credit on success
+  Future<bool> checkCreditAndProceed(String userId) async {
+    try {
+      final userRef = _firestore.collection('users').doc(userId);
+      bool hasCredit = false;
+
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(userRef);
+        
+        if (!snapshot.exists) {
+          // New user - initialize with 5 free credits
+          transaction.set(userRef, {
+            'userId': userId,
+            'remaining_credits': 4, // Start with 4 (using 1 now)
+            'questionsUsedToday': 1,
+            'lastQuestionDate': FieldValue.serverTimestamp(),
+            'subscriptionType': 'free',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+          hasCredit = true;
+        } else {
+          final data = snapshot.data()!;
+          final credits = data['remaining_credits'] ?? 0;
+          
+          if (credits > 0) {
+            // Has credits - decrement and allow
+            transaction.update(userRef, {
+              'remaining_credits': FieldValue.increment(-1),
+              'questionsUsedToday': FieldValue.increment(1),
+              'lastQuestionDate': FieldValue.serverTimestamp(),
+            });
+            hasCredit = true;
+          } else {
+            // No credits - show paywall
+            hasCredit = false;
+          }
+        }
+      });
+
+      // Also increment device counter (Anti-fraud)
+      if (hasCredit) {
+        final deviceId = await _deviceService.getDeviceId();
+        await _deviceService.incrementDeviceQuestionCounter(deviceId);
+      }
+
+      return hasCredit;
+    } catch (e) {
+      throw UserServiceException('Failed to check credits: $e');
+    }
+  }
+
   /// Increments user's daily question counter (and device counter for anti-fraud)
   Future<void> incrementQuestionCounter(String userId) async {
     try {
@@ -69,9 +122,10 @@ class UserService {
         final snapshot = await transaction.get(userRef);
         
         if (!snapshot.exists) {
-          // Create new user document
+          // Create new user document with 5 free credits
           transaction.set(userRef, {
             'userId': userId,
+            'remaining_credits': 5,
             'questionsUsedToday': 1,
             'lastQuestionDate': FieldValue.serverTimestamp(),
             'subscriptionType': 'free',

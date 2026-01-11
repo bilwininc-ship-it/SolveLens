@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../home/home_screen.dart';
 import 'login_screen.dart';
 
@@ -9,10 +8,12 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
+    // Use StreamBuilder for reactive auth state changes
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
         // Show loading while checking auth state
-        if (authProvider.isLoading) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Color(0xFF000000),
             body: Center(
@@ -23,10 +24,12 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
-        // Show appropriate screen based on auth state
-        if (authProvider.isAuthenticated) {
+        // Redirect immediately based on auth state
+        if (snapshot.hasData && snapshot.data != null) {
+          // User is logged in - go to Dashboard
           return const HomeScreen();
         } else {
+          // User is not logged in - show login
           return const LoginScreen();
         }
       },

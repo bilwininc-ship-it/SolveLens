@@ -112,6 +112,7 @@ class AuthService {
         'createdAt': FieldValue.serverTimestamp(),
         'isPremium': false,
         'subscriptionTier': 'free',
+        'remaining_credits': 5, // 5-Question Trial
       });
     }
   }
