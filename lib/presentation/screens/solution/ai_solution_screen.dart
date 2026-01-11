@@ -21,16 +21,26 @@ class AISolutionScreen extends StatefulWidget {
   State<AISolutionScreen> createState() => _AISolutionScreenState();
 }
 
-class _AISolutionScreenState extends State<AISolutionScreen> {
+class _AISolutionScreenState extends State<AISolutionScreen> with TickerProviderStateMixin {
   late SolutionProvider _solutionProvider;
+  late AnimationController _starAnimationController;
 
   @override
   void initState() {
     super.initState();
     _solutionProvider = Provider.of<SolutionProvider>(context, listen: false);
+    _starAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _analyzQuestion();
   }
 
+  @override
+  void dispose() {
+    _starAnimationController.dispose();
+    super.dispose();
+  }
   Future<void> _analyzQuestion() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -38,6 +48,89 @@ class _AISolutionScreenState extends State<AISolutionScreen> {
         imageFile: widget.imageFile,
         userId: user.uid,
       );
+    }
+  }
+
+  /// Saves the current solution as a note
+  Future<void> _saveNote() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final question = _solutionProvider.currentQuestion;
+    if (question == null) return;
+
+    try {
+      // Check if already saved
+      final exists = await _notesService.noteExists(
+        userId: user.uid,
+        question: question.question,
+      );
+
+      if (exists) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('📝 This note is already saved!'),
+              backgroundColor: Color(0xFFD4AF37),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Save the note
+      await _notesService.saveNote(
+        userId: user.uid,
+        imageUrl: question.imageUrl,
+        solutionText: question.answer,
+        question: question.question,
+        subject: question.subject,
+      );
+
+      // Play animation
+      _starAnimationController.forward().then((_) {
+        _starAnimationController.reverse();
+      });
+
+      setState(() {
+        _isSaved = true;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.star, color: Colors.white),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    '⭐ Note saved successfully!',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFD4AF37),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save note: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -71,18 +164,25 @@ class _AISolutionScreenState extends State<AISolutionScreen> {
         ),
       ),
       actions: [
-        // Save Note Button
-        IconButton(
-          icon: const Icon(Icons.star_border, color: Color(0xFFD4AF37)),
-          tooltip: 'Save Note',
-          onPressed: () {
-            // UI only for Sprint 1
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Save Note feature - Coming in Sprint 2'),
-                backgroundColor: Color(0xFFD4AF37),
-                duration: Duration(seconds: 2),
-              ),
+        // Save Note Button with animation
+        Consumer<SolutionProvider>(
+          builder: (context, provider, child) {
+            final canSave = provider.state is SolutionSuccess;
+            return AnimatedBuilder(
+              animation: _starAnimationController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_starAnimationController.value * 0.3),
+                  child: IconButton(
+                    icon: Icon(
+                      _isSaved ? Icons.star : Icons.star_border,
+                      color: const Color(0xFFD4AF37),
+                    ),
+                    tooltip: _isSaved ? 'Saved' : 'Save Note',
+                    onPressed: canSave ? _saveNote : null,
+                  ),
+                );
+              },
             );
           },
         ),

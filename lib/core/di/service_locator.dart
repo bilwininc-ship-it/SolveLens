@@ -8,6 +8,8 @@ import '../../services/user/user_service.dart';
 import '../../services/device/device_service.dart';
 import '../../services/config/remote_config_service.dart';
 import '../../services/database/realtime_database_service.dart';
+import '../../services/notes/notes_service.dart';
+import '../../services/voice/voice_service.dart';
 import '../../data/repositories/question_repository_impl.dart';
 import '../../domain/repositories/question_repository.dart';
 import '../../domain/usecases/analyze_question_usecase.dart';
@@ -67,6 +69,16 @@ Future<void> setupServiceLocator() async {
   // Realtime Database Service
   getIt.registerLazySingleton<RealtimeDatabaseService>(
     () => RealtimeDatabaseService(getIt<FirebaseDatabase>()),
+  );
+
+  // Notes Service
+  getIt.registerLazySingleton<NotesService>(
+    () => NotesService(getIt<FirebaseFirestore>()),
+  );
+
+  // Voice Service
+  getIt.registerLazySingleton<VoiceService>(
+    () => VoiceService(),
   );
 
   // Repositories

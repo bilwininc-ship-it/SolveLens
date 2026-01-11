@@ -5,6 +5,7 @@ import '../camera/camera_screen.dart';
 import '../notes/notes_screen.dart';
 import '../voice/voice_chat_screen.dart';
 import '../../widgets/dashboard_card.dart';
+import '../../widgets/app_drawer.dart';
 import '../../theme/app_theme.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../domain/usecases/get_question_history_usecase.dart';
@@ -58,6 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
+      drawer: const AppDrawer(), // Add drawer for history
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadStats,
@@ -98,40 +100,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
       greeting = 'Good Evening';
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          greeting,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 16,
-          ),
+        // Menu button to open drawer
+        IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            Text(
-              firstName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+        const SizedBox(width: 8),
+        
+        // Welcome text
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 16,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              '👋',
-              style: TextStyle(fontSize: 28),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'What shall we explore today?',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 16,
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    firstName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '👋',
+                    style: TextStyle(fontSize: 28),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'What shall we explore today?',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
         ),
       ],
