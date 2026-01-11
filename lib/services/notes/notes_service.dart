@@ -1,6 +1,6 @@
 // Notes Service for managing saved notes in Firestore
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../data/models/saved_note_model.dart';
+import '../../data/models/saved_note_model.dart';
 
 class NotesService {
   final FirebaseFirestore _firestore;

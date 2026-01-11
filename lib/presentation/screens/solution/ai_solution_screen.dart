@@ -8,6 +8,8 @@ import '../../providers/solution_provider.dart';
 import '../../providers/solution_state.dart';
 import '../../theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/notes/notes_service.dart';
+import '../../../core/di/service_locator.dart';
 
 class AISolutionScreen extends StatefulWidget {
   final File imageFile;
@@ -24,11 +26,14 @@ class AISolutionScreen extends StatefulWidget {
 class _AISolutionScreenState extends State<AISolutionScreen> with TickerProviderStateMixin {
   late SolutionProvider _solutionProvider;
   late AnimationController _starAnimationController;
+  late NotesService _notesService;
+  bool _isSaved = false;
 
   @override
   void initState() {
     super.initState();
     _solutionProvider = Provider.of<SolutionProvider>(context, listen: false);
+    _notesService = getIt<NotesService>();
     _starAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
