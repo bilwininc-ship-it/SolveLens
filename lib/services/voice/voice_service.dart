@@ -2,14 +2,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import '../../core/constants/app_constants.dart';
+import '../config/remote_config_service.dart';
 
 class VoiceService {
+  final RemoteConfigService _remoteConfigService;
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final FlutterTts _flutterTts = FlutterTts();
   
   bool _isListening = false;
   bool _isSpeaking = false;
@@ -21,13 +25,14 @@ class VoiceService {
   bool get isFetchingAudio => _isFetchingAudio;
   bool get isInitialized => _isInitialized;
 
-  // Google Cloud TTS configuration
+  // Google Cloud TTS configuration - fetched from Remote Config
   static const String _ttsEndpoint = 'https://texttospeech.googleapis.com/v1/text:synthesize';
-  static const String _voiceName = 'en-US-Wavenet-D'; // Deep, authoritative male voice
   static const String _languageCode = 'en-US';
   static const double _speakingRate = 0.9; // Slightly slower, professorial
   static const double _pitch = -2.0; // Deeper voice for authority
   static const String _audioEncoding = 'MP3';
+
+  VoiceService(this._remoteConfigService);
 
   /// Initializes Speech-to-Text
   Future<bool> initialize() async {
@@ -45,6 +50,9 @@ class VoiceService {
 
       // Configure audio player
       await _configureAudioPlayer();
+
+      // Configure fallback TTS
+      await _configureFlutterTts();
 
       _isInitialized = true;
       return true;
@@ -65,6 +73,24 @@ class VoiceService {
         _isSpeaking = false;
       }
     });
+  }
+
+  /// Configures Flutter TTS as fallback
+  Future<void> _configureFlutterTts() async {
+    try {
+      await _flutterTts.setLanguage('en-US');
+      await _flutterTts.setSpeechRate(0.45); // Flutter TTS rate (0.0-1.0)
+      await _flutterTts.setPitch(0.8); // Flutter TTS pitch (0.5-2.0, lower is deeper)
+      await _flutterTts.setVolume(1.0);
+      
+      _flutterTts.setCompletionHandler(() {
+        _isSpeaking = false;
+      });
+      
+      debugPrint('Flutter TTS configured as fallback');
+    } catch (e) {
+      debugPrint('Error configuring Flutter TTS: $e');
+    }
   }
 
   /// Starts listening to user speech
@@ -116,6 +142,7 @@ class VoiceService {
   }
 
   /// Speaks text using Google Cloud Text-to-Speech (Wavenet)
+  /// Falls back to local Flutter TTS if cloud API fails
   /// Returns true if successful, false otherwise
   Future<bool> speak(String text, {Function(String)? onStatusUpdate}) async {
     if (!_isInitialized) {
@@ -136,26 +163,50 @@ class VoiceService {
       _isFetchingAudio = true;
       onStatusUpdate?.call('Professor is preparing to speak...');
 
-      // Get audio from Google Cloud TTS
+      // Try Google Cloud TTS first
       final audioBytes = await _fetchAudioFromGoogleCloud(text);
       
-      if (audioBytes == null) {
+      if (audioBytes != null) {
         _isFetchingAudio = false;
-        onStatusUpdate?.call('Failed to generate speech');
-        return false;
+        _isSpeaking = true;
+        onStatusUpdate?.call('Speaking...');
+
+        // Play the audio
+        await _audioPlayer.play(BytesSource(audioBytes));
+        
+        return true;
+      } else {
+        // Fallback to Flutter TTS if cloud TTS failed
+        debugPrint('Cloud TTS failed, falling back to local TTS');
+        return await _speakWithFlutterTts(text, onStatusUpdate);
       }
-
-      _isFetchingAudio = false;
-      _isSpeaking = true;
-      onStatusUpdate?.call('Speaking...');
-
-      // Play the audio
-      await _audioPlayer.play(BytesSource(audioBytes));
-      
-      return true;
     } catch (e) {
       debugPrint('TTS speak error: $e');
       _isFetchingAudio = false;
+      
+      // Try fallback to Flutter TTS
+      try {
+        return await _speakWithFlutterTts(text, onStatusUpdate);
+      } catch (fallbackError) {
+        debugPrint('Fallback TTS also failed: $fallbackError');
+        _isSpeaking = false;
+        onStatusUpdate?.call('Error generating speech');
+        return false;
+      }
+    }
+  }
+
+  /// Fallback TTS using Flutter TTS
+  Future<bool> _speakWithFlutterTts(String text, Function(String)? onStatusUpdate) async {
+    try {
+      _isFetchingAudio = false;
+      _isSpeaking = true;
+      onStatusUpdate?.call('Speaking (offline mode)...');
+      
+      await _flutterTts.speak(text);
+      return true;
+    } catch (e) {
+      debugPrint('Flutter TTS error: $e');
       _isSpeaking = false;
       onStatusUpdate?.call('Error generating speech');
       return false;
@@ -163,15 +214,21 @@ class VoiceService {
   }
 
   /// Fetches audio bytes from Google Cloud Text-to-Speech API
+  /// Uses Remote Config for API key and voice name
   Future<Uint8List?> _fetchAudioFromGoogleCloud(String text) async {
     try {
-      final apiKey = AppConstants.googleCloudTtsApiKey;
+      // Get API key from Remote Config with fallback to local constant
+      final apiKey = _remoteConfigService.getGoogleCloudTtsApiKey(
+        AppConstants.googleCloudTtsApiKey
+      );
       
-      if (apiKey == 'YOUR_GOOGLE_CLOUD_TTS_API_KEY') {
-        throw VoiceServiceException(
-          'Google Cloud TTS API key not configured. Please add your API key to app_constants.dart'
-        );
+      if (apiKey == 'YOUR_GOOGLE_CLOUD_TTS_API_KEY' || apiKey.isEmpty) {
+        debugPrint('Google Cloud TTS API key not configured');
+        return null; // Will trigger fallback to Flutter TTS
       }
+
+      // Get voice name from Remote Config
+      final voiceName = _remoteConfigService.getTtsVoiceName();
 
       final url = Uri.parse('$_ttsEndpoint?key=$apiKey');
       
@@ -179,7 +236,7 @@ class VoiceService {
         'input': {'text': text},
         'voice': {
           'languageCode': _languageCode,
-          'name': _voiceName,
+          'name': voiceName,
           'ssmlGender': 'MALE',
         },
         'audioConfig': {
@@ -191,7 +248,7 @@ class VoiceService {
         },
       };
 
-      debugPrint('Requesting TTS from Google Cloud with voice: $_voiceName');
+      debugPrint('Requesting TTS from Google Cloud with voice: $voiceName');
 
       final response = await http.post(
         url,
@@ -199,6 +256,12 @@ class VoiceService {
           'Content-Type': 'application/json',
         },
         body: json.encode(requestBody),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('Google Cloud TTS request timed out');
+          throw VoiceServiceException('Request timed out');
+        },
       );
 
       if (response.statusCode == 200) {
@@ -207,18 +270,16 @@ class VoiceService {
         
         // Decode base64 audio
         final audioBytes = base64.decode(audioContent);
-        debugPrint('Successfully received ${audioBytes.length} bytes of audio');
+        debugPrint('Successfully received ${audioBytes.length} bytes of audio from Google Cloud TTS');
         
         return audioBytes;
       } else {
         debugPrint('TTS API Error: ${response.statusCode} - ${response.body}');
-        throw VoiceServiceException(
-          'Failed to generate speech: ${response.statusCode}'
-        );
+        return null; // Will trigger fallback to Flutter TTS
       }
     } catch (e) {
       debugPrint('Error fetching audio from Google Cloud: $e');
-      throw VoiceServiceException('Failed to fetch audio: $e');
+      return null; // Will trigger fallback to Flutter TTS
     }
   }
 
@@ -226,6 +287,7 @@ class VoiceService {
   Future<void> stopSpeaking() async {
     if (_isSpeaking) {
       await _audioPlayer.stop();
+      await _flutterTts.stop();
       _isSpeaking = false;
     }
   }
@@ -258,6 +320,7 @@ class VoiceService {
   void dispose() {
     _speechToText.cancel();
     _audioPlayer.dispose();
+    _flutterTts.stop();
   }
 }
 

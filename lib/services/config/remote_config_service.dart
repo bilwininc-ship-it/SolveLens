@@ -27,6 +27,8 @@ class RemoteConfigService {
         'enable_premium_features': false,
         'max_free_questions': 3,
         'enable_analytics': true,
+        'google_cloud_api_key': '',
+        'tts_voice_name': 'en-US-Wavenet-D',
       });
 
       // Fetch and activate
@@ -62,6 +64,28 @@ class RemoteConfigService {
   /// Refreshes config values
   Future<void> refresh() async {
     await _remoteConfig.fetchAndActivate();
+  }
+
+  /// Gets Google Cloud TTS API key from Remote Config
+  /// Falls back to local constant if not available
+  String getGoogleCloudTtsApiKey(String fallbackKey) {
+    if (!_isInitialized) {
+      return fallbackKey;
+    }
+    
+    final remoteKey = _remoteConfig.getString('google_cloud_api_key');
+    return remoteKey.isEmpty ? fallbackKey : remoteKey;
+  }
+
+  /// Gets TTS voice name from Remote Config
+  /// Defaults to en-US-Wavenet-D if not configured
+  String getTtsVoiceName() {
+    if (!_isInitialized) {
+      return 'en-US-Wavenet-D';
+    }
+    
+    final voiceName = _remoteConfig.getString('tts_voice_name');
+    return voiceName.isEmpty ? 'en-US-Wavenet-D' : voiceName;
   }
 }
 

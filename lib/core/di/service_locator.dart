@@ -76,9 +76,9 @@ Future<void> setupServiceLocator() async {
     () => NotesService(getIt<FirebaseFirestore>()),
   );
 
-  // Voice Service
+  // Voice Service (with Remote Config for TTS settings)
   getIt.registerLazySingleton<VoiceService>(
-    () => VoiceService(),
+    () => VoiceService(getIt<RemoteConfigService>()),
   );
 
   // Repositories
