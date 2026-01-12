@@ -1,4 +1,4 @@
-// Voice Chat Screen - Voice-powered AI Mentor with STT and TTS
+// Voice Chat Screen - Voice-powered AI Mentor with STT and Google Cloud TTS
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../../services/voice/voice_service.dart';
@@ -14,12 +14,13 @@ class VoiceChatScreen extends StatefulWidget {
   State<VoiceChatScreen> createState() => _VoiceChatScreenState();
 }
 
-class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProviderStateMixin {
+class _VoiceChatScreenState extends State<VoiceChatScreen> with TickerProviderStateMixin {
   final VoiceService _voiceService = getIt<VoiceService>();
   final AIService _aiService = getIt<AIService>();
   
   bool _isListening = false;
   bool _isSpeaking = false;
+  bool _isFetchingAudio = false;
   bool _isProcessing = false;
   bool _isInitialized = false;
   String _currentText = '';
@@ -28,15 +29,19 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProv
   
   late AnimationController _pulseAnimationController;
   late Animation<double> _pulseAnimation;
+  
+  late AnimationController _loadingAnimationController;
+  late Animation<double> _loadingRotation;
 
   @override
   void initState() {
     super.initState();
     _initializeVoiceService();
-    _setupAnimation();
+    _setupAnimations();
   }
 
-  void _setupAnimation() {
+  void _setupAnimations() {
+    // Pulse animation for microphone
     _pulseAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -45,6 +50,19 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProv
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(
         parent: _pulseAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Loading animation for audio fetching
+    _loadingAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    
+    _loadingRotation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _loadingAnimationController,
         curve: Curves.easeInOut,
       ),
     );
@@ -64,6 +82,7 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProv
   void dispose() {
     _voiceService.dispose();
     _pulseAnimationController.dispose();
+    _loadingAnimationController.dispose();
     super.dispose();
   }
 
@@ -132,8 +151,7 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProv
         throw Exception('User not logged in');
       }
 
-      // Create a temporary text-based "image" for AI processing
-      // Note: This is a voice-only chat, so we send text directly
+      // Get AI response
       final response = await _getAITextResponse(text, user.uid);
       
       setState(() {
@@ -143,10 +161,9 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with SingleTickerProv
           timestamp: DateTime.now(),
         ));
         _isProcessing = false;
-        _statusMessage = 'Speaking...';
       });
 
-      // Speak the response
+      // Speak the response using Google Cloud TTS
       await _speakResponse(response);
       
     } catch (e) {
@@ -178,10 +195,6 @@ For the best learning experience, use the camera feature to scan your homework q
   }
 
   Future<void> _speakResponse(String text) async {
-    setState(() {
-      _isSpeaking = true;
-    });
-
     // Clean text for TTS (remove markdown and LaTeX)
     String cleanText = text
         .replaceAll(RegExp(r'\\\[.*?\\\]', dotAll: true), 'mathematical equation')
@@ -190,9 +203,30 @@ For the best learning experience, use the camera feature to scan your homework q
         .replaceAll(RegExp(r'__'), '')
         .replaceAll(RegExp(r'\n+'), '. ');
 
-    await _voiceService.speak(cleanText);
+    // Speak with Google Cloud TTS and get status updates
+    final success = await _voiceService.speak(
+      cleanText,
+      onStatusUpdate: (status) {
+        setState(() {
+          _statusMessage = status;
+          _isFetchingAudio = status.contains('preparing');
+          _isSpeaking = status.contains('Speaking');
+        });
+      },
+    );
+
+    if (success) {
+      // Wait for speaking to complete
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Check periodically if still speaking
+      while (_voiceService.isSpeaking) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
 
     setState(() {
+      _isFetchingAudio = false;
       _isSpeaking = false;
       _statusMessage = 'Tap to continue conversation';
     });
@@ -202,6 +236,7 @@ For the best learning experience, use the camera feature to scan your homework q
     await _voiceService.stopSpeaking();
     setState(() {
       _isSpeaking = false;
+      _isFetchingAudio = false;
       _statusMessage = 'Tap to speak with Professor';
     });
   }
@@ -310,6 +345,32 @@ For the best learning experience, use the camera feature to scan your homework q
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.green.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.verified, color: Colors.green, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Powered by Google Cloud Wavenet',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
             Container(
@@ -422,15 +483,50 @@ For the best learning experience, use the camera feature to scan your homework q
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Status message
-            Text(
-              _statusMessage,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
+            // Status message with loading indicator
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isFetchingAudio)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: RotationTransition(
+                      turns: _loadingRotation,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.blue,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                Flexible(
+                  child: Text(
+                    _statusMessage,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             
@@ -439,7 +535,7 @@ For the best learning experience, use the camera feature to scan your homework q
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // Stop speaking button
-                if (_isSpeaking)
+                if (_isSpeaking || _isFetchingAudio)
                   _buildControlButton(
                     icon: Icons.stop,
                     label: 'Stop',
@@ -449,7 +545,7 @@ For the best learning experience, use the camera feature to scan your homework q
                 
                 // Main microphone button
                 GestureDetector(
-                  onTap: _isProcessing || _isSpeaking ? null : _toggleListening,
+                  onTap: (_isProcessing || _isSpeaking || _isFetchingAudio) ? null : _toggleListening,
                   child: AnimatedBuilder(
                     animation: _pulseAnimation,
                     builder: (context, child) {
@@ -463,11 +559,17 @@ For the best learning experience, use the camera feature to scan your homework q
                             gradient: LinearGradient(
                               colors: _isListening
                                   ? [Colors.red, Colors.red.shade700]
-                                  : [Colors.blue, Colors.blue.shade700],
+                                  : _isFetchingAudio
+                                      ? [Colors.orange, Colors.orange.shade700]
+                                      : [Colors.blue, Colors.blue.shade700],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: (_isListening ? Colors.red : Colors.blue)
+                                color: (_isListening 
+                                    ? Colors.red 
+                                    : _isFetchingAudio 
+                                        ? Colors.orange 
+                                        : Colors.blue)
                                     .withValues(alpha: 0.4),
                                 blurRadius: 20,
                                 spreadRadius: 2,
@@ -475,7 +577,11 @@ For the best learning experience, use the camera feature to scan your homework q
                             ],
                           ),
                           child: Icon(
-                            _isListening ? Icons.mic : Icons.mic_none,
+                            _isListening 
+                                ? Icons.mic 
+                                : _isFetchingAudio
+                                    ? Icons.cloud_download
+                                    : Icons.mic_none,
                             color: Colors.white,
                             size: 40,
                           ),
@@ -485,8 +591,8 @@ For the best learning experience, use the camera feature to scan your homework q
                   ),
                 ),
                 
-                // Placeholder for symmetry
-                if (_isSpeaking)
+                // Placeholder for symmetry or help button
+                if (_isSpeaking || _isFetchingAudio)
                   const SizedBox(width: 80)
                 else if (!_isListening)
                   _buildControlButton(

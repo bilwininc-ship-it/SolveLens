@@ -27,25 +27,27 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // User Avatar & Name Section
-            _buildUserHeader(user),
-            const SizedBox(height: 32),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // User Avatar & Name Section
+              _buildUserHeader(user),
+              const SizedBox(height: 32),
 
-            // Subscription Section
-            _buildSubscriptionCard(context),
-            const SizedBox(height: 16),
+              // Subscription Section
+              _buildSubscriptionCard(context),
+              const SizedBox(height: 16),
 
-            // Account Settings
-            _buildSettingsSection(context),
-            const SizedBox(height: 16),
+              // Account Settings
+              _buildSettingsSection(context),
+              const SizedBox(height: 16),
 
-            // Logout Button
-            _buildLogoutButton(context),
-          ],
+              // Logout Button
+              _buildLogoutButton(context),
+            ],
+          ),
         ),
       ),
     );

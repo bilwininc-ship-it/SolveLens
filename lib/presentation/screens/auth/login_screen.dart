@@ -260,6 +260,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                         height: 24,
                         width: 24,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to default icon if image fails to load
+                          return const Icon(
+                            Icons.login,
+                            color: AppTheme.accentGold,
+                            size: 24,
+                          );
+                        },
                       ),
                       label: const Text(
                         'Continue with Google',

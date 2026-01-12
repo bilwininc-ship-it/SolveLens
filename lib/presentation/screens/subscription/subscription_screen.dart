@@ -127,7 +127,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    _handleSubscription();
+                    _showComingSoonDialog();
                   },
                   child: const Text('Subscribe Now'),
                 ),
@@ -284,27 +284,35 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     );
   }
 
-  void _handleSubscription() {
+  void _showComingSoonDialog() {
     final packages = ['Basic', 'Pro', 'Elite'];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.slateGrey,
-        title: const Text('Confirm Subscription'),
+        title: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: AppTheme.accentGold,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text('Coming Soon'),
+          ],
+        ),
         content: Text(
-          'You are about to subscribe to ${packages[_selectedIndex]} plan.',
+          'Premium subscriptions are currently being configured. The ${packages[_selectedIndex]} plan will be available soon!\n\nStay tuned for exciting features.',
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement actual purchase flow
-              Navigator.pop(context);
-            },
-            child: const Text('Confirm'),
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentGold,
+              foregroundColor: AppTheme.deepBlack,
+            ),
+            child: const Text('Got it'),
           ),
         ],
       ),

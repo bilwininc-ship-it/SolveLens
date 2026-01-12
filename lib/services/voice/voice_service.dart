@@ -1,21 +1,35 @@
-// Voice Service for Speech-to-Text and Text-to-Speech
+// Voice Service for Speech-to-Text and Google Cloud Text-to-Speech
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:typed_data';
+import '../../core/constants/app_constants.dart';
 
 class VoiceService {
   final SpeechToText _speechToText = SpeechToText();
-  final FlutterTts _flutterTts = FlutterTts();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   
   bool _isListening = false;
   bool _isSpeaking = false;
+  bool _isFetchingAudio = false;
   bool _isInitialized = false;
 
   bool get isListening => _isListening;
   bool get isSpeaking => _isSpeaking;
+  bool get isFetchingAudio => _isFetchingAudio;
   bool get isInitialized => _isInitialized;
 
-  /// Initializes both STT and TTS
+  // Google Cloud TTS configuration
+  static const String _ttsEndpoint = 'https://texttospeech.googleapis.com/v1/text:synthesize';
+  static const String _voiceName = 'en-US-Wavenet-D'; // Deep, authoritative male voice
+  static const String _languageCode = 'en-US';
+  static const double _speakingRate = 0.9; // Slightly slower, professorial
+  static const double _pitch = -2.0; // Deeper voice for authority
+  static const String _audioEncoding = 'MP3';
+
+  /// Initializes Speech-to-Text
   Future<bool> initialize() async {
     try {
       // Initialize Speech-to-Text
@@ -29,8 +43,8 @@ class VoiceService {
         return false;
       }
 
-      // Configure TTS with Professor voice parameters
-      await _configureTts();
+      // Configure audio player
+      await _configureAudioPlayer();
 
       _isInitialized = true;
       return true;
@@ -40,22 +54,16 @@ class VoiceService {
     }
   }
 
-  /// Configures TTS with calm Professor voice
-  Future<void> _configureTts() async {
-    await _flutterTts.setLanguage('en-US');
-    await _flutterTts.setSpeechRate(0.5); // Natural speaking rate
-    await _flutterTts.setVolume(1.0); // Full volume
-    await _flutterTts.setPitch(0.95); // Slightly lower pitch for authority
+  /// Configures audio player settings
+  Future<void> _configureAudioPlayer() async {
+    // Set audio player to release mode for one-time playback
+    await _audioPlayer.setReleaseMode(ReleaseMode.stop);
     
-    // Set completion handler
-    _flutterTts.setCompletionHandler(() {
-      _isSpeaking = false;
-    });
-
-    // Set error handler
-    _flutterTts.setErrorHandler((msg) {
-      debugPrint('TTS Error: $msg');
-      _isSpeaking = false;
+    // Listen to player state changes
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.completed || state == PlayerState.stopped) {
+        _isSpeaking = false;
+      }
     });
   }
 
@@ -107,29 +115,117 @@ class VoiceService {
     }
   }
 
-  /// Speaks text using TTS
-  Future<void> speak(String text) async {
+  /// Speaks text using Google Cloud Text-to-Speech (Wavenet)
+  /// Returns true if successful, false otherwise
+  Future<bool> speak(String text, {Function(String)? onStatusUpdate}) async {
     if (!_isInitialized) {
-      debugPrint('TTS not initialized');
-      return;
+      debugPrint('Voice service not initialized');
+      return false;
+    }
+
+    if (text.trim().isEmpty) {
+      debugPrint('Cannot speak empty text');
+      return false;
     }
 
     try {
       // Stop any ongoing speech first
       await stopSpeaking();
 
+      // Update status: fetching audio from cloud
+      _isFetchingAudio = true;
+      onStatusUpdate?.call('Professor is preparing to speak...');
+
+      // Get audio from Google Cloud TTS
+      final audioBytes = await _fetchAudioFromGoogleCloud(text);
+      
+      if (audioBytes == null) {
+        _isFetchingAudio = false;
+        onStatusUpdate?.call('Failed to generate speech');
+        return false;
+      }
+
+      _isFetchingAudio = false;
       _isSpeaking = true;
-      await _flutterTts.speak(text);
+      onStatusUpdate?.call('Speaking...');
+
+      // Play the audio
+      await _audioPlayer.play(BytesSource(audioBytes));
+      
+      return true;
     } catch (e) {
       debugPrint('TTS speak error: $e');
+      _isFetchingAudio = false;
       _isSpeaking = false;
+      onStatusUpdate?.call('Error generating speech');
+      return false;
+    }
+  }
+
+  /// Fetches audio bytes from Google Cloud Text-to-Speech API
+  Future<Uint8List?> _fetchAudioFromGoogleCloud(String text) async {
+    try {
+      final apiKey = AppConstants.googleCloudTtsApiKey;
+      
+      if (apiKey == 'YOUR_GOOGLE_CLOUD_TTS_API_KEY') {
+        throw VoiceServiceException(
+          'Google Cloud TTS API key not configured. Please add your API key to app_constants.dart'
+        );
+      }
+
+      final url = Uri.parse('$_ttsEndpoint?key=$apiKey');
+      
+      final requestBody = {
+        'input': {'text': text},
+        'voice': {
+          'languageCode': _languageCode,
+          'name': _voiceName,
+          'ssmlGender': 'MALE',
+        },
+        'audioConfig': {
+          'audioEncoding': _audioEncoding,
+          'speakingRate': _speakingRate,
+          'pitch': _pitch,
+          'volumeGainDb': 0.0,
+          'sampleRateHertz': 24000,
+        },
+      };
+
+      debugPrint('Requesting TTS from Google Cloud with voice: $_voiceName');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final audioContent = jsonResponse['audioContent'] as String;
+        
+        // Decode base64 audio
+        final audioBytes = base64.decode(audioContent);
+        debugPrint('Successfully received ${audioBytes.length} bytes of audio');
+        
+        return audioBytes;
+      } else {
+        debugPrint('TTS API Error: ${response.statusCode} - ${response.body}');
+        throw VoiceServiceException(
+          'Failed to generate speech: ${response.statusCode}'
+        );
+      }
+    } catch (e) {
+      debugPrint('Error fetching audio from Google Cloud: $e');
+      throw VoiceServiceException('Failed to fetch audio: $e');
     }
   }
 
   /// Stops speaking
   Future<void> stopSpeaking() async {
     if (_isSpeaking) {
-      await _flutterTts.stop();
+      await _audioPlayer.stop();
       _isSpeaking = false;
     }
   }
@@ -137,7 +233,14 @@ class VoiceService {
   /// Pauses speaking
   Future<void> pauseSpeaking() async {
     if (_isSpeaking) {
-      await _flutterTts.pause();
+      await _audioPlayer.pause();
+    }
+  }
+
+  /// Resumes speaking
+  Future<void> resumeSpeaking() async {
+    if (_isSpeaking) {
+      await _audioPlayer.resume();
     }
   }
 
@@ -154,7 +257,7 @@ class VoiceService {
   /// Disposes resources
   void dispose() {
     _speechToText.cancel();
-    _flutterTts.stop();
+    _audioPlayer.dispose();
   }
 }
 
