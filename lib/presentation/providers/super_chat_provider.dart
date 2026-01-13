@@ -6,7 +6,6 @@ import '../../services/ai/ai_service.dart';
 import '../../services/voice/voice_service.dart';
 import '../../services/quota/quota_service.dart';
 import '../../data/models/chat_message_model.dart';
-import '../../data/models/quota_model.dart';
 import 'super_chat_state.dart';
 
 class SuperChatProvider extends ChangeNotifier {
@@ -21,8 +20,8 @@ class SuperChatProvider extends ChangeNotifier {
   final List<ChatMessageModel> _messages = [];
   List<ChatMessageModel> get messages => List.unmodifiable(_messages);
 
-  QuotaModel? _currentQuota;
-  QuotaModel? get currentQuota => _currentQuota;
+  QuotaUsage? _currentQuota;
+  QuotaUsage? get currentQuota => _currentQuota;
 
   final _uuid = const Uuid();
 
@@ -39,30 +38,25 @@ class SuperChatProvider extends ChangeNotifier {
   Future<void> _initializeQuota() async {
     try {
       final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = _convertToQuotaModel(usage);
+      _currentQuota = usage;
       notifyListeners();
     } catch (e) {
       debugPrint('Error initializing quota: $e');
-      _currentQuota = QuotaModel.freeTier();
+      // Set default quota if error occurs
+      _currentQuota = QuotaUsage(
+        textMessagesUsed: 0,
+        voiceMinutesUsed: 0,
+        textMessagesLimit: 150,
+        voiceMinutesLimit: 15.0,
+        weekStart: DateTime.now(),
+        monthStart: DateTime.now(),
+      );
     }
   }
 
   /// Stream quota updates in real-time
-  Stream<QuotaModel> streamQuota() {
-    return quotaService.streamQuotaUsage(userId).map((usage) => _convertToQuotaModel(usage));
-  }
-
-  /// Converts QuotaUsage to QuotaModel
-  QuotaModel _convertToQuotaModel(dynamic usage) {
-    return QuotaModel(
-      textQuestionsUsed: usage.textMessagesUsed,
-      textQuestionsLimit: usage.textMessagesLimit,
-      voiceMinutesUsed: usage.voiceMinutesUsed.toInt(),
-      voiceMinutesLimit: usage.voiceMinutesLimit.toInt(),
-      imageScansUsed: 0, // Not tracked in current QuotaUsage
-      imageScansLimit: 10, // Default
-      resetDate: usage.weekStart,
-    );
+  Stream<QuotaUsage> streamQuota() {
+    return quotaService.streamQuotaUsage(userId);
   }
 
   /// Send text message
@@ -121,7 +115,7 @@ class SuperChatProvider extends ChangeNotifier {
       // Update quota
       await quotaService.incrementTextMessage(userId);
       final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = _convertToQuotaModel(usage);
+      _currentQuota = usage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -136,7 +130,7 @@ class SuperChatProvider extends ChangeNotifier {
   Future<void> sendImageMessage(File imageFile, {String text = ''}) async {
     try {
       // Check quota
-      if (_currentQuota != null && !_currentQuota!.hasImageQuota) {
+      if (_currentQuota != null && !_currentQuota!.hasTextQuota) {
         _setState(SuperChatQuotaExceeded(
           messages: _messages,
           quotaType: 'image',
@@ -172,7 +166,7 @@ class SuperChatProvider extends ChangeNotifier {
       // Update quota (images count as text messages in current implementation)
       await quotaService.incrementTextMessage(userId);
       final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = _convertToQuotaModel(usage);
+      _currentQuota = usage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -228,7 +222,7 @@ class SuperChatProvider extends ChangeNotifier {
       // Update quota (increment by duration in minutes)
       await quotaService.incrementVoiceMinutes(userId, durationMinutes);
       final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = _convertToQuotaModel(usage);
+      _currentQuota = usage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -249,7 +243,7 @@ class SuperChatProvider extends ChangeNotifier {
   Future<void> refreshQuota() async {
     try {
       final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = _convertToQuotaModel(usage);
+      _currentQuota = usage;
       notifyListeners();
     } catch (e) {
       debugPrint('Error refreshing quota: $e');
