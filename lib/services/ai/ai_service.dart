@@ -226,6 +226,87 @@ Notice how [Pattern or insight]...
     }
   }
 
+  /// Gets a chat response for text-only questions
+  /// Returns the AI response text
+  Future<String> getChatResponse(String question) async {
+    try {
+      // Create text prompt
+      final prompt = TextPart(
+        'As a Socratic Mentor Professor, answer this question: $question\n'
+        'Provide a clear, encouraging explanation with step-by-step guidance. '
+        'Use LaTeX for any mathematical expressions.'
+      );
+      
+      // Generate content
+      final response = await _model.generateContent([
+        Content.multi([prompt])
+      ]);
+
+      // Extract text from response
+      final text = response.text;
+      if (text == null || text.isEmpty) {
+        throw AIServiceException('No response generated from AI model');
+      }
+
+      return text;
+      
+    } on GenerativeAIException catch (e) {
+      if (e.message.contains('quota') || e.message.contains('limit')) {
+        throw AIServiceException(
+          'Daily question limit reached. Upgrade to Premium for unlimited access.',
+          isRateLimitError: true,
+        );
+      } else {
+        throw AIServiceException('AI service error: ${e.message}');
+      }
+    } catch (e) {
+      throw AIServiceException('Failed to get chat response: $e');
+    }
+  }
+
+  /// Analyzes an image with optional prompt
+  /// Returns the AI analysis text
+  Future<String> analyzeImage(File imageFile, {String prompt = ''}) async {
+    try {
+      // Read image file
+      final imageBytes = await imageFile.readAsBytes();
+      
+      if (imageBytes.isEmpty) {
+        throw AIServiceException('Image file is empty');
+      }
+
+      // Determine MIME type
+      final mimeType = _getMimeType(imageFile.path);
+      
+      // Create image part
+      final imagePart = DataPart(mimeType, imageBytes);
+      
+      // Create prompt
+      final textPrompt = TextPart(
+        prompt.isNotEmpty 
+          ? 'As a Professor, analyze this image: $prompt'
+          : 'As a Professor, please analyze this image and explain what you see.'
+      );
+      
+      // Generate content
+      final response = await _model.generateContent([
+        Content.multi([textPrompt, imagePart])
+      ]);
+
+      final text = response.text;
+      if (text == null || text.isEmpty) {
+        throw AIServiceException('No response generated from AI model');
+      }
+
+      return text;
+      
+    } on GenerativeAIException catch (e) {
+      throw AIServiceException('AI service error: ${e.message}');
+    } catch (e) {
+      throw AIServiceException('Failed to analyze image: $e');
+    }
+  }
+
   /// Determines MIME type from file extension
   String _getMimeType(String filePath) {
     final extension = filePath.split('.').last.toLowerCase();

@@ -49,7 +49,7 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image if present
-          if (message.hasImage && message.imageFile != null) ..[
+          if (message.hasImage && message.imageFile != null) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.file(

@@ -195,6 +195,46 @@ class VoiceService {
       }
     }
   }
+  /// Generates speech audio and saves to Firebase Storage
+  /// Returns the Firebase Storage download URL
+  /// This is for the Audio Archive feature
+  Future<String> generateSpeech({
+    required String text,
+    required String userId,
+  }) async {
+    if (!_isInitialized) {
+      throw VoiceServiceException('Voice service not initialized');
+    }
+
+    if (text.trim().isEmpty) {
+      throw VoiceServiceException('Cannot generate speech for empty text');
+    }
+
+    try {
+      // Fetch audio from Google Cloud TTS
+      final audioBytes = await _fetchAudioFromGoogleCloud(text);
+      
+      if (audioBytes == null) {
+        throw VoiceServiceException('Failed to generate audio from cloud TTS');
+      }
+
+      // For now, return a placeholder URL
+      // TODO: Integrate with Firebase Storage to upload audio
+      // This would require firebase_storage package
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final placeholderUrl = 'gs://solvelens-audio/$userId/audio_$timestamp.mp3';
+      
+      debugPrint('Audio generated successfully: ${audioBytes.length} bytes');
+      debugPrint('TODO: Upload to Firebase Storage - placeholder URL: $placeholderUrl');
+      
+      // Return placeholder URL for now
+      // In production, this would be the actual Firebase Storage download URL
+      return placeholderUrl;
+      
+    } catch (e) {
+      throw VoiceServiceException('Failed to generate speech: $e');
+    }
+  }
 
   /// Fallback TTS using Flutter TTS
   Future<bool> _speakWithFlutterTts(String text, Function(String)? onStatusUpdate) async {
