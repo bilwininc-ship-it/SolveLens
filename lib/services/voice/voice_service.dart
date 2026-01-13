@@ -6,6 +6,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/constants/app_constants.dart';
 import '../config/remote_config_service.dart';
 
@@ -218,20 +219,39 @@ class VoiceService {
         throw VoiceServiceException('Failed to generate audio from cloud TTS');
       }
 
-      // For now, return a placeholder URL
-      // TODO: Integrate with Firebase Storage to upload audio
-      // This would require firebase_storage package
+      // Upload to Firebase Storage
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final placeholderUrl = 'gs://solvelens-audio/$userId/audio_$timestamp.mp3';
+      final fileName = 'audio_$timestamp.mp3';
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('audio_archive')
+          .child(userId)
+          .child(fileName);
+
+      debugPrint('Uploading audio to Firebase Storage: $fileName (${audioBytes.length} bytes)');
+
+      // Upload the file
+      final uploadTask = await storageRef.putData(
+        audioBytes,
+        SettableMetadata(
+          contentType: 'audio/mpeg',
+          customMetadata: {
+            'generatedAt': timestamp.toString(),
+            'textLength': text.length.toString(),
+          },
+        ),
+      );
+
+      // Get download URL
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
       
-      debugPrint('Audio generated successfully: ${audioBytes.length} bytes');
-      debugPrint('TODO: Upload to Firebase Storage - placeholder URL: $placeholderUrl');
+      debugPrint('Audio uploaded successfully to Firebase Storage');
+      debugPrint('Download URL: $downloadUrl');
       
-      // Return placeholder URL for now
-      // In production, this would be the actual Firebase Storage download URL
-      return placeholderUrl;
+      return downloadUrl;
       
     } catch (e) {
+      debugPrint('Error generating speech: $e');
       throw VoiceServiceException('Failed to generate speech: $e');
     }
   }

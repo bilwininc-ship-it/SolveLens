@@ -1,76 +1,82 @@
-// Premium dark mode theme with deep black, slate grey, and accent gold
+// Premium Elite Professor Theme - Navy & White (Ivy League Style)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
-  // Color Palette
-  static const Color deepBlack = Color(0xFF000000);
-  static const Color slateGrey = Color(0xFF121212);
-  static const Color darkGrey = Color(0xFF1E1E1E);
-  static const Color cardDark = Color(0xFF1E1E1E); // Added missing color
-  static const Color accentGold = Color(0xFFD4AF37);
-  static const Color lightGold = Color(0xFFE5C158);
-  static const Color paleGold = Color(0xFFF5E6C8);
-  static const Color primaryPurple = Color(0xFF9C27B0); // Added missing color
+  // Elite Professor Color Palette - Navy & White
+  static const Color primaryNavy = Color(0xFF1E3A8A); // Deep Navy Blue
+  static const Color navyDark = Color(0xFF1E293B); // Darker Navy
+  static const Color brightBlue = Color(0xFF3B82F6); // Accent Bright Blue
+  static const Color cleanWhite = Color(0xFFFFFFFF); // Pure White Background
+  static const Color lightGrey = Color(0xFFF8FAFC); // Light Grey Surface
+  static const Color mediumGrey = Color(0xFF64748B); // Medium Grey Text
+  static const Color darkGrey = Color(0xFF334155); // Dark Grey Text
+  static const Color premiumGold = Color(0xFFF59E0B); // Accent Gold for premium features
   
   // Status Colors
-  static const Color successGreen = Color(0xFF4CAF50);
-  static const Color errorRed = Color(0xFFE53935);
-  static const Color warningOrange = Color(0xFFFF9800);
+  static const Color successGreen = Color(0xFF10B981);
+  static const Color errorRed = Color(0xFFEF4444);
+  static const Color warningOrange = Color(0xFFF59E0B);
   
   // Text Colors
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0B0B0);
-  static const Color textTertiary = Color(0xFF6B6B6B);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textTertiary = Color(0xFF94A3B8);
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: deepBlack,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: cleanWhite,
       
       // Color Scheme
-      colorScheme: const ColorScheme.dark(
-        primary: accentGold,
-        secondary: lightGold,
-        surface: slateGrey,
+      colorScheme: const ColorScheme.light(
+        primary: primaryNavy,
+        secondary: brightBlue,
+        surface: lightGrey,
         error: errorRed,
-        onPrimary: deepBlack,
-        onSecondary: deepBlack,
+        onPrimary: cleanWhite,
+        onSecondary: cleanWhite,
         onSurface: textPrimary,
-        onError: textPrimary,
+        onError: cleanWhite,
+        tertiary: premiumGold,
       ),
       
       // AppBar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: deepBlack,
+        backgroundColor: cleanWhite,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        iconTheme: IconThemeData(color: accentGold),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        iconTheme: IconThemeData(color: primaryNavy),
         titleTextStyle: TextStyle(
           color: textPrimary,
           fontSize: 20,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
       
       // Card Theme
       cardTheme: CardThemeData(
-        color: slateGrey,
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.3),
+        color: cleanWhite,
+        elevation: 2,
+        shadowColor: primaryNavy.withOpacity(0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: lightGrey,
+            width: 1,
+          ),
         ),
       ),
       
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: accentGold,
-          foregroundColor: deepBlack,
-          elevation: 4,
+          backgroundColor: primaryNavy,
+          foregroundColor: cleanWhite,
+          elevation: 2,
+          shadowColor: primaryNavy.withOpacity(0.3),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -86,10 +92,27 @@ class AppTheme {
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: accentGold,
+          foregroundColor: primaryNavy,
           textStyle: const TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+      
+      // Outlined Button Theme
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primaryNavy,
+          side: const BorderSide(color: primaryNavy, width: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
           ),
         ),
@@ -98,18 +121,18 @@ class AppTheme {
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: darkGrey,
+        fillColor: lightGrey,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: darkGrey),
+          borderSide: BorderSide(color: mediumGrey.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: accentGold, width: 2),
+          borderSide: const BorderSide(color: primaryNavy, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -123,35 +146,35 @@ class AppTheme {
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: textPrimary,
           letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         displaySmall: TextStyle(
           fontSize: 24,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: textPrimary,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w400,
           color: textPrimary,
-          height: 1.5,
+          height: 1.6,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
@@ -168,14 +191,30 @@ class AppTheme {
       
       // Icon Theme
       iconTheme: const IconThemeData(
-        color: accentGold,
+        color: primaryNavy,
         size: 24,
       ),
       
       // Divider Theme
       dividerTheme: DividerThemeData(
-        color: textTertiary.withValues(alpha: 0.2),
+        color: mediumGrey.withOpacity(0.2),
         thickness: 1,
+      ),
+      
+      // FloatingActionButton Theme
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primaryNavy,
+        foregroundColor: cleanWhite,
+        elevation: 4,
+      ),
+      
+      // BottomNavigationBar Theme
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: cleanWhite,
+        selectedItemColor: primaryNavy,
+        unselectedItemColor: mediumGrey,
+        elevation: 8,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

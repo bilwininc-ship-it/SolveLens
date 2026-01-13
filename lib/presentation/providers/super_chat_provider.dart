@@ -64,8 +64,11 @@ class SuperChatProvider extends ChangeNotifier {
     if (text.trim().isEmpty) return;
 
     try {
-      // Check quota
-      if (_currentQuota != null && !_currentQuota!.hasTextQuota) {
+      // STRICT QUOTA CHECK BEFORE API CALL
+      final usage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = usage;
+      
+      if (!usage.hasTextQuota) {
         _setState(SuperChatQuotaExceeded(
           messages: _messages,
           quotaType: 'text',
@@ -81,7 +84,7 @@ class SuperChatProvider extends ChangeNotifier {
       _messages.add(userMessage);
       _setState(SuperChatProcessing(
         messages: _messages,
-        processingMessage: 'Professor is analyzing your question...',
+        processingMessage: 'Elite Professor is analyzing your question...',
       ));
 
       // Get AI response (using text-only chat method)
@@ -112,10 +115,10 @@ class SuperChatProvider extends ChangeNotifier {
 
       _messages.add(professorMessage);
 
-      // Update quota
+      // Update quota AFTER successful API call
       await quotaService.incrementTextMessage(userId);
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
+      final updatedUsage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -129,8 +132,11 @@ class SuperChatProvider extends ChangeNotifier {
   /// Send image message
   Future<void> sendImageMessage(File imageFile, {String text = ''}) async {
     try {
-      // Check quota
-      if (_currentQuota != null && !_currentQuota!.hasTextQuota) {
+      // STRICT QUOTA CHECK BEFORE API CALL
+      final usage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = usage;
+      
+      if (!usage.hasTextQuota) {
         _setState(SuperChatQuotaExceeded(
           messages: _messages,
           quotaType: 'image',
@@ -147,7 +153,7 @@ class SuperChatProvider extends ChangeNotifier {
       _messages.add(userMessage);
       _setState(SuperChatProcessing(
         messages: _messages,
-        processingMessage: 'Professor is analyzing the image...',
+        processingMessage: 'Elite Professor is analyzing the image...',
       ));
 
       // Analyze image with AI
@@ -163,10 +169,10 @@ class SuperChatProvider extends ChangeNotifier {
       );
       _messages.add(professorMessage);
 
-      // Update quota (images count as text messages in current implementation)
+      // Update quota AFTER successful API call (images count as text messages)
       await quotaService.incrementTextMessage(userId);
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
+      final updatedUsage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -182,8 +188,11 @@ class SuperChatProvider extends ChangeNotifier {
     if (transcribedText.trim().isEmpty) return;
 
     try {
-      // Check quota
-      if (_currentQuota != null && !_currentQuota!.hasVoiceQuota) {
+      // STRICT QUOTA CHECK BEFORE API CALLS (Both Gemini and TTS)
+      final usage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = usage;
+      
+      if (!usage.hasVoiceQuota) {
         _setState(SuperChatQuotaExceeded(
           messages: _messages,
           quotaType: 'voice',
@@ -199,13 +208,26 @@ class SuperChatProvider extends ChangeNotifier {
       _messages.add(userMessage);
       _setState(SuperChatProcessing(
         messages: _messages,
-        processingMessage: 'Professor is preparing an audio response...',
+        processingMessage: 'Elite Professor is preparing an audio response...',
       ));
 
-      // Get AI response text
+      // Get AI response text (Gemini API call)
       final responseText = await aiService.getChatResponse(transcribedText.trim());
 
-      // Generate audio response
+      // Check quota again before expensive TTS operation
+      final currentUsage = await quotaService.getQuotaUsage(userId);
+      if (!currentUsage.hasVoiceQuota) {
+        // Add text-only response if voice quota exhausted
+        final professorMessage = ChatMessageModel.professorText(
+          id: _uuid.v4(),
+          text: responseText + '\n\n⚠️ Voice quota exhausted. Upgrade for audio responses!',
+        );
+        _messages.add(professorMessage);
+        _setState(SuperChatLoaded(messages: _messages));
+        return;
+      }
+
+      // Generate audio response (Google Cloud TTS + Firebase Storage upload)
       final audioUrl = await voiceService.generateSpeech(
         text: responseText,
         userId: userId,
@@ -219,10 +241,10 @@ class SuperChatProvider extends ChangeNotifier {
       );
       _messages.add(professorMessage);
 
-      // Update quota (increment by duration in minutes)
+      // Update quota AFTER successful API calls (increment by duration in minutes)
       await quotaService.incrementVoiceMinutes(userId, durationMinutes);
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
+      final updatedUsage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
