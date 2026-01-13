@@ -10,6 +10,7 @@ import '../../services/config/remote_config_service.dart';
 import '../../services/database/realtime_database_service.dart';
 import '../../services/notes/notes_service.dart';
 import '../../services/voice/voice_service.dart';
+import '../../services/quota/quota_service.dart';
 import '../../data/repositories/question_repository_impl.dart';
 import '../../domain/repositories/question_repository.dart';
 import '../../domain/usecases/analyze_question_usecase.dart';
@@ -79,6 +80,14 @@ Future<void> setupServiceLocator() async {
   // Voice Service (with Remote Config for TTS settings)
   getIt.registerLazySingleton<VoiceService>(
     () => VoiceService(getIt<RemoteConfigService>()),
+  );
+
+  // Quota Service (for tracking text and voice usage)
+  getIt.registerLazySingleton<QuotaService>(
+    () => QuotaService(
+      getIt<FirebaseFirestore>(),
+      getIt<RemoteConfigService>(),
+    ),
   );
 
   // Repositories

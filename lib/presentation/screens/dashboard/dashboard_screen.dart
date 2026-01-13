@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../camera/camera_screen.dart';
 import '../notes/notes_screen.dart';
-import '../voice/voice_chat_screen.dart';
+import '../chat/super_chat_screen.dart';
 import '../../widgets/dashboard_card.dart';
 import '../../widgets/app_drawer.dart';
 import '../../theme/app_theme.dart';
@@ -282,17 +282,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Card 2: Voice Mentor
+        // Card 2: Super Chat (Unified Interface)
         DashboardCard(
-          icon: Icons.mic,
-          title: '🎤 Voice Mentor',
-          subtitle: 'Ask your question by voice, listen or read the answer',
+          icon: Icons.chat_bubble,
+          title: '💬 Super Chat',
+          subtitle: 'Text, voice, or photos - chat with your AI Professor',
           iconColor: Colors.blue,
           badge: 'NEW',
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const VoiceChatScreen()),
+              MaterialPageRoute(builder: (context) => const SuperChatScreen()),
             );
           },
         ),

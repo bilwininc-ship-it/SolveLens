@@ -25,7 +25,8 @@ class RemoteConfigService {
       await _remoteConfig.setDefaults({
         'gemini_api_key': '',
         'enable_premium_features': false,
-        'max_free_questions': 3,
+        'max_free_questions': 150,
+        'max_voice_minutes': 15,
         'enable_analytics': true,
         'google_cloud_api_key': '',
         'tts_voice_name': 'en-US-Wavenet-D',
@@ -86,6 +87,17 @@ class RemoteConfigService {
     
     final voiceName = _remoteConfig.getString('tts_voice_name');
     return voiceName.isEmpty ? 'en-US-Wavenet-D' : voiceName;
+  }
+
+  /// Gets max voice minutes limit from Remote Config
+  /// Defaults to 15 minutes if not configured
+  double getMaxVoiceMinutes() {
+    if (!_isInitialized) {
+      return 15.0;
+    }
+    
+    final minutes = _remoteConfig.getDouble('max_voice_minutes');
+    return minutes > 0 ? minutes : 15.0;
   }
 }
 
