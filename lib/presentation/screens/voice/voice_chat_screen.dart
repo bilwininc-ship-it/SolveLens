@@ -80,9 +80,24 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> with TickerProviderSt
 
   @override
   void dispose() {
+    // CRITICAL: Stop all voice operations and reset states
+    _voiceService.stopListening();
+    _voiceService.stopSpeaking();
     _voiceService.dispose();
+    
+    // Reset all local state flags
+    _isListening = false;
+    _isSpeaking = false;
+    _isFetchingAudio = false;
+    _isProcessing = false;
+    _currentText = '';
+    _statusMessage = '';
+    _messages.clear();
+    
+    // Dispose animation controllers
     _pulseAnimationController.dispose();
     _loadingAnimationController.dispose();
+    
     super.dispose();
   }
 

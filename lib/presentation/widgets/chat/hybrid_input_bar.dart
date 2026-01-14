@@ -190,45 +190,96 @@ class _HybridInputBarState extends State<HybridInputBar> {
     }
 
     if (_isRecording) {
-      // Stop recording
-      setState(() {
-        _isRecording = false;
-      });
-
-      if (_recordingStartTime != null) {
-        final duration = DateTime.now().difference(_recordingStartTime!);
-        final minutes = duration.inSeconds / 60.0;
-        
-        // In a real implementation, you'd get the transcribed text from speech-to-text
-        // For now, we'll use a placeholder
-        final transcribedText = 'Voice message transcribed';
-        
-        widget.onSendVoice?.call(transcribedText, minutes);
-        _recordingStartTime = null;
-      }
+      // Stop recording and process audio
+      await _stopRecording();
     } else {
       // Start recording
-      setState(() {
-        _isRecording = true;
-        _recordingStartTime = DateTime.now();
-      });
+      await _startRecording();
+    }
+  }
 
-      // Show recording indicator
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.mic, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Recording... Tap microphone again to stop'),
-              ],
-            ),
-            backgroundColor: Color(0xFF1E3A8A),
-            duration: Duration(days: 1), // Will be dismissed when stopped
+  Future<void> _startRecording() async {
+    setState(() {
+      _isRecording = true;
+      _recordingStartTime = DateTime.now();
+    });
+
+    // Show recording indicator with cancel button
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.mic, color: Colors.white),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Recording... Tap mic to stop'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                onPressed: _cancelRecording,
+                tooltip: 'Cancel',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
-        );
-      }
+          backgroundColor: const Color(0xFF1E3A8A),
+          duration: const Duration(days: 1), // Will be dismissed manually
+        ),
+      );
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    // Dismiss the recording SnackBar immediately
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
+
+    setState(() {
+      _isRecording = false;
+    });
+
+    if (_recordingStartTime != null) {
+      final duration = DateTime.now().difference(_recordingStartTime!);
+      final minutes = duration.inSeconds / 60.0;
+      
+      // In a real implementation, you'd get the transcribed text from speech-to-text
+      // For now, we'll use a placeholder
+      final transcribedText = 'Voice message transcribed';
+      
+      widget.onSendVoice?.call(transcribedText, minutes);
+      _recordingStartTime = null;
+    }
+  }
+
+  void _cancelRecording() {
+    // Dismiss the recording SnackBar
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
+
+    setState(() {
+      _isRecording = false;
+      _recordingStartTime = null;
+    });
+
+    // Show cancellation message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Recording cancelled'),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
