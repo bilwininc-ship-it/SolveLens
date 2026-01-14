@@ -70,9 +70,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.navyDark,
         elevation: 0,
         title: const Text(
           'History',
@@ -99,7 +99,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryPurple),
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryNavy),
         ),
       );
     }
@@ -124,7 +124,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ElevatedButton(
               onPressed: _loadHistory,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: AppTheme.primaryNavy,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -172,7 +172,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadHistory,
-      color: AppTheme.primaryPurple,
+      color: AppTheme.primaryNavy,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _questions!.length,
@@ -188,7 +188,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'en_US');
     
     return Card(
-      color: AppTheme.cardDark,
+      color: AppTheme.navyDark,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -212,16 +212,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryPurple.withValues(alpha: 0.2),
+                      color: AppTheme.primaryNavy.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppTheme.primaryPurple.withValues(alpha: 0.5),
+                        color: AppTheme.primaryNavy.withValues(alpha: 0.5),
                       ),
                     ),
                     child: Text(
                       question.subject,
                       style: TextStyle(
-                        color: AppTheme.primaryPurple,
+                        color: AppTheme.primaryNavy,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -269,7 +269,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: TextButton(
                   onPressed: () => _showQuestionDetail(question),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.primaryPurple,
+                    foregroundColor: AppTheme.primaryNavy,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
@@ -325,9 +325,9 @@ class QuestionDetailScreen extends StatelessWidget {
     final dateFormat = DateFormat('dd MMMM yyyy, HH:mm', 'en_US');
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.navyDark,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -362,10 +362,10 @@ class QuestionDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.cardDark,
+                color: AppTheme.navyDark,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+                  color: AppTheme.primaryNavy.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -374,7 +374,7 @@ class QuestionDetailScreen extends StatelessWidget {
                   Text(
                     'Question',
                     style: TextStyle(
-                      color: AppTheme.primaryPurple,
+                      color: AppTheme.primaryNavy,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -397,7 +397,7 @@ class QuestionDetailScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.cardDark,
+                color: AppTheme.navyDark,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -406,7 +406,7 @@ class QuestionDetailScreen extends StatelessWidget {
                   Text(
                     'Solution',
                     style: TextStyle(
-                      color: AppTheme.primaryPurple,
+                      color: AppTheme.primaryNavy,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -417,11 +417,11 @@ class QuestionDetailScreen extends StatelessWidget {
                       question.answer,
                       style: TeXViewStyle(
                         contentColor: Colors.white,
-                        backgroundColor: AppTheme.cardDark,
+                        backgroundColor: AppTheme.navyDark,
                       ),
                     ),
                     style: TeXViewStyle(
-                      backgroundColor: AppTheme.cardDark,
+                      backgroundColor: AppTheme.navyDark,
                       elevation: 0,
                     ),
                   ),

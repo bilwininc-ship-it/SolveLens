@@ -33,7 +33,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       appBar: AppBar(
         title: const Text('Choose Your Plan'),
         centerTitle: true,
@@ -118,8 +118,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    AppTheme.deepBlack,
-                    AppTheme.deepBlack.withValues(alpha: 0.9),
+                    AppTheme.navyDark,
+                    AppTheme.navyDark.withValues(alpha: 0.9),
                   ],
                 ),
               ),
@@ -160,8 +160,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               gradient: isRecommended
                   ? LinearGradient(
                       colors: [
-                        AppTheme.accentGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
-                        AppTheme.lightGold.withValues(alpha: 0.2 + _glowController.value * 0.15),
+                        AppTheme.premiumGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
+                        AppTheme.premiumGold.withValues(alpha: 0.2 + _glowController.value * 0.15),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -169,14 +169,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   : null,
               border: isRecommended
                   ? Border.all(
-                      color: AppTheme.accentGold.withValues(alpha: 0.5 + _glowController.value * 0.5),
+                      color: AppTheme.premiumGold.withValues(alpha: 0.5 + _glowController.value * 0.5),
                       width: 2,
                     )
                   : null,
               boxShadow: isRecommended
                   ? [
                       BoxShadow(
-                        color: AppTheme.accentGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
+                        color: AppTheme.premiumGold.withValues(alpha: 0.3 + _glowController.value * 0.2),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -186,11 +186,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             child: Container(
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.slateGrey
+                    ? AppTheme.mediumGrey
                     : AppTheme.darkGrey,
                 borderRadius: BorderRadius.circular(20),
                 border: isSelected && !isRecommended
-                    ? Border.all(color: AppTheme.accentGold, width: 2)
+                    ? Border.all(color: AppTheme.premiumGold, width: 2)
                     : null,
               ),
               padding: const EdgeInsets.all(24),
@@ -217,7 +217,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                 style: const TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.accentGold,
+                                  color: AppTheme.premiumGold,
                                 ),
                               ),
                               Padding(
@@ -238,13 +238,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentGold,
+                            color: AppTheme.premiumGold,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
                             'RECOMMENDED',
                             style: TextStyle(
-                              color: AppTheme.deepBlack,
+                              color: AppTheme.navyDark,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1,
@@ -262,7 +262,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           children: [
                             const Icon(
                               Icons.check_circle,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                               size: 20,
                             ),
                             const SizedBox(width: 12),
@@ -289,12 +289,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.slateGrey,
+        backgroundColor: AppTheme.mediumGrey,
         title: Row(
           children: [
             Icon(
               Icons.info_outline,
-              color: AppTheme.accentGold,
+              color: AppTheme.premiumGold,
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -309,8 +309,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentGold,
-              foregroundColor: AppTheme.deepBlack,
+              backgroundColor: AppTheme.premiumGold,
+              foregroundColor: AppTheme.navyDark,
             ),
             child: const Text('Got it'),
           ),

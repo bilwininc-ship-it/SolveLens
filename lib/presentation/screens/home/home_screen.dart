@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
             spreadRadius: 2,
           ),
           BoxShadow(
-            color: AppTheme.accentGold.withValues(alpha: 0.1),
+            color: AppTheme.premiumGold.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -111,12 +111,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.accentGold.withValues(alpha: 0.2)
+              ? AppTheme.premiumGold.withValues(alpha: 0.2)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: isSelected
               ? Border.all(
-                  color: AppTheme.accentGold.withValues(alpha: 0.5),
+                  color: AppTheme.premiumGold.withValues(alpha: 0.5),
                   width: 1,
                 )
               : null,
@@ -127,14 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppTheme.accentGold : Colors.white,
+              color: isSelected ? AppTheme.premiumGold : Colors.white,
               size: isSelected ? 28 : 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppTheme.accentGold : Colors.white.withValues(alpha: 0.8),
+                color: isSelected ? AppTheme.premiumGold : Colors.white.withValues(alpha: 0.8),
                 fontSize: isSelected ? 12 : 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 letterSpacing: 0.5,

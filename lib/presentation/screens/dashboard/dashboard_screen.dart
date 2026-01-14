@@ -58,12 +58,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       drawer: const AppDrawer(), // Add drawer for history
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadStats,
-          color: AppTheme.primaryPurple,
+          color: AppTheme.primaryNavy,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
@@ -161,15 +161,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.primaryPurple.withValues(alpha: 0.2),
-            AppTheme.primaryPurple.withValues(alpha: 0.05),
+            AppTheme.primaryNavy.withValues(alpha: 0.2),
+            AppTheme.primaryNavy.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+          color: AppTheme.primaryNavy.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -180,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.check_circle,
             value: _isLoading ? '...' : '$_solvedQuestionsCount',
             label: 'Solved',
-            color: AppTheme.primaryPurple,
+            color: AppTheme.primaryNavy,
           ),
           Container(
             height: 40,
@@ -258,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.camera_alt,
           title: '📸 Scan & Solve',
           subtitle: 'Take a photo of your question, get instant AI mentor help',
-          iconColor: AppTheme.primaryPurple,
+          iconColor: AppTheme.primaryNavy,
           onTap: () async {
             // Navigate to camera and get the captured image
             final File? capturedImage = await Navigator.push(

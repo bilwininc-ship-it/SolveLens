@@ -17,8 +17,8 @@ class DashboardCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.iconColor = AppTheme.primaryPurple,
-    this.backgroundColor = AppTheme.cardDark,
+    this.iconColor = AppTheme.primaryNavy,
+    this.backgroundColor = AppTheme.navyDark,
     this.badge,
   });
 

@@ -184,7 +184,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       body: Stack(
         children: [
           // Camera Preview or Error
@@ -222,7 +222,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            color: AppTheme.accentGold,
+            color: AppTheme.premiumGold,
           ),
           SizedBox(height: 16),
           Text(
@@ -264,7 +264,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: AppTheme.primaryNavy,
                 foregroundColor: Colors.white,
               ),
             ),
@@ -274,7 +274,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               icon: const Icon(Icons.photo_library),
               label: const Text('Pick from Gallery Instead'),
               style: TextButton.styleFrom(
-                foregroundColor: AppTheme.accentGold,
+                foregroundColor: AppTheme.premiumGold,
               ),
             ),
           ],
@@ -289,7 +289,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       left: 16,
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.deepBlack.withOpacity(0.6),
+          color: AppTheme.navyDark.withOpacity(0.6),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -303,7 +303,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
   Widget _buildOverlay() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.deepBlack.withOpacity(0.4),
+        color: AppTheme.navyDark.withOpacity(0.4),
       ),
       child: Stack(
         children: [
@@ -314,7 +314,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               height: 400,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: AppTheme.accentGold,
+                  color: AppTheme.premiumGold,
                   width: 3,
                 ),
                 borderRadius: BorderRadius.circular(20),
@@ -356,13 +356,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               margin: const EdgeInsets.only(top: 450),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: AppTheme.slateGrey.withOpacity(0.9),
+                color: AppTheme.mediumGrey.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.center_focus_strong, color: AppTheme.accentGold, size: 20),
+                  Icon(Icons.center_focus_strong, color: AppTheme.premiumGold, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'Scan your question',
@@ -391,16 +391,16 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         decoration: BoxDecoration(
           border: Border(
             top: alignment.y < 0
-                ? const BorderSide(color: AppTheme.lightGold, width: 4)
+                ? const BorderSide(color: AppTheme.premiumGold, width: 4)
                 : BorderSide.none,
             left: alignment.x < 0
-                ? const BorderSide(color: AppTheme.lightGold, width: 4)
+                ? const BorderSide(color: AppTheme.premiumGold, width: 4)
                 : BorderSide.none,
             right: alignment.x > 0
-                ? const BorderSide(color: AppTheme.lightGold, width: 4)
+                ? const BorderSide(color: AppTheme.premiumGold, width: 4)
                 : BorderSide.none,
             bottom: alignment.y > 0
-                ? const BorderSide(color: AppTheme.lightGold, width: 4)
+                ? const BorderSide(color: AppTheme.premiumGold, width: 4)
                 : BorderSide.none,
           ),
         ),
@@ -420,8 +420,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
             colors: [
-              AppTheme.deepBlack,
-              AppTheme.deepBlack.withOpacity(0.0),
+              AppTheme.navyDark,
+              AppTheme.navyDark.withOpacity(0.0),
             ],
           ),
         ),
@@ -443,7 +443,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppTheme.accentGold,
+                    color: AppTheme.premiumGold,
                     width: 4,
                   ),
                 ),
@@ -451,7 +451,7 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                   margin: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.accentGold,
+                    color: AppTheme.premiumGold,
                   ),
                 ),
               ),
@@ -482,12 +482,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isActive 
-              ? AppTheme.accentGold.withOpacity(0.3)
-              : AppTheme.slateGrey.withOpacity(0.8),
+              ? AppTheme.premiumGold.withOpacity(0.3)
+              : AppTheme.mediumGrey.withOpacity(0.8),
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.lightGold : AppTheme.accentGold,
+          color: isActive ? AppTheme.premiumGold : AppTheme.premiumGold,
           size: 28,
         ),
       ),

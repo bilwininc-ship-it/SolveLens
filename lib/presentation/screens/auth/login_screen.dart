@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       body: SafeArea(
         child: Consumer<AuthProvider>(
           builder: (context, authProvider, _) {
@@ -48,15 +48,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                AppTheme.accentGold.withOpacity(0.3),
-                                AppTheme.lightGold.withOpacity(0.1),
+                                AppTheme.premiumGold.withOpacity(0.3),
+                                AppTheme.premiumGold.withOpacity(0.1),
                               ],
                             ),
                           ),
                           child: const Icon(
                             Icons.school,
                             size: 60,
-                            color: AppTheme.accentGold,
+                            color: AppTheme.premiumGold,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: 'Enter your email',
                             prefixIcon: Icon(
                               Icons.email_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                           ),
                           validator: (value) {
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: 'Enter your password',
                             prefixIcon: const Icon(
                               Icons.lock_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme.deepBlack,
+                                        AppTheme.navyDark,
                                       ),
                                     ),
                                   )
@@ -249,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(
-                          color: AppTheme.accentGold,
+                          color: AppTheme.premiumGold,
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
@@ -264,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Fallback to default icon if image fails to load
                           return const Icon(
                             Icons.login,
-                            color: AppTheme.accentGold,
+                            color: AppTheme.premiumGold,
                             size: 24,
                           );
                         },
@@ -330,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.slateGrey,
+        backgroundColor: AppTheme.mediumGrey,
         title: const Text('Reset Password'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -348,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 hintText: 'Enter your email',
                 prefixIcon: Icon(
                   Icons.email_outlined,
-                  color: AppTheme.accentGold,
+                  color: AppTheme.premiumGold,
                 ),
               ),
             ),

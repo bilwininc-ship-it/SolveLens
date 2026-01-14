@@ -38,7 +38,7 @@ class _ScanAnimationOverlayState extends State<ScanAnimationOverlay>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.deepBlack.withOpacity(0.7),
+      color: AppTheme.navyDark.withOpacity(0.7),
       child: Center(
         child: SizedBox(
           width: 300,
@@ -68,14 +68,14 @@ class ScanLinePainter extends CustomPainter {
 
     // Main scan line
     final Paint linePaint = Paint()
-      ..color = AppTheme.accentGold
+      ..color = AppTheme.premiumGold
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..shader = LinearGradient(
         colors: [
-          AppTheme.accentGold.withOpacity(0.0),
-          AppTheme.accentGold,
-          AppTheme.accentGold.withOpacity(0.0),
+          AppTheme.premiumGold.withOpacity(0.0),
+          AppTheme.premiumGold,
+          AppTheme.premiumGold.withOpacity(0.0),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, lineY - 20, size.width, 40));
@@ -88,7 +88,7 @@ class ScanLinePainter extends CustomPainter {
 
     // Glow effect
     final Paint glowPaint = Paint()
-      ..color = AppTheme.lightGold.withOpacity(0.3)
+      ..color = AppTheme.premiumGold.withOpacity(0.3)
       ..strokeWidth = 8
       ..style = PaintingStyle.stroke
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
@@ -101,7 +101,7 @@ class ScanLinePainter extends CustomPainter {
 
     // Grid lines behind scan line
     final Paint gridPaint = Paint()
-      ..color = AppTheme.accentGold.withOpacity(0.1)
+      ..color = AppTheme.premiumGold.withOpacity(0.1)
       ..strokeWidth = 1;
 
     for (double i = 0; i <= lineY; i += 20) {

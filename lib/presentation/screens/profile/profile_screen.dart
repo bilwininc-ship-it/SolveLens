@@ -14,9 +14,9 @@ class ProfileScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.navyDark,
         elevation: 0,
         title: const Text(
           'Profile',
@@ -67,7 +67,7 @@ class ProfileScreen extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppTheme.primaryPurple,
+              color: AppTheme.primaryNavy,
               width: 3,
             ),
           ),
@@ -109,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildDefaultAvatar(String name) {
     return Container(
-      color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+      color: AppTheme.primaryNavy.withValues(alpha: 0.3),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'U',
@@ -125,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildSubscriptionCard(BuildContext context) {
     return Card(
-      color: AppTheme.cardDark,
+      color: AppTheme.navyDark,
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -201,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryPurple,
+                  backgroundColor: AppTheme.primaryNavy,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -232,7 +232,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildSettingsSection(BuildContext context) {
     return Card(
-      color: AppTheme.cardDark,
+      color: AppTheme.navyDark,
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -285,7 +285,7 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryPurple),
+      leading: Icon(icon, color: AppTheme.primaryNavy),
       title: Text(
         title,
         style: const TextStyle(
@@ -337,7 +337,7 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardDark,
+        backgroundColor: AppTheme.navyDark,
         title: const Text(
           'Logout',
           style: TextStyle(color: Colors.white),

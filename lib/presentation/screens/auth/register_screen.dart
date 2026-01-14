@@ -32,7 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.navyDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -104,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'Enter your full name',
                             prefixIcon: Icon(
                               Icons.person_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                           ),
                           validator: (value) {
@@ -128,7 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'Enter your email',
                             prefixIcon: Icon(
                               Icons.email_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                           ),
                           validator: (value) {
@@ -152,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'Enter your password',
                             prefixIcon: const Icon(
                               Icons.lock_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -189,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             hintText: 'Confirm your password',
                             prefixIcon: const Icon(
                               Icons.lock_outlined,
-                              color: AppTheme.accentGold,
+                              color: AppTheme.premiumGold,
                             ),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -228,8 +228,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   _agreedToTerms = value ?? false;
                                 });
                               },
-                              activeColor: AppTheme.accentGold,
-                              checkColor: AppTheme.deepBlack,
+                              activeColor: AppTheme.premiumGold,
+                              checkColor: AppTheme.navyDark,
                             ),
                             Expanded(
                               child: Text(
@@ -256,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme.deepBlack,
+                                        AppTheme.navyDark,
                                       ),
                                     ),
                                   )
@@ -304,7 +304,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(
-                          color: AppTheme.accentGold,
+                          color: AppTheme.premiumGold,
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
@@ -319,7 +319,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           // Fallback to default icon if image fails to load
                           return const Icon(
                             Icons.login,
-                            color: AppTheme.accentGold,
+                            color: AppTheme.premiumGold,
                             size: 24,
                           );
                         },
