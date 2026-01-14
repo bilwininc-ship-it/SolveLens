@@ -1,4 +1,4 @@
-// Super Chat Screen - Unified Premium Chat Interface
+// Premium Elite Super Chat Screen - Visual Harmony
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +11,7 @@ import '../../providers/super_chat_state.dart';
 import '../../widgets/chat/quota_indicator.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/hybrid_input_bar.dart';
+import '../../theme/app_theme.dart';
 
 class SuperChatScreen extends StatefulWidget {
   const SuperChatScreen({super.key});
@@ -32,7 +33,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
   void _initializeChatProvider() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      // Handle not logged in
       return;
     }
 
@@ -85,7 +85,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     return ChangeNotifierProvider<SuperChatProvider>.value(
       value: _chatProvider,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.lightGrey, // Premium light grey background
         appBar: _buildAppBar(),
         body: Column(
           children: [
@@ -137,31 +137,37 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.cleanWhite,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
+        icon: const Icon(
+          Icons.arrow_back_rounded,
+          color: AppTheme.primaryNavy,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Row(
+      title: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Color(0xFF1E3A8A),
-            child: Icon(
-              Icons.school,
-              color: Colors.white,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryNavy.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.school_rounded,
+              color: AppTheme.primaryNavy,
               size: 20,
             ),
           ),
-          SizedBox(width: 12),
-          Column(
+          const SizedBox(width: 12),
+          const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'AI Professor',
                 style: TextStyle(
-                  color: Color(0xFF1A1A1A),
+                  color: AppTheme.primaryNavy,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -169,7 +175,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
               Text(
                 'Always here to help',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: AppTheme.mediumGrey,
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
                 ),
@@ -182,7 +188,13 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
         Consumer<SuperChatProvider>(
           builder: (context, provider, child) {
             return PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Color(0xFF1A1A1A)),
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: AppTheme.primaryNavy,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               onSelected: (value) {
                 if (value == 'clear') {
                   _showClearConfirmation(provider);
@@ -195,9 +207,18 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                   value: 'clear',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, size: 20),
+                      Icon(
+                        Icons.delete_outline_rounded,
+                        size: 20,
+                        color: AppTheme.primaryNavy,
+                      ),
                       SizedBox(width: 12),
-                      Text('Clear Chat'),
+                      Text(
+                        'Clear Chat',
+                        style: TextStyle(
+                          color: AppTheme.primaryNavy,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -205,9 +226,18 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                   value: 'upgrade',
                   child: Row(
                     children: [
-                      Icon(Icons.workspace_premium, size: 20),
+                      Icon(
+                        Icons.workspace_premium_rounded,
+                        size: 20,
+                        color: AppTheme.primaryNavy,
+                      ),
                       SizedBox(width: 12),
-                      Text('Upgrade Plan'),
+                      Text(
+                        'Upgrade Plan',
+                        style: TextStyle(
+                          color: AppTheme.primaryNavy,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -246,7 +276,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
         if (index < messages.length) {
           return MessageBubble(message: messages[index]);
         } else {
-          // Processing indicator
           return _buildProcessingIndicator(
             (state as SuperChatProcessing).processingMessage,
           );
@@ -263,42 +292,57 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                color: AppTheme.cleanWhite,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    offset: const Offset(0, 4),
+                    blurRadius: 15,
+                    color: const Color(0x0D000000),
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.chat_bubble_outline,
-                size: 64,
-                color: Color(0xFF1E3A8A),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryNavy.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 48,
+                  color: AppTheme.primaryNavy,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             const Text(
               'Welcome to Super Chat!',
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryNavy,
+                letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Ask questions with text, photos, or voice.\nYour AI Professor is ready to help!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: AppTheme.mediumGrey,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: 32),
-            _buildFeatureChip(Icons.camera_alt, 'Scan homework'),
+            const SizedBox(height: 40),
+            _buildFeatureChip(Icons.camera_alt_rounded, 'Scan homework'),
             const SizedBox(height: 12),
-            _buildFeatureChip(Icons.edit, 'Ask anything'),
+            _buildFeatureChip(Icons.edit_rounded, 'Ask anything'),
             const SizedBox(height: 12),
-            _buildFeatureChip(Icons.mic, 'Voice questions'),
+            _buildFeatureChip(Icons.mic_rounded, 'Voice questions'),
           ],
         ),
       ),
@@ -307,30 +351,40 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
 
   Widget _buildFeatureChip(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
+        color: AppTheme.cleanWhite,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 2),
+            blurRadius: 8,
+            color: const Color(0x08000000),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: const Color(0xFF1E3A8A),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryNavy.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: AppTheme.primaryNavy,
+            ),
           ),
           const SizedBox(width: 12),
           Text(
             label,
             style: const TextStyle(
               fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1A1A1A),
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primaryNavy,
             ),
           ),
         ],
@@ -350,16 +404,16 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                Colors.grey.shade400,
+                AppTheme.primaryNavy,
               ),
             ),
           ),
           const SizedBox(width: 12),
           Text(
             message,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade600,
+              color: AppTheme.mediumGrey,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -372,24 +426,61 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Chat'),
+        backgroundColor: AppTheme.cleanWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: const Text(
+          'Clear Chat',
+          style: TextStyle(
+            color: AppTheme.primaryNavy,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: const Text(
           'Are you sure you want to clear all messages? This action cannot be undone.',
+          style: TextStyle(
+            color: AppTheme.mediumGrey,
+            fontSize: 15,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.mediumGrey,
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               provider.clearMessages();
               Navigator.pop(context);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: AppTheme.cleanWhite,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
             ),
-            child: const Text('Clear'),
+            child: const Text(
+              'Clear',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -397,12 +488,15 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
   }
 
   void _navigateToSubscription() {
-    // Navigate to subscription screen
-    // Navigator.pushNamed(context, '/subscription');
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Subscription screen - Coming soon'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: const Text('Subscription screen - Coming soon'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: AppTheme.primaryNavy,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }

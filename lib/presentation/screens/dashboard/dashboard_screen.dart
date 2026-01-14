@@ -1,4 +1,4 @@
-// Main Dashboard Screen - Personalized Learning Hub
+// Main Dashboard Screen - Premium Elite Academic Interface
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../camera/camera_screen.dart';
@@ -58,28 +58,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: AppTheme.navyDark,
-      drawer: const AppDrawer(), // Add drawer for history
+      backgroundColor: AppTheme.lightGrey, // Premium light grey background #F8FAFC
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadStats,
           color: AppTheme.primaryNavy,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24), // Increased padding
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Welcome Header
-                _buildWelcomeHeader(firstName),
+                // Premium Header with Menu
+                _buildPremiumHeader(firstName),
+                const SizedBox(height: 32),
+
+                // Elegant Dashboard Title
+                _buildDashboardTitle(),
                 const SizedBox(height: 24),
 
-                // Stats Card
-                _buildStatsCard(),
-                const SizedBox(height: 24),
+                // Premium Stats Card
+                _buildPremiumStatsCard(),
+                const SizedBox(height: 32),
 
-                // Main Feature Cards
-                _buildFeatureCards(),
+                // Features Section Title
+                const Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    color: AppTheme.primaryNavy,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Premium Feature Cards
+                _buildPremiumFeatureCards(),
               ],
             ),
           ),
@@ -88,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildWelcomeHeader(String firstName) {
+  Widget _buildPremiumHeader(String firstName) {
     final hour = DateTime.now().hour;
     String greeting;
     
@@ -102,12 +118,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Row(
       children: [
-        // Menu button to open drawer
-        IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+        // Menu button - Premium Navy
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cleanWhite,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, 2),
+                blurRadius: 8,
+                color: const Color(0x0A000000),
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.menu_rounded, color: AppTheme.primaryNavy, size: 24),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         
         // Welcome text
         Expanded(
@@ -116,9 +145,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 greeting,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 16,
+                style: const TextStyle(
+                  color: AppTheme.mediumGrey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.2,
                 ),
               ),
               const SizedBox(height: 4),
@@ -127,25 +158,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     firstName,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryNavy,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const SizedBox(width: 8),
                   const Text(
                     '👋',
-                    style: TextStyle(fontSize: 28),
+                    style: TextStyle(fontSize: 24),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'What shall we explore today?',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 16,
-                ),
               ),
             ],
           ),
@@ -154,62 +178,118 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatsCard() {
+  Widget _buildDashboardTitle() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryNavy.withValues(alpha: 0.2),
-            AppTheme.primaryNavy.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.cleanWhite,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.primaryNavy.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: const Color(0x0D000000),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem(
-            icon: Icons.check_circle,
-            value: _isLoading ? '...' : '$_solvedQuestionsCount',
-            label: 'Solved',
-            color: AppTheme.primaryNavy,
-          ),
           Container(
-            height: 40,
-            width: 1,
-            color: Colors.white.withValues(alpha: 0.2),
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryNavy,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          _buildStatItem(
-            icon: Icons.local_fire_department,
-            value: '0',
-            label: 'Streak',
-            color: Colors.orange,
-          ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.white.withValues(alpha: 0.2),
-          ),
-          _buildStatItem(
-            icon: Icons.star,
-            value: '0',
-            label: 'Notes',
-            color: Colors.amber,
+          const SizedBox(width: 12),
+          const Text(
+            'Dashboard',
+            style: TextStyle(
+              color: AppTheme.primaryNavy,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem({
+  Widget _buildPremiumStatsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.cleanWhite, // Premium white background
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          // Airy Shadow
+          BoxShadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: const Color(0x0D000000),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildPremiumStatItem(
+            icon: Icons.check_circle_rounded,
+            value: _isLoading ? '...' : '$_solvedQuestionsCount',
+            label: 'Solved',
+            color: AppTheme.primaryNavy,
+          ),
+          Container(
+            height: 50,
+            width: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppTheme.mediumGrey.withOpacity(0.0),
+                  AppTheme.mediumGrey.withOpacity(0.15),
+                  AppTheme.mediumGrey.withOpacity(0.0),
+                ],
+              ),
+            ),
+          ),
+          _buildPremiumStatItem(
+            icon: Icons.local_fire_department_rounded,
+            value: '0',
+            label: 'Streak',
+            color: AppTheme.warningOrange,
+          ),
+          Container(
+            height: 50,
+            width: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppTheme.mediumGrey.withOpacity(0.0),
+                  AppTheme.mediumGrey.withOpacity(0.15),
+                  AppTheme.mediumGrey.withOpacity(0.0),
+                ],
+              ),
+            ),
+          ),
+          _buildPremiumStatItem(
+            icon: Icons.star_rounded,
+            value: '0',
+            label: 'Notes',
+            color: AppTheme.premiumGold,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumStatItem({
     required IconData icon,
     required String value,
     required String label,
@@ -217,45 +297,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 28),
-        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 26),
+        ),
+        const SizedBox(height: 12),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: AppTheme.primaryNavy,
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: AppTheme.mediumGrey,
             fontSize: 12,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.3,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFeatureCards() {
+  Widget _buildPremiumFeatureCards() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Features',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-
         // Card 1: Scan & Solve
         DashboardCard(
-          icon: Icons.camera_alt,
+          icon: Icons.camera_alt_rounded,
           title: '📸 Scan & Solve',
           subtitle: 'Take a photo of your question, get instant AI mentor help',
           iconColor: AppTheme.primaryNavy,
@@ -280,14 +360,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24), // Generous vertical spacing
 
         // Card 2: Super Chat (Unified Interface)
         DashboardCard(
-          icon: Icons.chat_bubble,
+          icon: Icons.chat_bubble_rounded,
           title: '💬 Super Chat',
           subtitle: 'Text, voice, or photos - chat with your AI Professor',
-          iconColor: Colors.blue,
+          iconColor: AppTheme.primaryNavy,
           badge: 'NEW',
           onTap: () {
             Navigator.push(
@@ -296,14 +376,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24), // Generous vertical spacing
 
         // Card 3: My Smart Notes
         DashboardCard(
-          icon: Icons.bookmark,
+          icon: Icons.bookmark_rounded,
           title: '📝 My Smart Notes',
           subtitle: 'Quickly access your starred important solutions',
-          iconColor: Colors.amber,
+          iconColor: AppTheme.primaryNavy,
           onTap: () {
             Navigator.push(
               context,

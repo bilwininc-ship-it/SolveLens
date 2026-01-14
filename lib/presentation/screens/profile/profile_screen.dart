@@ -1,4 +1,4 @@
-// Profile Screen - User Info, Subscription, Logout
+// Premium Elite Profile Screen - Ultra-Clean Design
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:provider/provider.dart';
@@ -14,22 +14,29 @@ class ProfileScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
     
     return Scaffold(
-      backgroundColor: AppTheme.navyDark,
+      backgroundColor: AppTheme.lightGrey, // Premium light grey #F8FAFC
       appBar: AppBar(
-        backgroundColor: AppTheme.navyDark,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppTheme.primaryNavy,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'Profile',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryNavy,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
               // User Avatar & Name Section
@@ -38,11 +45,11 @@ class ProfileScreen extends StatelessWidget {
 
               // Subscription Section
               _buildSubscriptionCard(context),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Account Settings
               _buildSettingsSection(context),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // Logout Button
               _buildLogoutButton(context),
@@ -58,65 +65,107 @@ class ProfileScreen extends StatelessWidget {
     final email = user?.email ?? 'email@example.com';
     final photoUrl = user?.photoURL;
 
-    return Column(
-      children: [
-        // Avatar
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppTheme.primaryNavy,
-              width: 3,
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: AppTheme.cleanWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: const Color(0x0D000000),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Avatar
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppTheme.primaryNavy.withOpacity(0.15),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  offset: const Offset(0, 2),
+                  blurRadius: 8,
+                  color: const Color(0x08000000),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: photoUrl != null
+                  ? Image.network(
+                      photoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildDefaultAvatar(displayName),
+                    )
+                  : _buildDefaultAvatar(displayName),
             ),
           ),
-          child: ClipOval(
-            child: photoUrl != null
-                ? Image.network(
-                    photoUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildDefaultAvatar(displayName),
-                  )
-                : _buildDefaultAvatar(displayName),
-          ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-        // Name
-        Text(
-          displayName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          // Name
+          Text(
+            displayName,
+            style: const TextStyle(
+              color: AppTheme.primaryNavy,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
-        // Email
-        Text(
-          email,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 14,
+          // Email
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: AppTheme.lightGrey,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              email,
+              style: const TextStyle(
+                color: AppTheme.mediumGrey,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildDefaultAvatar(String name) {
     return Container(
-      color: AppTheme.primaryNavy.withValues(alpha: 0.3),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryNavy.withOpacity(0.15),
+            AppTheme.primaryNavy.withOpacity(0.05),
+          ],
+        ),
+      ),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'U',
           style: const TextStyle(
-            color: Colors.white,
+            color: AppTheme.primaryNavy,
             fontSize: 40,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -124,153 +173,192 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildSubscriptionCard(BuildContext context) {
-    return Card(
-      color: AppTheme.navyDark,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.cleanWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: const Color(0x0D000000),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                    size: 24,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.premiumGold.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Subscription Status',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Free Plan',
-                        style: TextStyle(
-                          color: Colors.amber,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: AppTheme.premiumGold,
+                  size: 28,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Premium Features Info
-            Text(
-              'Upgrade to Premium for unlimited questions, voice assistant, and exclusive features.',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Upgrade Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SubscriptionScreen(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryNavy,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.upgrade, size: 20),
-                    SizedBox(width: 8),
                     Text(
-                      'Upgrade to Premium',
+                      'Subscription Status',
                       style: TextStyle(
+                        color: AppTheme.primaryNavy,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Free Plan',
+                      style: TextStyle(
+                        color: AppTheme.premiumGold,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Premium Features Info
+          const Text(
+            'Upgrade to Premium for unlimited questions, voice assistant, and exclusive features.',
+            style: TextStyle(
+              color: AppTheme.mediumGrey,
+              fontSize: 14,
+              height: 1.5,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+
+          // Upgrade Button - 50px height, 24px corners
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SubscriptionScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryNavy,
+                foregroundColor: AppTheme.cleanWhite,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.upgrade_rounded, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Upgrade to Premium',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSettingsSection(BuildContext context) {
-    return Card(
-      color: AppTheme.navyDark,
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cleanWhite,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: const Color(0x0D000000),
+          ),
+        ],
       ),
       child: Column(
         children: [
           _buildSettingsTile(
-            icon: Icons.notifications,
+            icon: Icons.notifications_outlined,
             title: 'Notifications',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming soon!')),
+                SnackBar(
+                  content: const Text('Coming soon!'),
+                  backgroundColor: AppTheme.primaryNavy,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               );
             },
           ),
           Divider(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: AppTheme.mediumGrey.withOpacity(0.1),
             height: 1,
+            indent: 20,
+            endIndent: 20,
           ),
           _buildSettingsTile(
-            icon: Icons.language,
+            icon: Icons.language_outlined,
             title: 'Language Settings',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming soon!')),
+                SnackBar(
+                  content: const Text('Coming soon!'),
+                  backgroundColor: AppTheme.primaryNavy,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               );
             },
           ),
           Divider(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: AppTheme.mediumGrey.withOpacity(0.1),
             height: 1,
+            indent: 20,
+            endIndent: 20,
           ),
           _buildSettingsTile(
-            icon: Icons.help_outline,
+            icon: Icons.help_outline_rounded,
             title: 'Help & Support',
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming soon!')),
+                SnackBar(
+                  content: const Text('Coming soon!'),
+                  backgroundColor: AppTheme.primaryNavy,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               );
             },
           ),
@@ -285,17 +373,33 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryNavy),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: 8,
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryNavy.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          icon,
+          color: AppTheme.primaryNavy,
+          size: 22,
+        ),
+      ),
       title: Text(
         title,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppTheme.primaryNavy,
           fontSize: 16,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Icon(
-        Icons.arrow_forward_ios,
-        color: Colors.white.withValues(alpha: 0.4),
+        Icons.arrow_forward_ios_rounded,
+        color: AppTheme.mediumGrey.withOpacity(0.5),
         size: 16,
       ),
       onTap: onTap,
@@ -305,26 +409,31 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildLogoutButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 50, // Professional height
       child: OutlinedButton(
         onPressed: () => _handleLogout(context),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.red, width: 2),
-          foregroundColor: Colors.red,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          backgroundColor: AppTheme.cleanWhite,
+          side: BorderSide(
+            color: AppTheme.errorRed.withOpacity(0.3),
+            width: 1.5,
+          ),
+          foregroundColor: AppTheme.errorRed,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(24), // 24px corners
           ),
         ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout, size: 20),
-            SizedBox(width: 8),
+            Icon(Icons.logout_rounded, size: 20),
+            SizedBox(width: 10),
             Text(
               'Logout',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
               ),
             ),
           ],
@@ -337,28 +446,60 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.navyDark,
+        backgroundColor: AppTheme.cleanWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
         title: const Text(
           'Logout',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: AppTheme.primaryNavy,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: const Text(
           'Are you sure you want to logout?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(
+            color: AppTheme.mediumGrey,
+            fontSize: 15,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.mediumGrey,
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               Provider.of<AuthProvider>(context, listen: false).signOut();
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              foregroundColor: AppTheme.cleanWhite,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+            ),
             child: const Text(
               'Logout',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
