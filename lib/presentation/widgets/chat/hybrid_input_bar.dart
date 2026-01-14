@@ -1,12 +1,14 @@
-// Hybrid Input Bar - Camera + Text Field + Microphone
+// Hybrid Input Bar - Camera + PDF + Text Field + Microphone
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 class HybridInputBar extends StatefulWidget {
   final Function(String text)? onSendText;
   final Function(File image, String? caption)? onSendImage;
   final Function(String transcribedText, double durationMinutes)? onSendVoice;
+  final Function(File pdf, String fileName, String fileSize)? onSendPDF;
   final bool isProcessing;
   final bool canSendText;
   final bool canSendVoice;
@@ -16,6 +18,7 @@ class HybridInputBar extends StatefulWidget {
     this.onSendText,
     this.onSendImage,
     this.onSendVoice,
+    this.onSendPDF,
     this.isProcessing = false,
     this.canSendText = true,
     this.canSendVoice = true,
@@ -124,6 +127,106 @@ class _HybridInputBarState extends State<HybridInputBar> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _pickPDF() async {
+    try {
+      // Use file_picker to select PDF files
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final fileName = result.files.single.name;
+        final fileSize = result.files.single.size;
+
+        // Validate file size (max 15MB = 15 * 1024 * 1024 bytes)
+        const maxSizeInBytes = 15 * 1024 * 1024;
+        
+        if (fileSize > maxSizeInBytes) {
+          // Show error SnackBar for file too large
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.white),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text('PDF file size exceeds 15MB limit'),
+                    ),
+                  ],
+                ),
+                backgroundColor: Color(0xFF1E3A8A),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Format file size
+        final formattedSize = _formatFileSize(fileSize);
+        
+        // Print to console
+        print('PDF Selected: $fileName');
+        
+        // Show success SnackBar in Navy Blue
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('PDF selected: $fileName ($formattedSize)'),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF1E3A8A), // Navy Blue
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+
+        // Call the callback with PDF info
+        widget.onSendPDF?.call(file, fileName, formattedSize);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Failed to pick PDF: $e'),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1E3A8A),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      final kb = (bytes / 1024).toStringAsFixed(2);
+      return '$kb KB';
+    } else {
+      final mb = (bytes / (1024 * 1024)).toStringAsFixed(2);
+      return '$mb MB';
     }
   }
 
@@ -338,6 +441,17 @@ class _HybridInputBarState extends State<HybridInputBar> {
                     : const Color(0xFF1E3A8A),
               ),
               tooltip: 'Add photo',
+            ),
+            // PDF Button
+            IconButton(
+              onPressed: widget.isProcessing ? null : _pickPDF,
+              icon: Icon(
+                Icons.picture_as_pdf,
+                color: widget.isProcessing
+                    ? Colors.grey.shade400
+                    : const Color(0xFF1E3A8A),
+              ),
+              tooltip: 'Add PDF',
             ),
             const SizedBox(width: 4),
             // Text Field

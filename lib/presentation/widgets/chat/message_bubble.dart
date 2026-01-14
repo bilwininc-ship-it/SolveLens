@@ -48,6 +48,17 @@ class MessageBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // PDF Card if present
+          if (message.hasPDF && message.pdfFileName != null && message.pdfFileSize != null) ...[
+            PdfCardWidget(
+              fileName: message.pdfFileName!,
+              fileSize: message.pdfFileSize!,
+              onTap: () {
+                // TODO: Open PDF viewer
+              },
+            ),
+            if (message.text.isNotEmpty) const SizedBox(height: 8),
+          ],
           // Image if present
           if (message.hasImage && message.imageFile != null) ...[
             ClipRRect(

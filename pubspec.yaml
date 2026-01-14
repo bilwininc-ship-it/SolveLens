@@ -74,6 +74,10 @@ dependencies:
   # Google Cloud TTS & Audio Playback
   http: ^1.2.0
   audioplayers: ^6.1.0
+  
+  # PDF Support
+  file_picker: ^8.1.6
+  syncfusion_flutter_pdf: ^28.1.33
 
 dev_dependencies:
   flutter_test:

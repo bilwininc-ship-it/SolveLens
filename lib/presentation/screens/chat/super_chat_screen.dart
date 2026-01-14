@@ -79,6 +79,10 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     _chatProvider.sendVoiceMessage(transcribedText, durationMinutes);
     _scrollToBottom();
   }
+  void _handleSendPDF(file, fileName, fileSize) {
+    _chatProvider.sendPDFMessage(file, fileName, fileSize);
+    _scrollToBottom();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +127,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                   onSendText: _handleSendText,
                   onSendImage: _handleSendImage,
                   onSendVoice: _handleSendVoice,
+                  onSendPDF: _handleSendPDF,
                   isProcessing: isProcessing,
                   canSendText: hasTextQuota,
                   canSendVoice: hasVoiceQuota,
@@ -329,7 +334,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Ask questions with text, photos, or voice.\nYour AI Professor is ready to help!',
+              'Ask questions with text, photos, PDFs, or voice.\nYour AI Professor is ready to help!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -339,6 +344,8 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             ),
             const SizedBox(height: 40),
             _buildFeatureChip(Icons.camera_alt_rounded, 'Scan homework'),
+            const SizedBox(height: 12),
+            _buildFeatureChip(Icons.picture_as_pdf, 'Upload PDFs'),
             const SizedBox(height: 12),
             _buildFeatureChip(Icons.edit_rounded, 'Ask anything'),
             const SizedBox(height: 12),

@@ -254,6 +254,60 @@ class SuperChatProvider extends ChangeNotifier {
       ));
     }
   }
+  /// Send PDF message
+  Future<void> sendPDFMessage(File pdfFile, String fileName, String fileSize, {String text = ''}) async {
+    try {
+      // STRICT QUOTA CHECK BEFORE API CALL
+      final usage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = usage;
+      
+      if (!usage.hasTextQuota) {
+        _setState(SuperChatQuotaExceeded(
+          messages: _messages,
+          quotaType: 'pdf',
+        ));
+        return;
+      }
+
+      // Add user message with PDF
+      final userMessage = ChatMessageModel.userPDF(
+        id: _uuid.v4(),
+        pdfFile: pdfFile,
+        pdfFileName: fileName,
+        pdfFileSize: fileSize,
+        text: text,
+      );
+      _messages.add(userMessage);
+      _setState(SuperChatProcessing(
+        messages: _messages,
+        processingMessage: 'Elite Professor is analyzing the PDF document...',
+      ));
+
+      // For now, just acknowledge the PDF with a simple response
+      // TODO: Implement PDF content extraction and analysis
+      final response = 'I have received your PDF document "$fileName" ($fileSize). '
+          'PDF analysis feature is coming soon! For now, you can ask me questions about the content.';
+
+      // Add professor response
+      final professorMessage = ChatMessageModel.professorText(
+        id: _uuid.v4(),
+        text: response,
+      );
+      _messages.add(professorMessage);
+
+      // Update quota AFTER successful processing (PDFs count as text messages)
+      await quotaService.incrementTextMessage(userId);
+      final updatedUsage = await quotaService.getQuotaUsage(userId);
+      _currentQuota = updatedUsage;
+
+      _setState(SuperChatLoaded(messages: _messages));
+    } catch (e) {
+      _setState(SuperChatError(
+        messages: _messages,
+        errorMessage: 'Failed to process PDF: $e',
+      ));
+    }
+  }
 
   /// Clear all messages
   void clearMessages() {

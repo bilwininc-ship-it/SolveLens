@@ -11,6 +11,10 @@ class ChatMessageModel extends Equatable {
   final String? audioUrl; // Firebase Storage URL for audio
   final bool hasImage;
   final bool hasAudio;
+  final File? pdfFile;
+  final bool hasPDF;
+  final String? pdfFileName;
+  final String? pdfFileSize;
 
   const ChatMessageModel({
     required this.id,
@@ -21,6 +25,10 @@ class ChatMessageModel extends Equatable {
     this.audioUrl,
     this.hasImage = false,
     this.hasAudio = false,
+    this.pdfFile,
+    this.hasPDF = false,
+    this.pdfFileName,
+    this.pdfFileSize,
   });
 
   /// Creates a user text message
@@ -35,6 +43,7 @@ class ChatMessageModel extends Equatable {
       timestamp: DateTime.now(),
       hasImage: false,
       hasAudio: false,
+      hasPDF: false,
     );
   }
 
@@ -52,6 +61,29 @@ class ChatMessageModel extends Equatable {
       imageFile: imageFile,
       hasImage: true,
       hasAudio: false,
+      hasPDF: false,
+    );
+  }
+
+  /// Creates a user PDF message
+  factory ChatMessageModel.userPDF({
+    required String id,
+    required File pdfFile,
+    required String pdfFileName,
+    required String pdfFileSize,
+    String text = '',
+  }) {
+    return ChatMessageModel(
+      id: id,
+      text: text,
+      isUser: true,
+      timestamp: DateTime.now(),
+      pdfFile: pdfFile,
+      pdfFileName: pdfFileName,
+      pdfFileSize: pdfFileSize,
+      hasImage: false,
+      hasAudio: false,
+      hasPDF: true,
     );
   }
 
@@ -67,6 +99,7 @@ class ChatMessageModel extends Equatable {
       timestamp: DateTime.now(),
       hasImage: false,
       hasAudio: false,
+      hasPDF: false,
     );
   }
 
@@ -82,6 +115,7 @@ class ChatMessageModel extends Equatable {
       timestamp: DateTime.now(),
       hasImage: false,
       hasAudio: false,
+      hasPDF: false,
     );
   }
 
@@ -99,6 +133,7 @@ class ChatMessageModel extends Equatable {
       audioUrl: audioUrl,
       hasImage: false,
       hasAudio: true,
+      hasPDF: false,
     );
   }
 
@@ -112,6 +147,10 @@ class ChatMessageModel extends Equatable {
     String? audioUrl,
     bool? hasImage,
     bool? hasAudio,
+    File? pdfFile,
+    bool? hasPDF,
+    String? pdfFileName,
+    String? pdfFileSize,
   }) {
     return ChatMessageModel(
       id: id ?? this.id,
@@ -122,6 +161,10 @@ class ChatMessageModel extends Equatable {
       audioUrl: audioUrl ?? this.audioUrl,
       hasImage: hasImage ?? this.hasImage,
       hasAudio: hasAudio ?? this.hasAudio,
+      pdfFile: pdfFile ?? this.pdfFile,
+      hasPDF: hasPDF ?? this.hasPDF,
+      pdfFileName: pdfFileName ?? this.pdfFileName,
+      pdfFileSize: pdfFileSize ?? this.pdfFileSize,
     );
   }
 
@@ -135,5 +178,9 @@ class ChatMessageModel extends Equatable {
         audioUrl,
         hasImage,
         hasAudio,
+        pdfFile,
+        hasPDF,
+        pdfFileName,
+        pdfFileSize,
       ];
 }
