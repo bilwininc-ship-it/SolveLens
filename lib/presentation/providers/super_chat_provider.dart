@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:uuid/uuid.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/ai/ai_service.dart';
 import '../../services/voice/voice_service.dart';
 import '../../services/quota/quota_service.dart';
@@ -24,6 +25,9 @@ class SuperChatProvider extends ChangeNotifier {
   QuotaUsage? get currentQuota => _currentQuota;
 
   final _uuid = const Uuid();
+  
+  // Store last extracted PDF text for debugging
+  String? lastExtractedText;
 
   SuperChatProvider({
     required this.aiService,
@@ -254,6 +258,38 @@ class SuperChatProvider extends ChangeNotifier {
       ));
     }
   }
+
+  /// Extract text from PDF (max 50 pages)
+  Future<String> _extractPdfText(File file) async {
+    PdfDocument? document;
+    try {
+      // Load PDF document
+      final bytes = await file.readAsBytes();
+      document = PdfDocument(inputBytes: bytes);
+      
+      // Get total pages (max 50)
+      final totalPages = document.pages.count;
+      final pagesToProcess = totalPages > 50 ? 50 : totalPages;
+      
+      // Extract text from each page
+      final StringBuffer textBuffer = StringBuffer();
+      for (int i = 0; i < pagesToProcess; i++) {
+        final PdfPage page = document.pages[i];
+        final String pageText = PdfTextExtractor(document).extractText(startPageIndex: i, endPageIndex: i);
+        textBuffer.write(pageText);
+        textBuffer.write('\n'); // Add newline between pages
+      }
+      
+      return textBuffer.toString();
+    } catch (e) {
+      debugPrint('Error extracting PDF text: $e');
+      return '';
+    } finally {
+      // Dispose document to free memory
+      document?.dispose();
+    }
+  }
+
   /// Send PDF message
   Future<void> sendPDFMessage(File pdfFile, String fileName, String fileSize, {String text = ''}) async {
     try {
@@ -283,10 +319,23 @@ class SuperChatProvider extends ChangeNotifier {
         processingMessage: 'Elite Professor is analyzing the PDF document...',
       ));
 
+      // Extract PDF text
+      final extractedText = await _extractPdfText(pdfFile);
+      
+      // Store extracted text for debugging
+      lastExtractedText = extractedText;
+      
+      // Print first 100 characters to console
+      final preview = extractedText.length > 100 
+          ? extractedText.substring(0, 100) 
+          : extractedText;
+      debugPrint('PDF Text Preview (first 100 chars): $preview');
+
       // For now, just acknowledge the PDF with a simple response
-      // TODO: Implement PDF content extraction and analysis
+      // TODO: Send extractedText to Gemini API for analysis
       final response = 'I have received your PDF document "$fileName" ($fileSize). '
-          'PDF analysis feature is coming soon! For now, you can ask me questions about the content.';
+          'PDF text extraction successful! Extracted ${extractedText.length} characters. '
+          'Gemini integration coming in next sprint.';
 
       // Add professor response
       final professorMessage = ChatMessageModel.professorText(
