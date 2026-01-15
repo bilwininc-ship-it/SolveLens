@@ -1,6 +1,6 @@
 // Message Bubble Widget - Supports user and professor messages with text, images, and audio
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'pdf_card_widget.dart';
 import '../../../data/models/chat_message_model.dart';
 import 'audio_player_widget.dart';
 
