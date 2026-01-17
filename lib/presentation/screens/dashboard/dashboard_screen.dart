@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import '../solution/ai_solution_screen.dart';
 import '../../providers/solution_provider.dart';
+import '../../providers/user_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -174,7 +175,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
+        
+        // Credits Chip - Elite Glassmorphism Design
+        _buildCreditsChip(),
       ],
+    );
+  }
+
+  Widget _buildCreditsChip() {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final credits = userProvider.remainingCredits;
+        final isLoading = userProvider.isLoading;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primaryNavy.withOpacity(0.95),
+                AppTheme.primaryNavy.withOpacity(0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, 4),
+                blurRadius: 12,
+                color: AppTheme.primaryNavy.withOpacity(0.25),
+              ),
+              BoxShadow(
+                offset: const Offset(0, 2),
+                blurRadius: 6,
+                color: Colors.black.withOpacity(0.05),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppTheme.premiumGold.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.diamond_rounded,
+                  color: AppTheme.premiumGold,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isLoading ? '...' : '$credits',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Credits',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

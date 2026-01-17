@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../home/home_screen.dart';
 import 'login_screen.dart';
+import '../../providers/user_provider.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -24,12 +26,22 @@ class AuthWrapper extends StatelessWidget {
           );
         }
 
+        // Get UserProvider instance
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+
         // Redirect immediately based on auth state
         if (snapshot.hasData && snapshot.data != null) {
-          // User is logged in - go to Dashboard
+          // User is logged in - start listening to user document
+          final userId = snapshot.data!.uid;
+          userProvider.startListening(userId);
+          
+          // Go to Dashboard
           return const HomeScreen();
         } else {
-          // User is not logged in - show login
+          // User is not logged in - stop listening
+          userProvider.stopListening();
+          
+          // Show login
           return const LoginScreen();
         }
       },

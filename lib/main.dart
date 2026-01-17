@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_wrapper.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/user_provider.dart';
 import 'core/di/service_locator.dart';
 import 'firebase_options.dart';
 
@@ -46,6 +47,7 @@ class SolveLensApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: MaterialApp(
         title: 'SolveLens - Elite Professor',
