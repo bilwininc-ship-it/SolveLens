@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../domain/entities/question.dart';
 import '../../../domain/usecases/get_question_history_usecase.dart';
 import '../../../core/di/service_locator.dart';
-import '../theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -207,20 +208,20 @@ class _AppDrawerState extends State<AppDrawer> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFFD4AF37).withOpacity(0.15),
-                const Color(0xFFD4AF37).withOpacity(0.08),
+                const Color(0xFFD4AF37).withValues(alpha: 0.15),
+                const Color(0xFFD4AF37).withValues(alpha: 0.08),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFD4AF37).withOpacity(0.3),
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFD4AF37).withOpacity(0.2),
+                color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -252,7 +253,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFD4AF37).withOpacity(0.5),
+                            color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -289,10 +290,10 @@ class _AppDrawerState extends State<AppDrawer> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFD4AF37).withOpacity(0.2),
+                                  color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: const Color(0xFFD4AF37).withOpacity(0.4),
+                                    color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
                                     width: 1,
                                   ),
                                 ),
@@ -338,7 +339,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     // Arrow Icon
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      color: const Color(0xFFD4AF37).withOpacity(0.6),
+                      color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
                       size: 18,
                     ),
                   ],
@@ -639,145 +640,6 @@ class _AppDrawerState extends State<AppDrawer> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMyCreditsSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFFD4AF37).withValues(alpha: 0.1),
-            const Color(0xFFFFD700).withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFD4AF37).withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navigate to credits/subscription page
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Credits feature coming soon!'),
-                backgroundColor: Color(0xFFD4AF37),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Credits icon with glow effect
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFD4AF37),
-                        const Color(0xFFFFD700),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.stars,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                
-                // Credits info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'My Credits',
-                            style: TextStyle(
-                              color: Color(0xFFD4AF37),
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'PREMIUM',
-                              style: TextStyle(
-                                color: Color(0xFFD4AF37),
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '∞',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Unlimited Questions',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Arrow indicator
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: const Color(0xFFD4AF37).withValues(alpha: 0.6),
-                  size: 16,
-                ),
-              ],
-            ),
           ),
         ),
       ),

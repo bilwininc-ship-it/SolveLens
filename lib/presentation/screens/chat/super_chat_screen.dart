@@ -8,6 +8,7 @@ import '../../../services/voice/voice_service.dart';
 import '../../../services/quota/quota_service.dart';
 import '../../providers/super_chat_provider.dart';
 import '../../providers/super_chat_state.dart';
+import '../../providers/user_provider.dart';
 import '../../widgets/chat/quota_indicator.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/hybrid_input_bar.dart';
@@ -36,11 +37,15 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
       return;
     }
 
+    // Get UserProvider from context
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     _chatProvider = SuperChatProvider(
       aiService: getIt<AIService>(),
       voiceService: getIt<VoiceService>(),
       quotaService: getIt<QuotaService>(),
       userId: user.uid,
+      userProvider: userProvider,
     );
   }
 
@@ -156,7 +161,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryNavy.withOpacity(0.1),
+              color: AppTheme.primaryNavy.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -312,7 +317,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryNavy.withOpacity(0.08),
+                  color: AppTheme.primaryNavy.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -376,7 +381,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryNavy.withOpacity(0.08),
+              color: AppTheme.primaryNavy.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
