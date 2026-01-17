@@ -14,6 +14,7 @@ class SuperChatProvider extends ChangeNotifier {
   final VoiceService voiceService;
   final QuotaService quotaService;
   final String userId;
+  final dynamic userProvider; // UserProvider reference for credit system
 
   SuperChatState _state = const SuperChatInitial();
   SuperChatState get state => _state;
@@ -34,6 +35,7 @@ class SuperChatProvider extends ChangeNotifier {
     required this.voiceService,
     required this.quotaService,
     required this.userId,
+    required this.userProvider, // NEW: UserProvider for credit deduction
   }) {
     _initializeQuota();
   }
@@ -68,17 +70,30 @@ class SuperChatProvider extends ChangeNotifier {
     if (text.trim().isEmpty) return;
 
     try {
-      // STRICT QUOTA CHECK BEFORE API CALL
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
-      
-      if (!usage.hasTextQuota) {
-        _setState(SuperChatQuotaExceeded(
+      // ============================================================
+      // NEW CREDIT SYSTEM: Check if user has credits
+      // ============================================================
+      if (userProvider.remainingCredits <= 0) {
+        _setState(SuperChatError(
           messages: _messages,
-          quotaType: 'text',
+          errorMessage: '💳 Insufficient credits! Please purchase more credits to continue.',
         ));
         return;
       }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // final usage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = usage;
+      // 
+      // if (!usage.hasTextQuota) {
+      //   _setState(SuperChatQuotaExceeded(
+      //     messages: _messages,
+      //     quotaType: 'text',
+      //   ));
+      //   return;
+      // }
 
       // Add user message
       final userMessage = ChatMessageModel.userText(
@@ -119,10 +134,20 @@ class SuperChatProvider extends ChangeNotifier {
 
       _messages.add(professorMessage);
 
-      // Update quota AFTER successful API call
-      await quotaService.incrementTextMessage(userId);
-      final updatedUsage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = updatedUsage;
+      // ============================================================
+      // NEW CREDIT SYSTEM: Deduct 1 credit for text message
+      // ============================================================
+      final deductionSuccess = await userProvider.useCredits(1);
+      if (!deductionSuccess) {
+        debugPrint('⚠️ Warning: Credit deduction failed for text message');
+      }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // await quotaService.incrementTextMessage(userId);
+      // final updatedUsage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -136,17 +161,30 @@ class SuperChatProvider extends ChangeNotifier {
   /// Send image message
   Future<void> sendImageMessage(File imageFile, {String text = ''}) async {
     try {
-      // STRICT QUOTA CHECK BEFORE API CALL
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
-      
-      if (!usage.hasTextQuota) {
-        _setState(SuperChatQuotaExceeded(
+      // ============================================================
+      // NEW CREDIT SYSTEM: Check if user has credits
+      // ============================================================
+      if (userProvider.remainingCredits <= 0) {
+        _setState(SuperChatError(
           messages: _messages,
-          quotaType: 'image',
+          errorMessage: '💳 Insufficient credits! Please purchase more credits to continue.',
         ));
         return;
       }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // final usage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = usage;
+      // 
+      // if (!usage.hasTextQuota) {
+      //   _setState(SuperChatQuotaExceeded(
+      //     messages: _messages,
+      //     quotaType: 'image',
+      //   ));
+      //   return;
+      // }
 
       // Add user message with image
       final userMessage = ChatMessageModel.userImage(
@@ -173,10 +211,20 @@ class SuperChatProvider extends ChangeNotifier {
       );
       _messages.add(professorMessage);
 
-      // Update quota AFTER successful API call (images count as text messages)
-      await quotaService.incrementTextMessage(userId);
-      final updatedUsage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = updatedUsage;
+      // ============================================================
+      // NEW CREDIT SYSTEM: Deduct 1 credit for image analysis
+      // ============================================================
+      final deductionSuccess = await userProvider.useCredits(1);
+      if (!deductionSuccess) {
+        debugPrint('⚠️ Warning: Credit deduction failed for image message');
+      }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // await quotaService.incrementTextMessage(userId);
+      // final updatedUsage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -192,17 +240,30 @@ class SuperChatProvider extends ChangeNotifier {
     if (transcribedText.trim().isEmpty) return;
 
     try {
-      // STRICT QUOTA CHECK BEFORE API CALLS (Both Gemini and TTS)
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
-      
-      if (!usage.hasVoiceQuota) {
-        _setState(SuperChatQuotaExceeded(
+      // ============================================================
+      // NEW CREDIT SYSTEM: Check if user has credits
+      // ============================================================
+      if (userProvider.remainingCredits <= 0) {
+        _setState(SuperChatError(
           messages: _messages,
-          quotaType: 'voice',
+          errorMessage: '💳 Insufficient credits! Please purchase more credits to continue.',
         ));
         return;
       }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // final usage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = usage;
+      // 
+      // if (!usage.hasVoiceQuota) {
+      //   _setState(SuperChatQuotaExceeded(
+      //     messages: _messages,
+      //     quotaType: 'voice',
+      //   ));
+      //   return;
+      // }
 
       // Add user voice message
       final userMessage = ChatMessageModel.userVoice(
@@ -218,18 +279,21 @@ class SuperChatProvider extends ChangeNotifier {
       // Get AI response text (Gemini API call)
       final responseText = await aiService.getChatResponse(transcribedText.trim());
 
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
       // Check quota again before expensive TTS operation
-      final currentUsage = await quotaService.getQuotaUsage(userId);
-      if (!currentUsage.hasVoiceQuota) {
-        // Add text-only response if voice quota exhausted
-        final professorMessage = ChatMessageModel.professorText(
-          id: _uuid.v4(),
-          text: responseText + '\n\n⚠️ Voice quota exhausted. Upgrade for audio responses!',
-        );
-        _messages.add(professorMessage);
-        _setState(SuperChatLoaded(messages: _messages));
-        return;
-      }
+      // final currentUsage = await quotaService.getQuotaUsage(userId);
+      // if (!currentUsage.hasVoiceQuota) {
+      //   // Add text-only response if voice quota exhausted
+      //   final professorMessage = ChatMessageModel.professorText(
+      //     id: _uuid.v4(),
+      //     text: responseText + '\n\n⚠️ Voice quota exhausted. Upgrade for audio responses!',
+      //   );
+      //   _messages.add(professorMessage);
+      //   _setState(SuperChatLoaded(messages: _messages));
+      //   return;
+      // }
 
       // Generate audio response (Google Cloud TTS + Firebase Storage upload)
       final audioUrl = await voiceService.generateSpeech(
@@ -245,10 +309,20 @@ class SuperChatProvider extends ChangeNotifier {
       );
       _messages.add(professorMessage);
 
-      // Update quota AFTER successful API calls (increment by duration in minutes)
-      await quotaService.incrementVoiceMinutes(userId, durationMinutes);
-      final updatedUsage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = updatedUsage;
+      // ============================================================
+      // NEW CREDIT SYSTEM: Deduct 1 credit for voice message
+      // ============================================================
+      final deductionSuccess = await userProvider.useCredits(1);
+      if (!deductionSuccess) {
+        debugPrint('⚠️ Warning: Credit deduction failed for voice message');
+      }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // await quotaService.incrementVoiceMinutes(userId, durationMinutes);
+      // final updatedUsage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {
@@ -293,17 +367,30 @@ class SuperChatProvider extends ChangeNotifier {
   /// Send PDF message
   Future<void> sendPDFMessage(File pdfFile, String fileName, String fileSize, {String text = ''}) async {
     try {
-      // STRICT QUOTA CHECK BEFORE API CALL
-      final usage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = usage;
-      
-      if (!usage.hasTextQuota) {
-        _setState(SuperChatQuotaExceeded(
+      // ============================================================
+      // NEW CREDIT SYSTEM: Check if user has credits (PDF requires 3 credits)
+      // ============================================================
+      if (userProvider.remainingCredits < 3) {
+        _setState(SuperChatError(
           messages: _messages,
-          quotaType: 'pdf',
+          errorMessage: '💳 Insufficient credits! PDF analysis requires 3 credits. Please purchase more credits to continue.',
         ));
         return;
       }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // final usage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = usage;
+      // 
+      // if (!usage.hasTextQuota) {
+      //   _setState(SuperChatQuotaExceeded(
+      //     messages: _messages,
+      //     quotaType: 'pdf',
+      //   ));
+      //   return;
+      // }
 
       // Add user message with PDF
       final userMessage = ChatMessageModel.userPDF(
@@ -344,10 +431,20 @@ class SuperChatProvider extends ChangeNotifier {
       );
       _messages.add(professorMessage);
 
-      // Update quota AFTER successful processing (PDFs count as text messages)
-      await quotaService.incrementTextMessage(userId);
-      final updatedUsage = await quotaService.getQuotaUsage(userId);
-      _currentQuota = updatedUsage;
+      // ============================================================
+      // NEW CREDIT SYSTEM: Deduct 3 credits for PDF analysis (brain-heavy task)
+      // ============================================================
+      final deductionSuccess = await userProvider.useCredits(3);
+      if (!deductionSuccess) {
+        debugPrint('⚠️ Warning: Credit deduction failed for PDF message');
+      }
+
+      // ============================================================
+      // OLD QUOTA SYSTEM (COMMENTED OUT - TO BE REMOVED LATER)
+      // ============================================================
+      // await quotaService.incrementTextMessage(userId);
+      // final updatedUsage = await quotaService.getQuotaUsage(userId);
+      // _currentQuota = updatedUsage;
 
       _setState(SuperChatLoaded(messages: _messages));
     } catch (e) {

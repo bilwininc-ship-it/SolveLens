@@ -86,6 +86,38 @@ class UserProvider extends ChangeNotifier {
       debugPrint('❌ Error refreshing credits: $e');
     }
   }
+  /// Deduct credits atomically from user's wallet
+  /// Returns true if successful, false if insufficient credits
+  Future<bool> useCredits(int amount) async {
+    if (_userId == null) {
+      debugPrint('❌ useCredits: No userId set');
+      return false;
+    }
+
+    if (amount <= 0) {
+      debugPrint('⚠️ useCredits: Invalid amount $amount');
+      return false;
+    }
+
+    if (_remainingCredits < amount) {
+      debugPrint('❌ useCredits: Insufficient credits. Need: $amount, Have: $_remainingCredits');
+      return false;
+    }
+
+    try {
+      // Atomic decrement using FieldValue.increment (negative for deduction)
+      await _firestore.collection('users').doc(_userId).update({
+        'remaining_credits': FieldValue.increment(-amount),
+      });
+
+      debugPrint('💰 useCredits: Successfully deducted $amount credits');
+      // Real-time listener will automatically update _remainingCredits
+      return true;
+    } catch (e) {
+      debugPrint('❌ useCredits: Error deducting credits: $e');
+      return false;
+    }
+  }
 
   @override
   void dispose() {
