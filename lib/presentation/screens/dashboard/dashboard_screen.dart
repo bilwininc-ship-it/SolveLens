@@ -119,6 +119,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Row(
       children: [
+        // SolveLens Logo
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cleanWhite,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, 2),
+                blurRadius: 8,
+                color: const Color(0x0A000000),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(8),
+          child: const Icon(
+            Icons.school_rounded,
+            color: AppTheme.primaryNavy,
+            size: 32,
+          ),
+        ),
+        const SizedBox(width: 12),
+        
         // Menu button - Premium Navy
         Container(
           decoration: BoxDecoration(

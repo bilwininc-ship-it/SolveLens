@@ -87,6 +87,27 @@ class _AppDrawerState extends State<AppDrawer> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // SolveLens Logo at the top
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.school_rounded,
+                      color: Colors.white,
+                      size: 48,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
                 Row(
                   children: [
                     CircleAvatar(

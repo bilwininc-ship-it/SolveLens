@@ -83,6 +83,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  
+  # App Icon & Splash Screen Generation
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 flutter:
   uses-material-design: true
@@ -95,3 +99,25 @@ flutter:
   #   - family: CustomFont
   #     fonts:
   #       - asset: assets/fonts/CustomFont-Regular.ttf
+
+# App Launcher Icons Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  adaptive_icon_background: "#0A192F"
+  adaptive_icon_foreground: "assets/images/logo.png"
+  remove_alpha_ios: true
+  
+# Native Splash Screen Configuration  
+flutter_native_splash:
+  color: "#0A192F"
+  image: assets/images/logo.png
+  android_gravity: center
+  ios_content_mode: center
+  web: false
+  branding: assets/images/logo.png
+  branding_mode: bottom
+  android_12:
+    image: assets/images/logo.png
+    color: "#0A192F"
