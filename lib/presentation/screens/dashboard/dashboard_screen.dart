@@ -67,21 +67,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: AppTheme.primaryNavy,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24), // Increased padding
+            padding: const EdgeInsets.all(20), // Reduced padding for better fit
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Premium Header with Menu
                 _buildPremiumHeader(firstName),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28), // Reduced from 32
 
                 // Elegant Dashboard Title
                 _buildDashboardTitle(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20), // Reduced from 24
 
                 // Premium Stats Card
                 _buildPremiumStatsCard(),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28), // Reduced from 32
 
                 // Features Section Title
                 const Text(
@@ -93,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18), // Reduced from 20
 
                 // Premium Feature Cards
                 _buildPremiumFeatureCards(),
@@ -210,80 +210,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final credits = userProvider.remainingCredits;
         final isLoading = userProvider.isLoading;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryNavy.withOpacity(0.95),
-                AppTheme.primaryNavy.withOpacity(0.85),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                offset: const Offset(0, 4),
-                blurRadius: 12,
-                color: AppTheme.primaryNavy.withOpacity(0.25),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Use compact design for smaller screens
+            final isCompact = constraints.maxWidth < 400;
+            
+            return Container(
+              constraints: const BoxConstraints(
+                maxWidth: 110, // Prevent overflow
               ),
-              BoxShadow(
-                offset: const Offset(0, 2),
-                blurRadius: 6,
-                color: Colors.black.withOpacity(0.05),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 10 : 12, 
+                vertical: 8,
               ),
-            ],
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppTheme.premiumGold.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryNavy.withOpacity(0.95),
+                    AppTheme.primaryNavy.withOpacity(0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: const Icon(
-                  Icons.diamond_rounded,
-                  color: AppTheme.premiumGold,
-                  size: 16,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    offset: const Offset(0, 3),
+                    blurRadius: 10,
+                    color: AppTheme.primaryNavy.withOpacity(0.2),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 0.5,
                 ),
               ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    isLoading ? '...' : '$credits',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
-                      height: 1,
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.premiumGold.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.diamond_rounded,
+                      color: AppTheme.premiumGold,
+                      size: 14,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'Credits',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.5,
-                      height: 1,
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isLoading ? '...' : '$credits',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                            height: 1,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 1.5),
+                        const Text(
+                          'Credits',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            height: 1,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -331,15 +343,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildPremiumStatsCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20), // Reduced from 24
       decoration: BoxDecoration(
         color: AppTheme.cleanWhite, // Premium white background
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20), // Reduced from 24
         boxShadow: [
           // Airy Shadow
           BoxShadow(
-            offset: const Offset(0, 4),
-            blurRadius: 15,
+            offset: const Offset(0, 3),
+            blurRadius: 12,
             color: const Color(0x0D000000),
           ),
         ],
@@ -354,7 +366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: AppTheme.primaryNavy,
           ),
           Container(
-            height: 50,
+            height: 45,
             width: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -375,7 +387,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: AppTheme.warningOrange,
           ),
           Container(
-            height: 50,
+            height: 45,
             width: 1,
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -409,29 +421,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(9), // Reduced from 10
           decoration: BoxDecoration(
             color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(11), // Reduced from 12
           ),
-          child: Icon(icon, color: color, size: 26),
+          child: Icon(icon, color: color, size: 22), // Reduced from 26
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10), // Reduced from 12
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppTheme.primaryNavy,
-            fontSize: 24,
+            fontSize: 22, // Reduced from 24
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3), // Reduced from 4
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppTheme.mediumGrey,
-            fontSize: 12,
+            fontSize: 11, // Reduced from 12
             fontWeight: FontWeight.w500,
             letterSpacing: 0.3,
           ),
@@ -471,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             }
           },
         ),
-        const SizedBox(height: 24), // Generous vertical spacing
+        const SizedBox(height: 18), // Reduced from 24
 
         // Card 2: Super Chat (Unified Interface)
         DashboardCard(
@@ -487,7 +499,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           },
         ),
-        const SizedBox(height: 24), // Generous vertical spacing
+        const SizedBox(height: 18), // Reduced from 24
 
         // Card 3: My Smart Notes
         DashboardCard(

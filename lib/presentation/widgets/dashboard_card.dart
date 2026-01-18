@@ -27,12 +27,12 @@ class DashboardCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(24), // Premium 24px corners
+        borderRadius: BorderRadius.circular(20), // Reduced from 24px to 20px
         boxShadow: [
           // Airy Shadow - Ultra-subtle and premium
           BoxShadow(
-            offset: const Offset(0, 4),
-            blurRadius: 15,
+            offset: const Offset(0, 3),
+            blurRadius: 12,
             color: const Color(0x0D000000), // Very subtle shadow
           ),
         ],
@@ -41,9 +41,9 @@ class DashboardCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.all(24), // Generous padding for breathing room
+            padding: const EdgeInsets.all(16), // Reduced from 24 to 16 (~30% reduction)
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,67 +53,67 @@ class DashboardCard extends StatelessWidget {
                   children: [
                     // Premium Icon Container
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(10), // Reduced from 14 to 10
                       decoration: BoxDecoration(
                         color: AppTheme.primaryNavy.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(12), // Reduced from 16 to 12
                       ),
                       child: Icon(
                         icon,
                         color: AppTheme.primaryNavy, // Navy Blue icons
-                        size: 26, // Consistent 26px icon size
+                        size: 20, // Reduced from 26 to 20 (~30% reduction)
                       ),
                     ),
                     if (badge != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 10,
+                          vertical: 5,
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryNavy,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           badge!,
                           style: const TextStyle(
                             color: AppTheme.cleanWhite,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.4,
                           ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 20), // Generous spacing
+                const SizedBox(height: 14), // Reduced from 20 to 14
                 
-                // Title - Navy Blue, 17pt, Semi-Bold
+                // Title - Navy Blue, Reduced size
                 Text(
                   title,
                   style: const TextStyle(
                     color: AppTheme.primaryNavy, // #1E3A8A
-                    fontSize: 17,
+                    fontSize: 15, // Reduced from 17 to 15
                     fontWeight: FontWeight.w600, // Semi-Bold
                     letterSpacing: 0.2,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6), // Reduced from 10 to 6
                 
-                // Subtitle - Slate Grey, 12pt, Regular
+                // Subtitle - Slate Grey, Reduced size
                 Text(
                   subtitle,
                   style: const TextStyle(
                     color: AppTheme.mediumGrey, // #64748B
-                    fontSize: 12,
+                    fontSize: 11, // Reduced from 12 to 11
                     fontWeight: FontWeight.w400, // Regular
-                    height: 1.5,
+                    height: 1.4,
                     letterSpacing: 0.1,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12), // Reduced from 20 to 12
                 
                 // Arrow Icon - Subtle
                 Align(
@@ -121,7 +121,7 @@ class DashboardCard extends StatelessWidget {
                   child: Icon(
                     Icons.arrow_forward_rounded,
                     color: AppTheme.primaryNavy.withOpacity(0.5),
-                    size: 22,
+                    size: 18, // Reduced from 22 to 18
                   ),
                 ),
               ],

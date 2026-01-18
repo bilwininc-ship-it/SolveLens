@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFloatingBottomBar() {
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -45,26 +45,21 @@ class _HomeScreenState extends State<HomeScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1565C0).withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: AppTheme.premiumGold.withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: const Color(0xFF1565C0).withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+            spreadRadius: 1,
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(28),
         child: Container(
-          height: 75,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -97,50 +92,54 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     final isSelected = _currentIndex == index;
     
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.premiumGold.withValues(alpha: 0.2)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected
-              ? Border.all(
-                  color: AppTheme.premiumGold.withValues(alpha: 0.5),
-                  width: 1,
-                )
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AppTheme.premiumGold : Colors.white,
-              size: isSelected ? 28 : 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppTheme.premiumGold : Colors.white.withValues(alpha: 0.8),
-                fontSize: isSelected ? 12 : 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                letterSpacing: 0.5,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSelected ? 12 : 8,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.premiumGold.withValues(alpha: 0.2)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            border: isSelected
+                ? Border.all(
+                    color: AppTheme.premiumGold.withValues(alpha: 0.5),
+                    width: 1,
+                  )
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppTheme.premiumGold : Colors.white,
+                size: isSelected ? 24 : 22,
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppTheme.premiumGold : Colors.white.withValues(alpha: 0.8),
+                  fontSize: isSelected ? 11 : 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
         ),
       ),
     );
