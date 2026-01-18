@@ -1,7 +1,10 @@
-// RevenueCat payment service for subscription management
-import 'package:flutter/services.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
-import '../../core/constants/app_constants.dart';
+// Google Play In-App Purchase service for subscription management
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import '../../core/constants/subscription_constants.dart';
 
 class PaymentService {
@@ -9,138 +12,230 @@ class PaymentService {
   factory PaymentService() => _instance;
   PaymentService._internal();
 
+  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
+  late StreamSubscription<List<PurchaseDetails>> _subscription;
   bool _isInitialized = false;
 
-  /// Initializes RevenueCat SDK
+  // Product IDs for different subscription tiers
+  static const String basicMonthlyId = 'solvelens_basic_monthly';
+  static const String basicYearlyId = 'solvelens_basic_yearly';
+  static const String proMonthlyId = 'solvelens_pro_monthly';
+  static const String proYearlyId = 'solvelens_pro_yearly';
+  static const String eliteMonthlyId = 'solvelens_elite_monthly';
+  static const String eliteYearlyId = 'solvelens_elite_yearly';
+
+  static const Set<String> _productIds = {
+    basicMonthlyId,
+    basicYearlyId,
+    proMonthlyId,
+    proYearlyId,
+    eliteMonthlyId,
+    eliteYearlyId,
+  };
+
+  List<ProductDetails> _products = [];
+  List<PurchaseDetails> _purchases = [];
+
+  /// Initializes Google Play In-App Purchase
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    await Purchases.setLogLevel(LogLevel.debug);
-    
-    PurchasesConfiguration configuration = PurchasesConfiguration(
-      AppConstants.revenueCatApiKey,
+    // Check if IAP is available
+    final bool available = await _inAppPurchase.isAvailable();
+    if (!available) {
+      throw PaymentServiceException('In-App Purchase is not available on this device');
+    }
+
+    // Platform-specific initialization
+    if (Platform.isAndroid) {
+      final InAppPurchaseAndroidPlatformAddition androidAddition =
+          _inAppPurchase.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+      await androidAddition.enablePendingPurchases();
+    }
+
+    // Listen to purchase updates
+    _subscription = _inAppPurchase.purchaseStream.listen(
+      _onPurchaseUpdate,
+      onDone: () {
+        debugPrint('Purchase stream closed');
+      },
+      onError: (error) {
+        debugPrint('Purchase stream error: $error');
+      },
     );
-    
-    await Purchases.configure(configuration);
+
     _isInitialized = true;
   }
 
-  /// Checks if user has an active subscription
-  Future<SubscriptionStatus> checkSubscriptionStatus() async {
+  /// Handles purchase updates from the stream
+  void _onPurchaseUpdate(List<PurchaseDetails> purchaseDetailsList) async {
+    for (final PurchaseDetails purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        // Handle pending purchase
+        debugPrint('Purchase pending: ${purchaseDetails.productID}');
+      } else if (purchaseDetails.status == PurchaseStatus.error) {
+        // Handle error
+        debugPrint('Purchase error: ${purchaseDetails.error}');
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        // Verify purchase and grant entitlement
+        await _verifyAndDeliverProduct(purchaseDetails);
+      }
+
+      // Complete the purchase on Android
+      if (purchaseDetails.pendingCompletePurchase) {
+        await _inAppPurchase.completePurchase(purchaseDetails);
+      }
+    }
+
+    _purchases = purchaseDetailsList;
+  }
+
+  /// Verifies and delivers the purchased product
+  Future<void> _verifyAndDeliverProduct(PurchaseDetails purchaseDetails) async {
+    // TODO: Implement server-side verification
+    // For now, we trust the platform verification
+    debugPrint('Purchase verified: ${purchaseDetails.productID}');
+  }
+
+  /// Fetches available subscription products
+  Future<List<ProductDetails>> getAvailableProducts() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     try {
-      final CustomerInfo customerInfo = await Purchases.getCustomerInfo();
-      
-      // Check for Elite entitlement
-      if (customerInfo.entitlements.all['elite']?.isActive == true) {
-        return SubscriptionStatus(
-          isSubscribed: true,
-          tier: SubscriptionTier.elite,
-          dailyLimit: SubscriptionConstants.eliteQuestionsPerDay,
-          expirationDate: customerInfo.entitlements.all['elite']?.expirationDate,
-        );
+      final ProductDetailsResponse response = await _inAppPurchase.queryProductDetails(_productIds);
+
+      if (response.error != null) {
+        throw PaymentServiceException('Failed to query products: ${response.error!.message}');
       }
-      
-      // Check for Pro entitlement
-      if (customerInfo.entitlements.all['pro']?.isActive == true) {
-        return SubscriptionStatus(
-          isSubscribed: true,
-          tier: SubscriptionTier.pro,
-          dailyLimit: SubscriptionConstants.proQuestionsPerDay,
-          expirationDate: customerInfo.entitlements.all['pro']?.expirationDate,
-        );
+
+      if (response.notFoundIDs.isNotEmpty) {
+        debugPrint('Products not found: ${response.notFoundIDs}');
       }
-      
-      // Check for Basic entitlement
-      if (customerInfo.entitlements.all['basic']?.isActive == true) {
-        return SubscriptionStatus(
-          isSubscribed: true,
-          tier: SubscriptionTier.basic,
-          dailyLimit: SubscriptionConstants.basicQuestionsPerDay,
-          expirationDate: customerInfo.entitlements.all['basic']?.expirationDate,
-        );
+
+      if (response.productDetails.isEmpty) {
+        throw PaymentServiceException('No products available');
       }
-      
-      // Free tier (no active subscription)
-      return SubscriptionStatus(
-        isSubscribed: false,
-        tier: SubscriptionTier.free,
-        dailyLimit: 3, // Free tier limit
-        expirationDate: null,
-      );
-      
+
+      _products = response.productDetails;
+      return _products;
     } catch (e) {
-      throw PaymentServiceException('Failed to check subscription: $e');
+      throw PaymentServiceException('Failed to fetch products: $e');
     }
   }
 
-  /// Fetches available packages for purchase
-  Future<List<Package>> getAvailablePackages() async {
-    try {
-      final Offerings offerings = await Purchases.getOfferings();
-      
-      if (offerings.current == null || 
-          offerings.current!.availablePackages.isEmpty) {
-        throw PaymentServiceException('No packages available');
-      }
-      
-      return offerings.current!.availablePackages;
-      
-    } catch (e) {
-      throw PaymentServiceException('Failed to fetch packages: $e');
+  /// Purchases a subscription product
+  Future<bool> purchaseProduct(ProductDetails product) async {
+    if (!_isInitialized) {
+      await initialize();
     }
-  }
 
-  /// Purchases a subscription package
-  Future<SubscriptionStatus> purchasePackage(Package package) async {
     try {
-      final CustomerInfo customerInfo = await Purchases.purchasePackage(package);
+      final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
       
-      // Re-check subscription status after purchase
-      return await checkSubscriptionStatus();
+      // For subscriptions, use buyNonConsumable
+      final bool success = await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
       
-    } on PlatformException catch (e) {
-      final errorCode = PurchasesErrorHelper.getErrorCode(e);
-      
-      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
-        throw PaymentServiceException('Purchase cancelled');
-      } else if (errorCode == PurchasesErrorCode.purchaseNotAllowedError) {
-        throw PaymentServiceException('Purchase not allowed');
-      } else if (errorCode == PurchasesErrorCode.paymentPendingError) {
-        throw PaymentServiceException('Payment pending');
-      } else {
-        throw PaymentServiceException('Purchase failed: ${e.message}');
-      }
+      return success;
     } catch (e) {
-      throw PaymentServiceException('Purchase error: $e');
+      throw PaymentServiceException('Purchase failed: $e');
     }
   }
 
   /// Restores previous purchases
-  Future<SubscriptionStatus> restorePurchases() async {
+  Future<List<PurchaseDetails>> restorePurchases() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     try {
-      final CustomerInfo customerInfo = await Purchases.restorePurchases();
-      return await checkSubscriptionStatus();
+      await _inAppPurchase.restorePurchases();
+      
+      // Wait for purchases to be updated
+      await Future.delayed(const Duration(seconds: 2));
+      
+      return _purchases.where((p) => p.status == PurchaseStatus.restored).toList();
     } catch (e) {
       throw PaymentServiceException('Failed to restore purchases: $e');
     }
   }
 
-  /// Identifies user for RevenueCat (call after auth)
-  Future<void> identifyUser(String userId) async {
+  /// Checks current subscription status
+  Future<SubscriptionStatus> checkSubscriptionStatus() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     try {
-      await Purchases.logIn(userId);
+      // Get all active purchases
+      final List<PurchaseDetails> activePurchases = _purchases.where((p) =>
+          p.status == PurchaseStatus.purchased || p.status == PurchaseStatus.restored).toList();
+
+      if (activePurchases.isEmpty) {
+        return SubscriptionStatus(
+          isSubscribed: false,
+          tier: SubscriptionTier.free,
+          dailyLimit: 3, // Free tier limit
+          expirationDate: null,
+        );
+      }
+
+      // Check for Elite subscription (highest tier)
+      if (activePurchases.any((p) => p.productID.contains('elite'))) {
+        return SubscriptionStatus(
+          isSubscribed: true,
+          tier: SubscriptionTier.elite,
+          dailyLimit: SubscriptionConstants.eliteQuestionsPerDay,
+          expirationDate: null, // Subscriptions don't have fixed expiration
+        );
+      }
+
+      // Check for Pro subscription
+      if (activePurchases.any((p) => p.productID.contains('pro'))) {
+        return SubscriptionStatus(
+          isSubscribed: true,
+          tier: SubscriptionTier.pro,
+          dailyLimit: SubscriptionConstants.proQuestionsPerDay,
+          expirationDate: null,
+        );
+      }
+
+      // Check for Basic subscription
+      if (activePurchases.any((p) => p.productID.contains('basic'))) {
+        return SubscriptionStatus(
+          isSubscribed: true,
+          tier: SubscriptionTier.basic,
+          dailyLimit: SubscriptionConstants.basicQuestionsPerDay,
+          expirationDate: null,
+        );
+      }
+
+      // Default to free tier
+      return SubscriptionStatus(
+        isSubscribed: false,
+        tier: SubscriptionTier.free,
+        dailyLimit: 3,
+        expirationDate: null,
+      );
     } catch (e) {
-      throw PaymentServiceException('Failed to identify user: $e');
+      throw PaymentServiceException('Failed to check subscription: $e');
     }
   }
 
-  /// Logs out user from RevenueCat
-  Future<void> logoutUser() async {
+  /// Gets product details by ID
+  ProductDetails? getProductById(String productId) {
     try {
-      await Purchases.logOut();
+      return _products.firstWhere((p) => p.id == productId);
     } catch (e) {
-      throw PaymentServiceException('Failed to logout user: $e');
+      return null;
     }
+  }
+
+  /// Disposes the service
+  void dispose() {
+    _subscription.cancel();
   }
 }
 
@@ -184,7 +279,7 @@ class SubscriptionStatus {
 class PaymentServiceException implements Exception {
   final String message;
   PaymentServiceException(this.message);
-  
+
   @override
   String toString() => message;
 }

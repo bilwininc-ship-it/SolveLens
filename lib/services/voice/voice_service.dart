@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../core/constants/app_constants.dart';
 import '../config/remote_config_service.dart';
 
 class VoiceService {
@@ -277,13 +276,13 @@ class VoiceService {
   /// Uses Remote Config for API key and voice name
   Future<Uint8List?> _fetchAudioFromGoogleCloud(String text) async {
     try {
-      // Get API key from Remote Config with fallback to local constant
+      // Get API key from Remote Config (must be configured in Firebase)
       final apiKey = _remoteConfigService.getGoogleCloudTtsApiKey(
-        AppConstants.googleCloudTtsApiKey
+        ''
       );
       
-      if (apiKey == 'YOUR_GOOGLE_CLOUD_TTS_API_KEY' || apiKey.isEmpty) {
-        debugPrint('Google Cloud TTS API key not configured');
+      if (apiKey.isEmpty) {
+        debugPrint('Google Cloud TTS API key not configured in Remote Config');
         return null; // Will trigger fallback to Flutter TTS
       }
 

@@ -21,8 +21,8 @@ dependencies:
   # AI
   google_generative_ai: ^0.4.6
   
-  # IAP
-  purchases_flutter: ^8.2.2
+  # IAP - Google Play In-App Purchase
+  in_app_purchase: ^3.2.0
   
   # Camera
   camera: ^0.11.0+2

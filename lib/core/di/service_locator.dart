@@ -61,9 +61,10 @@ Future<void> setupServiceLocator() async {
   );
 
   // AI Service (with Remote Config key, Gemini 2.5 Flash, and Firebase Database)
+  // API key is fetched from Firebase Remote Config for security
   getIt.registerLazySingleton<AIService>(
     () => AIService(
-      remoteConfigService.getGeminiApiKey(AppConstants.geminiApiKey),
+      remoteConfigService.getGeminiApiKey(''), // Empty fallback - key must be in Remote Config
       getIt<FirebaseDatabase>(),
     ),
   );

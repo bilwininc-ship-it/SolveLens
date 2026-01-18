@@ -1,20 +1,29 @@
 // Application-wide constant values
+// ⚠️ SECURITY NOTE: API keys are stored in Firebase Remote Config for security
+// Never hardcode API keys in the codebase
 class AppConstants {
   static const String appName = 'SolveLens';
-  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY'; // Should be loaded from .env
-  static const String revenueCatApiKey = 'YOUR_REVENUECAT_KEY';
+  static const String appVersion = '1.0.0';
   
-  // Google Cloud Text-to-Speech API
-  // Get your API key from: https://console.cloud.google.com/apis/credentials
-  // Make sure to enable "Cloud Text-to-Speech API" in your project
-  static const String googleCloudTtsApiKey = 'YOUR_GOOGLE_CLOUD_TTS_API_KEY';
+  // API Keys are managed through Firebase Remote Config
+  // See: lib/services/config/remote_config_service.dart
+  // - gemini_api_key: Gemini AI API key
+  // - google_cloud_api_key: Google Cloud TTS API key
   
   // Firebase Collection Names
   static const String usersCollection = 'users';
   static const String questionsCollection = 'questions';
   static const String subscriptionsCollection = 'subscriptions';
+  static const String notesCollection = 'notes';
+  static const String historyCollection = 'history';
   
   // SharedPreferences Keys
   static const String userIdKey = 'user_id';
   static const String subscriptionTypeKey = 'subscription_type';
+  static const String firstLaunchKey = 'first_launch';
+  static const String selectedLanguageKey = 'selected_language';
+  
+  // App Store / Play Store IDs (for IAP)
+  static const String androidAppId = 'com.solvelens.app';
+  static const String iosAppId = 'com.solvelens.app';
 }
