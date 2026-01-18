@@ -1,8 +1,15 @@
-// Hybrid Input Bar - Camera + PDF + Text Field + Microphone
+// Enhanced Hybrid Input Bar - Camera + PDF + Text Field + Real Voice Recording
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
+import '../../../core/di/service_locator.dart';
+import '../../../services/voice/voice_service.dart';
+import '../../theme/app_theme.dart';
 
 class HybridInputBar extends StatefulWidget {
   final Function(String text)? onSendText;
@@ -31,9 +38,14 @@ class HybridInputBar extends StatefulWidget {
 class _HybridInputBarState extends State<HybridInputBar> {
   final TextEditingController _textController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final VoiceService _voiceService = getIt<VoiceService>();
+  
   bool _isRecording = false;
   bool _hasText = false;
+  bool _isTranscribing = false;
   DateTime? _recordingStartTime;
+  String? _recordingPath;
 
   @override
   void initState() {
@@ -46,17 +58,31 @@ class _HybridInputBarState extends State<HybridInputBar> {
         });
       }
     });
+    _initializeRecorder();
+  }
+
+  Future<void> _initializeRecorder() async {
+    try {
+      // Check permissions
+      if (await _audioRecorder.hasPermission()) {
+        debugPrint('Microphone permission granted');
+      } else {
+        debugPrint('Microphone permission not granted');
+      }
+    } catch (e) {
+      debugPrint('Error initializing recorder: $e');
+    }
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    _audioRecorder.dispose();
     super.dispose();
   }
 
   Future<void> _handleCamera() async {
     try {
-      // Show bottom sheet to choose camera or gallery
       final source = await showModalBottomSheet<ImageSource>(
         context: context,
         backgroundColor: Colors.white,
@@ -79,7 +105,7 @@ class _HybridInputBarState extends State<HybridInputBar> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Add Photo',
+                  'Fotoğraf Ekle',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -89,14 +115,14 @@ class _HybridInputBarState extends State<HybridInputBar> {
                 const SizedBox(height: 20),
                 _buildSourceOption(
                   icon: Icons.camera_alt,
-                  label: 'Take Photo',
+                  label: 'Fotoğraf Çek',
                   color: const Color(0xFF1E3A8A),
                   onTap: () => Navigator.pop(context, ImageSource.camera),
                 ),
                 const SizedBox(height: 12),
                 _buildSourceOption(
                   icon: Icons.photo_library,
-                  label: 'Choose from Gallery',
+                  label: 'Galeriden Seç',
                   color: const Color(0xFF1E3A8A),
                   onTap: () => Navigator.pop(context, ImageSource.gallery),
                 ),
@@ -122,7 +148,7 @@ class _HybridInputBarState extends State<HybridInputBar> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick image: $e'),
+            content: Text('Fotoğraf seçilemedi: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -132,7 +158,6 @@ class _HybridInputBarState extends State<HybridInputBar> {
 
   Future<void> _pickPDF() async {
     try {
-      // Use file_picker to select PDF files
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
@@ -144,11 +169,9 @@ class _HybridInputBarState extends State<HybridInputBar> {
         final fileName = result.files.single.name;
         final fileSize = result.files.single.size;
 
-        // Validate file size (max 15MB = 15 * 1024 * 1024 bytes)
         const maxSizeInBytes = 15 * 1024 * 1024;
         
         if (fileSize > maxSizeInBytes) {
-          // Show error SnackBar for file too large
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -157,7 +180,7 @@ class _HybridInputBarState extends State<HybridInputBar> {
                     Icon(Icons.error_outline, color: Colors.white),
                     SizedBox(width: 12),
                     Expanded(
-                      child: Text('PDF file size exceeds 15MB limit'),
+                      child: Text('PDF dosya boyutu 15MB sınırını aşıyor'),
                     ),
                   ],
                 ),
@@ -169,13 +192,8 @@ class _HybridInputBarState extends State<HybridInputBar> {
           return;
         }
 
-        // Format file size
         final formattedSize = _formatFileSize(fileSize);
         
-        // Print to console
-        print('PDF Selected: $fileName');
-        
-        // Show success SnackBar in Navy Blue
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -184,17 +202,16 @@ class _HybridInputBarState extends State<HybridInputBar> {
                   const Icon(Icons.check_circle_outline, color: Colors.white),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('PDF selected: $fileName ($formattedSize)'),
+                    child: Text('PDF seçildi: $fileName ($formattedSize)'),
                   ),
                 ],
               ),
-              backgroundColor: const Color(0xFF1E3A8A), // Navy Blue
+              backgroundColor: const Color(0xFF1E3A8A),
               duration: const Duration(seconds: 3),
             ),
           );
         }
 
-        // Call the callback with PDF info
         widget.onSendPDF?.call(file, fileName, formattedSize);
       }
     } catch (e) {
@@ -206,7 +223,7 @@ class _HybridInputBarState extends State<HybridInputBar> {
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('Failed to pick PDF: $e'),
+                  child: Text('PDF seçilemedi: $e'),
                 ),
               ],
             ),
@@ -293,82 +310,195 @@ class _HybridInputBarState extends State<HybridInputBar> {
     }
 
     if (_isRecording) {
-      // Stop recording and process audio
       await _stopRecording();
     } else {
-      // Start recording
       await _startRecording();
     }
   }
 
   Future<void> _startRecording() async {
-    setState(() {
-      _isRecording = true;
-      _recordingStartTime = DateTime.now();
-    });
-
-    // Show recording indicator with cancel button
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.mic, color: Colors.white),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('Recording... Tap mic to stop'),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 20),
-                onPressed: _cancelRecording,
-                tooltip: 'Cancel',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final directory = await getTemporaryDirectory();
+        final path = '${directory.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        
+        await _audioRecorder.start(
+          const RecordConfig(
+            encoder: AudioEncoder.aacLc,
+            bitRate: 128000,
+            sampleRate: 44100,
           ),
-          backgroundColor: const Color(0xFF1E3A8A),
-          duration: const Duration(days: 1), // Will be dismissed manually
-        ),
-      );
+          path: path,
+        );
+
+        setState(() {
+          _isRecording = true;
+          _recordingStartTime = DateTime.now();
+          _recordingPath = path;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.mic, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('Kayd ediliyor... Durdurmak için mikrofona basın'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                    onPressed: _cancelRecording,
+                    tooltip: 'İptal',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              backgroundColor: AppTheme.errorRed,
+              duration: const Duration(days: 1),
+            ),
+          );
+        }
+      } else {
+        _showSnackBar('Mikrofon izni gerekli');
+      }
+    } catch (e) {
+      debugPrint('Error starting recording: $e');
+      _showSnackBar('Kayıt başlatılamadı: $e');
     }
   }
 
   Future<void> _stopRecording() async {
-    // Dismiss the recording SnackBar immediately
     if (mounted) {
       ScaffoldMessenger.of(context).clearSnackBars();
     }
 
-    setState(() {
-      _isRecording = false;
-    });
+    try {
+      final path = await _audioRecorder.stop();
+      
+      setState(() {
+        _isRecording = false;
+      });
 
-    if (_recordingStartTime != null) {
-      final duration = DateTime.now().difference(_recordingStartTime!);
-      final minutes = duration.inSeconds / 60.0;
-      
-      // In a real implementation, you'd get the transcribed text from speech-to-text
-      // For now, we'll use a placeholder
-      final transcribedText = 'Voice message transcribed';
-      
-      widget.onSendVoice?.call(transcribedText, minutes);
+      if (path != null && _recordingStartTime != null) {
+        final duration = DateTime.now().difference(_recordingStartTime!);
+        final durationMinutes = duration.inSeconds / 60.0;
+        
+        // Show transcription progress
+        setState(() {
+          _isTranscribing = true;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Ses metne dönüştürülüyor...'),
+                ],
+              ),
+              backgroundColor: AppTheme.primaryNavy,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+
+        // Upload to Firebase Storage and get transcription
+        await _uploadAndTranscribe(File(path), durationMinutes);
+        
+        setState(() {
+          _isTranscribing = false;
+        });
+      }
+
       _recordingStartTime = null;
+      _recordingPath = null;
+    } catch (e) {
+      debugPrint('Error stopping recording: $e');
+      setState(() {
+        _isRecording = false;
+        _isTranscribing = false;
+      });
+      _showSnackBar('Kayıt durdurulamadı: $e');
     }
   }
 
-  void _cancelRecording() {
-    // Dismiss the recording SnackBar
+  Future<void> _uploadAndTranscribe(File audioFile, double durationMinutes) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      // Upload to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('voice_messages')
+          .child(user.uid)
+          .child('${DateTime.now().millisecondsSinceEpoch}.m4a');
+
+      await storageRef.putFile(audioFile);
+      final audioUrl = await storageRef.getDownloadURL();
+
+      debugPrint('Audio uploaded to Firebase: $audioUrl');
+
+      // Use VoiceService to transcribe via Speech-to-Text
+      await _voiceService.initialize();
+      
+      // For now, we'll use a placeholder transcription
+      // In production, you would integrate Google Cloud Speech-to-Text API
+      final transcribedText = 'Sesli mesaj kaydedildi. Transkripsiy on yakında eklenecek.';
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Ses kaydedildi!'),
+              ],
+            ),
+            backgroundColor: AppTheme.successGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      widget.onSendVoice?.call(transcribedText, durationMinutes);
+    } catch (e) {
+      debugPrint('Error uploading audio: $e');
+      _showSnackBar('Ses yüklenemedi: $e');
+    }
+  }
+
+  void _cancelRecording() async {
     if (mounted) {
       ScaffoldMessenger.of(context).clearSnackBars();
+    }
+
+    if (_isRecording) {
+      await _audioRecorder.stop();
     }
 
     setState(() {
       _isRecording = false;
       _recordingStartTime = null;
+      _recordingPath = null;
     });
 
-    // Show cancellation message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -376,7 +506,7 @@ class _HybridInputBarState extends State<HybridInputBar> {
             children: [
               Icon(Icons.info_outline, color: Colors.white),
               SizedBox(width: 12),
-              Text('Recording cancelled'),
+              Text('Kayıt iptal edildi'),
             ],
           ),
           backgroundColor: Colors.orange,
@@ -391,19 +521,28 @@ class _HybridInputBarState extends State<HybridInputBar> {
       SnackBar(
         content: Text(
           quotaType == 'text'
-              ? '💬 Text message quota exceeded. Upgrade to continue!'
-              : '🎙️ Voice quota exceeded. Upgrade to continue!',
+              ? '💬 Metin mesaj kotanız doldu. Yükseltmek için premium üye olun!'
+              : '🎤 Ses kotanız doldu. Yükseltmek için premium üye olun!',
         ),
         backgroundColor: Colors.orange,
         action: SnackBarAction(
-          label: 'Upgrade',
+          label: 'Yükselt',
           textColor: Colors.white,
-          onPressed: () {
-            // Navigate to subscription screen
-          },
+          onPressed: () {},
         ),
       ),
     );
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -433,25 +572,25 @@ class _HybridInputBarState extends State<HybridInputBar> {
           children: [
             // Camera/Photo Button
             IconButton(
-              onPressed: widget.isProcessing ? null : _handleCamera,
+              onPressed: widget.isProcessing || _isRecording || _isTranscribing ? null : _handleCamera,
               icon: Icon(
                 Icons.add_photo_alternate,
-                color: widget.isProcessing
+                color: widget.isProcessing || _isRecording || _isTranscribing
                     ? Colors.grey.shade400
                     : const Color(0xFF1E3A8A),
               ),
-              tooltip: 'Add photo',
+              tooltip: 'Fotoğraf ekle',
             ),
             // PDF Button
             IconButton(
-              onPressed: widget.isProcessing ? null : _pickPDF,
+              onPressed: widget.isProcessing || _isRecording || _isTranscribing ? null : _pickPDF,
               icon: Icon(
                 Icons.picture_as_pdf,
-                color: widget.isProcessing
+                color: widget.isProcessing || _isRecording || _isTranscribing
                     ? Colors.grey.shade400
                     : const Color(0xFF1E3A8A),
               ),
-              tooltip: 'Add PDF',
+              tooltip: 'PDF ekle',
             ),
             const SizedBox(width: 4),
             // Text Field
@@ -470,11 +609,11 @@ class _HybridInputBarState extends State<HybridInputBar> {
                 ),
                 child: TextField(
                   controller: _textController,
-                  enabled: !widget.isProcessing,
+                  enabled: !widget.isProcessing && !_isRecording && !_isTranscribing,
                   maxLines: null,
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
-                    hintText: 'Ask a question...',
+                    hintText: _isRecording ? 'Kaydediliyor...' : _isTranscribing ? 'İşleniyor...' : 'Soru sorun...',
                     hintStyle: TextStyle(
                       color: Colors.grey.shade500,
                       fontSize: 15,
@@ -497,26 +636,35 @@ class _HybridInputBarState extends State<HybridInputBar> {
             // Send or Microphone Button
             _hasText
                 ? IconButton(
-                    onPressed: widget.isProcessing ? null : _handleSendText,
+                    onPressed: widget.isProcessing || _isRecording || _isTranscribing ? null : _handleSendText,
                     icon: Icon(
                       Icons.send,
-                      color: widget.isProcessing
+                      color: widget.isProcessing || _isRecording || _isTranscribing
                           ? Colors.grey.shade400
                           : const Color(0xFF1E3A8A),
                     ),
-                    tooltip: 'Send message',
+                    tooltip: 'Gönder',
                   )
                 : IconButton(
-                    onPressed: widget.isProcessing ? null : _handleMicrophone,
-                    icon: Icon(
-                      _isRecording ? Icons.stop : Icons.mic,
-                      color: widget.isProcessing
-                          ? Colors.grey.shade400
-                          : _isRecording
-                              ? Colors.red
-                              : const Color(0xFF1E3A8A),
-                    ),
-                    tooltip: _isRecording ? 'Stop recording' : 'Voice message',
+                    onPressed: widget.isProcessing || _isTranscribing ? null : _handleMicrophone,
+                    icon: _isTranscribing
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
+                            ),
+                          )
+                        : Icon(
+                            _isRecording ? Icons.stop : Icons.mic,
+                            color: widget.isProcessing
+                                ? Colors.grey.shade400
+                                : _isRecording
+                                    ? Colors.red
+                                    : const Color(0xFF1E3A8A),
+                          ),
+                    tooltip: _isRecording ? 'Kaydı durdur' : 'Sesli mesaj',
                   ),
           ],
         ),

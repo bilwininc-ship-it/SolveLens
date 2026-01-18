@@ -11,6 +11,7 @@ import '../../services/database/realtime_database_service.dart';
 import '../../services/notes/notes_service.dart';
 import '../../services/voice/voice_service.dart';
 import '../../services/quota/quota_service.dart';
+import '../../services/conversation/conversation_service.dart';
 import '../../data/repositories/question_repository_impl.dart';
 import '../../domain/repositories/question_repository.dart';
 import '../../domain/usecases/analyze_question_usecase.dart';
@@ -88,6 +89,11 @@ Future<void> setupServiceLocator() async {
       getIt<FirebaseFirestore>(),
       getIt<RemoteConfigService>(),
     ),
+  );
+
+  // Conversation Service (for managing chat sessions)
+  getIt.registerLazySingleton<ConversationService>(
+    () => ConversationService(getIt<FirebaseFirestore>()),
   );
 
   // Repositories

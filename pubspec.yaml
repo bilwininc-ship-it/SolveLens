@@ -70,6 +70,8 @@ dependencies:
   # Voice Features
   speech_to_text: ^7.0.0
   flutter_tts: ^4.2.0
+  record: ^5.1.2
+  path_provider: ^2.1.5
   
   # Google Cloud TTS & Audio Playback
   http: ^1.2.0

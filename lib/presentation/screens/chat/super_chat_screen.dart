@@ -1,4 +1,4 @@
-// Premium Elite Super Chat Screen - Visual Harmony
+// Premium Elite Super Chat Screen - with Mode Selection & Conversation Management
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +6,9 @@ import '../../../core/di/service_locator.dart';
 import '../../../services/ai/ai_service.dart';
 import '../../../services/voice/voice_service.dart';
 import '../../../services/quota/quota_service.dart';
+import '../../../services/conversation/conversation_service.dart';
+import '../../../services/notes/notes_service.dart';
+import '../../../data/models/conversation_model.dart';
 import '../../providers/super_chat_provider.dart';
 import '../../providers/super_chat_state.dart';
 import '../../providers/user_provider.dart';
@@ -13,9 +16,17 @@ import '../../widgets/chat/quota_indicator.dart';
 import '../../widgets/chat/message_bubble.dart';
 import '../../widgets/chat/hybrid_input_bar.dart';
 import '../../theme/app_theme.dart';
+import 'conversations_list_screen.dart';
 
 class SuperChatScreen extends StatefulWidget {
-  const SuperChatScreen({super.key});
+  final String? conversationId;
+  final ChatMode? initialMode;
+
+  const SuperChatScreen({
+    super.key,
+    this.conversationId,
+    this.initialMode,
+  });
 
   @override
   State<SuperChatScreen> createState() => _SuperChatScreenState();
@@ -24,11 +35,43 @@ class SuperChatScreen extends StatefulWidget {
 class _SuperChatScreenState extends State<SuperChatScreen> {
   late SuperChatProvider _chatProvider;
   final ScrollController _scrollController = ScrollController();
+  final ConversationService _conversationService = getIt<ConversationService>();
+  final NotesService _notesService = getIt<NotesService>();
+  
+  ChatMode _selectedMode = ChatMode.textToText;
+  String? _currentConversationId;
+  ConversationModel? _currentConversation;
 
   @override
   void initState() {
     super.initState();
+    _selectedMode = widget.initialMode ?? ChatMode.textToText;
+    _currentConversationId = widget.conversationId;
     _initializeChatProvider();
+    _loadConversation();
+  }
+
+  Future<void> _loadConversation() async {
+    if (_currentConversationId == null) return;
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final conversation = await _conversationService.getConversation(
+        userId: user.uid,
+        conversationId: _currentConversationId!,
+      );
+      
+      if (conversation != null) {
+        setState(() {
+          _currentConversation = conversation;
+          _selectedMode = conversation.mode;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading conversation: $e');
+    }
   }
 
   void _initializeChatProvider() {
@@ -37,7 +80,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
       return;
     }
 
-    // Get UserProvider from context
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     _chatProvider = SuperChatProvider(
@@ -70,23 +112,124 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     }
   }
 
-  void _handleSendText(String text) {
-    _chatProvider.sendTextMessage(text);
+  Future<void> _handleSendText(String text) async {
+    await _chatProvider.sendTextMessage(text);
     _scrollToBottom();
+    await _saveMessageToConversation(text, true);
   }
 
-  void _handleSendImage(file, caption) {
-    _chatProvider.sendImageMessage(file, text: caption);
+  Future<void> _handleSendImage(file, caption) async {
+    await _chatProvider.sendImageMessage(file, text: caption);
     _scrollToBottom();
+    await _saveMessageToConversation(caption ?? 'Image message', true);
   }
 
-  void _handleSendVoice(String transcribedText, double durationMinutes) {
-    _chatProvider.sendVoiceMessage(transcribedText, durationMinutes);
+  Future<void> _handleSendVoice(String transcribedText, double durationMinutes) async {
+    await _chatProvider.sendVoiceMessage(transcribedText, durationMinutes);
     _scrollToBottom();
+    await _saveMessageToConversation(transcribedText, true);
   }
-  void _handleSendPDF(file, fileName, fileSize) {
-    _chatProvider.sendPDFMessage(file, fileName, fileSize);
+
+  Future<void> _handleSendPDF(file, fileName, fileSize) async {
+    await _chatProvider.sendPDFMessage(file, fileName, fileSize);
     _scrollToBottom();
+    await _saveMessageToConversation('PDF: $fileName', true);
+  }
+
+  Future<void> _saveMessageToConversation(String message, bool isUser) async {
+    if (_currentConversationId == null) return;
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _conversationService.updateConversation(
+        userId: user.uid,
+        conversationId: _currentConversationId!,
+        lastMessage: message.length > 50 ? '${message.substring(0, 50)}...' : message,
+      );
+    } catch (e) {
+      debugPrint('Error saving message to conversation: $e');
+    }
+  }
+
+  Future<void> _saveMessageAsNote(dynamic message) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _notesService.saveNote(
+        userId: user.uid,
+        imageUrl: '',
+        solutionText: message.text,
+        question: message.isUser ? message.text : 'Professor Response',
+        subject: 'Chat Note',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Not olarak kaydedildi'),
+              ],
+            ),
+            backgroundColor: AppTheme.successGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _onModeChanged(ChatMode? newMode) {
+    if (newMode != null && newMode != _selectedMode) {
+      setState(() {
+        _selectedMode = newMode;
+      });
+
+      // Update conversation mode if conversation exists
+      if (_currentConversationId != null) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          _conversationService.updateConversation(
+            userId: user.uid,
+            conversationId: _currentConversationId!,
+            mode: newMode,
+          );
+        }
+      }
+
+      // Show mode change notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Text(newMode.icon, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Text('Mod değiştirildi: ${newMode.displayName}'),
+            ],
+          ),
+          backgroundColor: AppTheme.primaryNavy,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -94,10 +237,12 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     return ChangeNotifierProvider<SuperChatProvider>.value(
       value: _chatProvider,
       child: Scaffold(
-        backgroundColor: AppTheme.lightGrey, // Premium light grey background
+        backgroundColor: AppTheme.lightGrey,
         appBar: _buildAppBar(),
         body: Column(
           children: [
+            // Mode Selector
+            _buildModeSelector(),
             // Quota Indicator
             Consumer<SuperChatProvider>(
               builder: (context, provider, child) {
@@ -171,30 +316,50 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'AI Professor',
-                style: TextStyle(
-                  color: AppTheme.primaryNavy,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _currentConversation?.title ?? 'AI Professor',
+                  style: const TextStyle(
+                    color: AppTheme.primaryNavy,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                'Always here to help',
-                style: TextStyle(
-                  color: AppTheme.mediumGrey,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
+                Text(
+                  _selectedMode.displayName,
+                  style: const TextStyle(
+                    color: AppTheme.mediumGrey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
       actions: [
+        // Conversations List Button
+        IconButton(
+          icon: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            color: AppTheme.primaryNavy,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ConversationsListScreen(),
+              ),
+            );
+          },
+          tooltip: 'Sohbetlerim',
+        ),
         Consumer<SuperChatProvider>(
           builder: (context, provider, child) {
             return PopupMenuButton<String>(
@@ -210,9 +375,30 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                   _showClearConfirmation(provider);
                 } else if (value == 'upgrade') {
                   _navigateToSubscription();
+                } else if (value == 'rename') {
+                  _showRenameDialog();
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit_rounded,
+                        size: 20,
+                        color: AppTheme.primaryNavy,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Yeniden Adlandır',
+                        style: TextStyle(
+                          color: AppTheme.primaryNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'clear',
                   child: Row(
@@ -224,7 +410,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                       ),
                       SizedBox(width: 12),
                       Text(
-                        'Clear Chat',
+                        'Sohbeti Temizle',
                         style: TextStyle(
                           color: AppTheme.primaryNavy,
                         ),
@@ -243,7 +429,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
                       ),
                       SizedBox(width: 12),
                       Text(
-                        'Upgrade Plan',
+                        'Premium Ol',
                         style: TextStyle(
                           color: AppTheme.primaryNavy,
                         ),
@@ -256,6 +442,86 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildModeSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.cleanWhite,
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.mediumGrey.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.swap_horiz_rounded,
+            color: AppTheme.primaryNavy,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'Mod:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primaryNavy,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.lightGrey,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.primaryNavy.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<ChatMode>(
+                  value: _selectedMode,
+                  isExpanded: true,
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppTheme.primaryNavy,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.primaryNavy,
+                  ),
+                  dropdownColor: AppTheme.cleanWhite,
+                  borderRadius: BorderRadius.circular(12),
+                  onChanged: _onModeChanged,
+                  items: ChatMode.values.map((mode) {
+                    return DropdownMenuItem<ChatMode>(
+                      value: mode,
+                      child: Row(
+                        children: [
+                          Text(
+                            mode.icon,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(mode.displayName),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -284,13 +550,49 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
       itemCount: messages.length + (state is SuperChatProcessing ? 1 : 0),
       itemBuilder: (context, index) {
         if (index < messages.length) {
-          return MessageBubble(message: messages[index]);
+          return _buildMessageWithActions(messages[index]);
         } else {
           return _buildProcessingIndicator(
             (state as SuperChatProcessing).processingMessage,
           );
         }
       },
+    );
+  }
+
+  Widget _buildMessageWithActions(dynamic message) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: MessageBubble(message: message),
+        ),
+        // Save as note button
+        if (!message.isUser)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 8),
+            child: IconButton(
+              onPressed: () => _saveMessageAsNote(message),
+              icon: const Icon(
+                Icons.bookmark_add_outlined,
+                color: AppTheme.primaryNavy,
+                size: 20,
+              ),
+              tooltip: 'Not olarak kaydet',
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(8),
+              style: IconButton.styleFrom(
+                backgroundColor: AppTheme.cleanWhite,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: AppTheme.primaryNavy.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -329,7 +631,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'Welcome to Super Chat!',
+              'Süper Sohbete Hoş Geldiniz!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -339,7 +641,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Ask questions with text, photos, PDFs, or voice.\nYour AI Professor is ready to help!',
+              'Metin, fotoğraf, PDF veya ses ile soru sorun.\nAI Profesörünüz size yardım etmeye hazır!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -348,13 +650,13 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
               ),
             ),
             const SizedBox(height: 40),
-            _buildFeatureChip(Icons.camera_alt_rounded, 'Scan homework'),
+            _buildFeatureChip(Icons.camera_alt_rounded, 'Ödev tarama'),
             const SizedBox(height: 12),
-            _buildFeatureChip(Icons.picture_as_pdf, 'Upload PDFs'),
+            _buildFeatureChip(Icons.picture_as_pdf, 'PDF yükleme'),
             const SizedBox(height: 12),
-            _buildFeatureChip(Icons.edit_rounded, 'Ask anything'),
+            _buildFeatureChip(Icons.edit_rounded, 'Her şeyi sorun'),
             const SizedBox(height: 12),
-            _buildFeatureChip(Icons.mic_rounded, 'Voice questions'),
+            _buildFeatureChip(Icons.mic_rounded, 'Sesli sorular'),
           ],
         ),
       ),
@@ -434,6 +736,92 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     );
   }
 
+  void _showRenameDialog() async {
+    if (_currentConversationId == null) return;
+    
+    final controller = TextEditingController(
+      text: _currentConversation?.title ?? '',
+    );
+
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cleanWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: const Text(
+          'Sohbeti Yeniden Adlandır',
+          style: TextStyle(
+            color: AppTheme.primaryNavy,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Sohbet başlığı',
+            filled: true,
+            fillColor: AppTheme.lightGrey,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: AppTheme.mediumGrey,
+            ),
+            child: const Text(
+              'İptal',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryNavy,
+              foregroundColor: AppTheme.cleanWhite,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+            ),
+            child: const Text(
+              'Kaydet',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (newTitle != null && newTitle.isNotEmpty) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await _conversationService.updateConversation(
+          userId: user.uid,
+          conversationId: _currentConversationId!,
+          title: newTitle,
+        );
+        await _loadConversation();
+      }
+    }
+  }
+
   void _showClearConfirmation(SuperChatProvider provider) {
     showDialog(
       context: context,
@@ -443,7 +831,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           borderRadius: BorderRadius.circular(24),
         ),
         title: const Text(
-          'Clear Chat',
+          'Sohbeti Temizle',
           style: TextStyle(
             color: AppTheme.primaryNavy,
             fontSize: 20,
@@ -451,7 +839,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
           ),
         ),
         content: const Text(
-          'Are you sure you want to clear all messages? This action cannot be undone.',
+          'Tüm mesajlar silinecek. Bu işlem geri alınamaz. Emin misiniz?',
           style: TextStyle(
             color: AppTheme.mediumGrey,
             fontSize: 15,
@@ -464,7 +852,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
               foregroundColor: AppTheme.mediumGrey,
             ),
             child: const Text(
-              'Cancel',
+              'İptal',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
               ),
@@ -488,7 +876,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
               ),
             ),
             child: const Text(
-              'Clear',
+              'Temizle',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
               ),
@@ -502,7 +890,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
   void _navigateToSubscription() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Subscription screen - Coming soon'),
+        content: const Text('Abonelik ekranı - Yakında'),
         duration: const Duration(seconds: 2),
         backgroundColor: AppTheme.primaryNavy,
         behavior: SnackBarBehavior.floating,
