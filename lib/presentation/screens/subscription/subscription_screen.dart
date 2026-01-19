@@ -290,15 +290,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.mediumGrey,
-        title: Row(
+        title: const Row(
           children: [
             Icon(
               Icons.info_outline,
               color: AppTheme.premiumGold,
               size: 28,
             ),
-            const SizedBox(width: 12),
-            const Text('Coming Soon'),
+            SizedBox(width: 12),
+            Text('Coming Soon'),
           ],
         ),
         content: Text(

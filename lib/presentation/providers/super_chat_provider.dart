@@ -418,11 +418,28 @@ class SuperChatProvider extends ChangeNotifier {
           : extractedText;
       debugPrint('PDF Text Preview (first 100 chars): $preview');
 
-      // For now, just acknowledge the PDF with a simple response
-      // TODO: Send extractedText to Gemini API for analysis
-      final response = 'I have received your PDF document "$fileName" ($fileSize). '
-          'PDF text extraction successful! Extracted ${extractedText.length} characters. '
-          'Gemini integration coming in next sprint.';
+      // Check if PDF text was successfully extracted
+      if (extractedText.isEmpty) {
+        throw Exception('Could not extract text from PDF. The PDF might be image-based or encrypted.');
+      }
+
+      // Send extracted text to Gemini AI for analysis
+      final userQuery = text.isNotEmpty 
+          ? text 
+          : 'Please analyze this PDF document and provide a comprehensive summary with key insights.';
+      
+      final fullPrompt = '''
+$userQuery
+
+Here is the content from the PDF document "$fileName":
+
+$extractedText
+''';
+
+      debugPrint('Sending ${extractedText.length} characters to Gemini AI for analysis...');
+      
+      // Get AI response from Gemini
+      final response = await aiService.getChatResponse(fullPrompt);
 
       // Add professor response
       final professorMessage = ChatMessageModel.professorText(

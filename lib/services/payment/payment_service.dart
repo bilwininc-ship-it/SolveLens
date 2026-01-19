@@ -3,8 +3,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:in_app_purchase_android/in_app_purchase_android.dart';
-import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import '../../core/constants/subscription_constants.dart';
 
 class PaymentService {
@@ -44,13 +42,6 @@ class PaymentService {
     final bool available = await _inAppPurchase.isAvailable();
     if (!available) {
       throw PaymentServiceException('In-App Purchase is not available on this device');
-    }
-
-    // Platform-specific initialization
-    if (Platform.isAndroid) {
-      final InAppPurchaseAndroidPlatformAddition androidAddition =
-          _inAppPurchase.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
-      await androidAddition.enablePendingPurchases();
     }
 
     // Listen to purchase updates

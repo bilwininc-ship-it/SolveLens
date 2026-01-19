@@ -27,6 +27,11 @@ class SubscriptionConstants {
   static const int proQuestionsPerDay = 200;
   static const int eliteQuestionsPerDay = -1; // Unlimited
   
+  // Price Getters (for backward compatibility)
+  static double get basicPrice => basicMonthlyPrice;
+  static double get proPrice => proMonthlyPrice;
+  static double get elitePrice => eliteMonthlyPrice;
+  
   // Feature Flags
   // Basic Tier
   static const bool basicDetailedExplanations = true;
