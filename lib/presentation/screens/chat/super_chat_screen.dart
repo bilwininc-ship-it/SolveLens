@@ -113,7 +113,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
   }
 
   Future<void> _handleSendText(String text) async {
-    await _chatProvider.sendTextMessage(text);
+    await _chatProvider.sendTextMessage(text, mode: _selectedMode);
     _scrollToBottom();
     await _saveMessageToConversation(text, true);
   }
@@ -125,7 +125,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
   }
 
   Future<void> _handleSendVoice(String transcribedText, double durationMinutes) async {
-    await _chatProvider.sendVoiceMessage(transcribedText, durationMinutes);
+    await _chatProvider.sendVoiceMessage(transcribedText, durationMinutes, mode: _selectedMode);
     _scrollToBottom();
     await _saveMessageToConversation(transcribedText, true);
   }
