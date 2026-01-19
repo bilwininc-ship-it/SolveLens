@@ -91,7 +91,6 @@ class SuperChatProvider extends ChangeNotifier {
       } else if (mode == ChatMode.textToVoice || mode == ChatMode.liveVoiceChat) {
         // For voice output modes, get text first then convert to voice
         responseText = await aiService.getChatResponse(text);
-        // TODO: Convert to voice if needed
       }
 
       if (responseText != null) {
@@ -110,6 +109,11 @@ class SuperChatProvider extends ChangeNotifier {
         _currentQuota = await quotaService.getQuotaUsage(userId);
 
         _setState(SuperChatLoaded(messages: _messages));
+        
+        // CRITICAL FIX: Auto-speak response in voice modes
+        if (mode == ChatMode.textToVoice || mode == ChatMode.liveVoiceChat) {
+          await _speakResponse(responseText);
+        }
       } else {
         throw Exception('Failed to get AI response');
       }
@@ -338,6 +342,40 @@ class SuperChatProvider extends ChangeNotifier {
     }
   }
 
+  /// Speak the AI response using voice service
+  Future<void> _speakResponse(String text) async {
+    try {
+      // Initialize voice service if needed
+      if (!voiceService.isInitialized) {
+        await voiceService.initialize();
+      }
+      
+      // Clean text for TTS (remove markdown, LaTeX, and special characters)
+      String cleanText = text
+          .replaceAll(RegExp(r'\\\[.*?\\\]', dotAll: true), 'mathematical equation')
+          .replaceAll(RegExp(r'\\\(.*?\\\)', dotAll: true), 'math expression')
+          .replaceAll(RegExp(r'\$\$.*?\$\$', dotAll: true), 'equation')
+          .replaceAll(RegExp(r'\$.*?\$'), 'expression')
+          .replaceAll(RegExp(r'\*\*'), '')  // Bold
+          .replaceAll(RegExp(r'__'), '')    // Bold
+          .replaceAll(RegExp(r'\*'), '')    // Italic
+          .replaceAll(RegExp(r'_'), '')     // Italic
+          .replaceAll(RegExp(r'`'), '')     // Code
+          .replaceAll(RegExp(r'#'), '')     // Headers
+          .replaceAll(RegExp(r'\n+'), '. '); // Newlines to periods
+      
+      debugPrint('🔊 Speaking response (${cleanText.length} chars)');
+      
+      await voiceService.speak(
+        cleanText,
+        onStatusUpdate: (status) {
+          debugPrint('TTS Status: $status');
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ Error speaking response: $e');
+    }
+  }
   void _setState(SuperChatState newState) {
     _state = newState;
     notifyListeners();

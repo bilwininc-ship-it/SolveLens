@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../config/remote_config_service.dart';
@@ -83,13 +84,32 @@ class VoiceService {
       await _flutterTts.setPitch(0.8); // Flutter TTS pitch (0.5-2.0, lower is deeper)
       await _flutterTts.setVolume(1.0);
       
+      // CRITICAL FIX: Add iOS-specific settings
+      if (Platform.isIOS) {
+        await _flutterTts.setSharedInstance(true);
+        await _flutterTts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.ambient,
+          [
+            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          ],
+          IosTextToSpeechAudioMode.voicePrompt,
+        );
+      }
+      
       _flutterTts.setCompletionHandler(() {
         _isSpeaking = false;
       });
       
-      debugPrint('Flutter TTS configured as fallback');
+      _flutterTts.setErrorHandler((msg) {
+        debugPrint('Flutter TTS Error: $msg');
+        _isSpeaking = false;
+      });
+      
+      debugPrint('✅ Flutter TTS configured as fallback');
     } catch (e) {
-      debugPrint('Error configuring Flutter TTS: $e');
+      debugPrint('❌ Error configuring Flutter TTS: $e');
     }
   }
 

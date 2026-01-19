@@ -29,7 +29,9 @@ class UserProvider extends ChangeNotifier {
     
     _userId = userId;
     _isLoading = true;
-    notifyListeners();
+    // CRITICAL FIX: Defer notifyListeners to avoid setState during build
+    // This prevents "setState() or markNeedsBuild() called during build" error
+    Future.microtask(() => notifyListeners());
 
     // Set up real-time StreamSubscription on users/{userId} document
     _userSubscription = _firestore
