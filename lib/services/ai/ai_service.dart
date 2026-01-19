@@ -278,7 +278,7 @@ Notice how [Pattern or insight - celebrate their growing understanding]...
 
   /// Analyzes an image with optional prompt
   /// Returns the AI analysis text
-  Future<String> analyzeImage(File imageFile, {String prompt = ''}) async {
+  Future<String> analyzeImage(File imageFile, {String? prompt}) async {
     try {
       // Read image file
       final imageBytes = await imageFile.readAsBytes();
@@ -295,7 +295,7 @@ Notice how [Pattern or insight - celebrate their growing understanding]...
       
       // Create prompt
       final textPrompt = TextPart(
-        prompt.isNotEmpty 
+        prompt != null && prompt.isNotEmpty 
           ? 'As a Professor, analyze this image: $prompt'
           : 'As a Professor, please analyze this image and explain what you see.'
       );
@@ -316,6 +316,18 @@ Notice how [Pattern or insight - celebrate their growing understanding]...
       throw AIServiceException('AI service error: ${e.message}');
     } catch (e) {
       throw AIServiceException('Failed to analyze image: $e');
+    }
+  }
+
+  /// Analyzes a PDF file
+  /// Returns the AI analysis text
+  Future<String> analyzePDF(File pdfFile) async {
+    try {
+      // For now, return a placeholder message
+      // PDF analysis would require additional libraries or conversion to images
+      return 'PDF analysis feature coming soon! For now, please take screenshots of the PDF pages and upload them as images.';
+    } catch (e) {
+      throw AIServiceException('Failed to analyze PDF: $e');
     }
   }
 

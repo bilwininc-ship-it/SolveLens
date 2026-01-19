@@ -1,6 +1,7 @@
 // Chat Message Model for Super Chat feature
 import 'dart:io';
 import 'package:equatable/equatable.dart';
+import './conversation_model.dart';
 
 class ChatMessageModel extends Equatable {
   final String id;
@@ -15,6 +16,10 @@ class ChatMessageModel extends Equatable {
   final bool hasPDF;
   final String? pdfFileName;
   final String? pdfFileSize;
+  final ChatMode? mode; // Chat mode for this message
+  final bool isVoice; // If message was sent via voice
+  final String? imageUrl; // URL or path to image
+  final String? pdfUrl; // URL or path to PDF
 
   const ChatMessageModel({
     required this.id,
@@ -29,6 +34,10 @@ class ChatMessageModel extends Equatable {
     this.hasPDF = false,
     this.pdfFileName,
     this.pdfFileSize,
+    this.mode,
+    this.isVoice = false,
+    this.imageUrl,
+    this.pdfUrl,
   });
 
   /// Creates a user text message
@@ -151,6 +160,10 @@ class ChatMessageModel extends Equatable {
     bool? hasPDF,
     String? pdfFileName,
     String? pdfFileSize,
+    ChatMode? mode,
+    bool? isVoice,
+    String? imageUrl,
+    String? pdfUrl,
   }) {
     return ChatMessageModel(
       id: id ?? this.id,
@@ -165,6 +178,10 @@ class ChatMessageModel extends Equatable {
       hasPDF: hasPDF ?? this.hasPDF,
       pdfFileName: pdfFileName ?? this.pdfFileName,
       pdfFileSize: pdfFileSize ?? this.pdfFileSize,
+      mode: mode ?? this.mode,
+      isVoice: isVoice ?? this.isVoice,
+      imageUrl: imageUrl ?? this.imageUrl,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
     );
   }
 
@@ -182,5 +199,9 @@ class ChatMessageModel extends Equatable {
         hasPDF,
         pdfFileName,
         pdfFileSize,
+        mode,
+        isVoice,
+        imageUrl,
+        pdfUrl,
       ];
 }
