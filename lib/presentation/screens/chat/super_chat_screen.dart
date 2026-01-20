@@ -1,7 +1,8 @@
-// Premium Elite Super Chat Screen - with Mode Selection & Conversation Management
+// Academic Coach Desk - Layered Research Interface (Z0-Z4 Architecture)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import '../../../core/di/service_locator.dart';
 import '../../../services/ai/ai_service.dart';
 import '../../../services/voice/voice_service.dart';
@@ -12,9 +13,6 @@ import '../../../data/models/conversation_model.dart';
 import '../../providers/super_chat_provider.dart';
 import '../../providers/super_chat_state.dart';
 import '../../providers/user_provider.dart';
-import '../../widgets/chat/quota_indicator.dart';
-import '../../widgets/chat/message_bubble.dart';
-import '../../widgets/chat/hybrid_input_bar.dart';
 import '../../theme/app_theme.dart';
 import 'conversations_list_screen.dart';
 
@@ -32,15 +30,36 @@ class SuperChatScreen extends StatefulWidget {
   State<SuperChatScreen> createState() => _SuperChatScreenState();
 }
 
-class _SuperChatScreenState extends State<SuperChatScreen> {
+class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderStateMixin {
+  // Core Services
   late SuperChatProvider _chatProvider;
-  final ScrollController _scrollController = ScrollController();
   final ConversationService _conversationService = getIt<ConversationService>();
   final NotesService _notesService = getIt<NotesService>();
   
+  // UI Controllers
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _inputController = TextEditingController();
+  
+  // State Variables
   ChatMode _selectedMode = ChatMode.textToText;
   String? _currentConversationId;
   ConversationModel? _currentConversation;
+  
+  // Z3 - Resource Dock State
+  bool _isResourceDockOpen = false;
+  
+  // Z4 - Discipline Layer State
+  bool _isDisciplineLocked = false;
+  Timer? _disciplineTimer;
+  int _remainingFocusSeconds = 0;
+  
+  // Z1 - Input Control State
+  bool _isInputExpanded = false;
+  
+  // Typography Sharpness (Cognitive Depth)
+  double _contentSharpness = 1.0; // 1.0 = normal, 2.0 = maximum sharpness
+  Timer? _readingTimer;
+  int _readingTimeSeconds = 0;
 
   @override
   void initState() {
@@ -49,6 +68,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     _currentConversationId = widget.conversationId;
     _initializeChatProvider();
     _loadConversation();
+    _startReadingTimer();
   }
 
   Future<void> _loadConversation() async {
@@ -91,10 +111,41 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     );
   }
 
+  void _startReadingTimer() {
+    _readingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        _readingTimeSeconds += 10;
+        // Gradually increase sharpness based on reading time (max at 5 minutes)
+        _contentSharpness = 1.0 + (_readingTimeSeconds / 300).clamp(0.0, 1.0);
+      });
+    });
+  }
+
+  void _triggerDisciplineLock() {
+    setState(() {
+      _isDisciplineLocked = true;
+      _remainingFocusSeconds = 180; // 3 minutes
+    });
+
+    _disciplineTimer?.cancel();
+    _disciplineTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _remainingFocusSeconds--;
+        if (_remainingFocusSeconds <= 0) {
+          _isDisciplineLocked = false;
+          timer.cancel();
+        }
+      });
+    });
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
+    _inputController.dispose();
     _chatProvider.dispose();
+    _disciplineTimer?.cancel();
+    _readingTimer?.cancel();
     super.dispose();
   }
 
@@ -237,667 +288,845 @@ class _SuperChatScreenState extends State<SuperChatScreen> {
     return ChangeNotifierProvider<SuperChatProvider>.value(
       value: _chatProvider,
       child: Scaffold(
-        backgroundColor: AppTheme.lightGrey,
-        appBar: _buildAppBar(),
-        body: Column(
+        backgroundColor: const Color(0xFFF9F9F7), // Ivory Research Surface
+        body: Stack(
           children: [
-            // Mode Selector
-            _buildModeSelector(),
-            // Quota Indicator
-            Consumer<SuperChatProvider>(
-              builder: (context, provider, child) {
-                return StreamBuilder(
-                  stream: provider.streamQuota(),
-                  builder: (context, snapshot) {
-                    return QuotaIndicator(
-                      quotaUsage: snapshot.data ?? provider.currentQuota,
-                    );
-                  },
-                );
-              },
-            ),
-            // Messages List
-            Expanded(
-              child: Consumer<SuperChatProvider>(
-                builder: (context, provider, child) {
-                  return _buildMessagesList(provider.state);
-                },
-              ),
-            ),
-            // Input Bar
-            Consumer<SuperChatProvider>(
-              builder: (context, provider, child) {
-                final isProcessing = provider.state is SuperChatProcessing;
-                final hasTextQuota =
-                    provider.currentQuota?.hasTextQuota ?? true;
-                final hasVoiceQuota =
-                    provider.currentQuota?.hasVoiceQuota ?? true;
-
-                return HybridInputBar(
-                  onSendText: _handleSendText,
-                  onSendImage: _handleSendImage,
-                  onSendVoice: _handleSendVoice,
-                  onSendPDF: _handleSendPDF,
-                  isProcessing: isProcessing,
-                  canSendText: hasTextQuota,
-                  canSendVoice: hasVoiceQuota,
-                );
-              },
-            ),
+            // Z0 - Research Surface (Main Content Area)
+            _buildResearchSurface(),
+            
+            // Z2 - Edge UI (Right Side Vertical Dock + Credit Counter)
+            _buildEdgeUI(),
+            
+            // Z3 - Floating Resource Dock (Bottom-Right Expandable Panel)
+            _buildResourceDock(),
+            
+            // Z1 - Input Control (Bottom Sliding Input)
+            _buildInputControl(),
+            
+            // Z4 - Discipline Layer (Cognitive Lock Overlay)
+            if (_isDisciplineLocked) _buildDisciplineLayer(),
           ],
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppTheme.cleanWhite,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_rounded,
-          color: AppTheme.primaryNavy,
-        ),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryNavy.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              color: AppTheme.primaryNavy,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _currentConversation?.title ?? 'AI Professor',
-                  style: const TextStyle(
-                    color: AppTheme.primaryNavy,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  _selectedMode.displayName,
-                  style: const TextStyle(
-                    color: AppTheme.mediumGrey,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        // Conversations List Button
-        IconButton(
-          icon: const Icon(
-            Icons.chat_bubble_outline_rounded,
-            color: AppTheme.primaryNavy,
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ConversationsListScreen(),
-              ),
-            );
-          },
-          tooltip: 'Sohbetlerim',
-        ),
-        Consumer<SuperChatProvider>(
-          builder: (context, provider, child) {
-            return PopupMenuButton<String>(
-              icon: const Icon(
-                Icons.more_vert_rounded,
-                color: AppTheme.primaryNavy,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              onSelected: (value) {
-                if (value == 'clear') {
-                  _showClearConfirmation(provider);
-                } else if (value == 'upgrade') {
-                  _navigateToSubscription();
-                } else if (value == 'rename') {
-                  _showRenameDialog();
-                }
+  // ========================================
+  // Z0 - RESEARCH SURFACE
+  // ========================================
+  Widget _buildResearchSurface() {
+    return Consumer<SuperChatProvider>(
+      builder: (context, provider, child) {
+        final messages = _getMessagesFromState(provider.state);
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F9F7), // Ivory
+            // Subtle paper texture effect
+            image: DecorationImage(
+              image: const AssetImage('assets/images/paper_texture.png'),
+              fit: BoxFit.cover,
+              opacity: 0.03,
+              onError: (exception, stackTrace) {
+                // Gracefully handle missing texture
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'rename',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.edit_rounded,
-                        size: 20,
-                        color: AppTheme.primaryNavy,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Yeniden Adlandır',
-                        style: TextStyle(
-                          color: AppTheme.primaryNavy,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'clear',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete_outline_rounded,
-                        size: 20,
-                        color: AppTheme.primaryNavy,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Sohbeti Temizle',
-                        style: TextStyle(
-                          color: AppTheme.primaryNavy,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'upgrade',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.workspace_premium_rounded,
-                        size: 20,
-                        color: AppTheme.primaryNavy,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Premium Ol',
-                        style: TextStyle(
-                          color: AppTheme.primaryNavy,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildModeSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.cleanWhite,
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.mediumGrey.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.swap_horiz_rounded,
-            color: AppTheme.primaryNavy,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Mod:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryNavy,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.lightGrey,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.primaryNavy.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<ChatMode>(
-                  value: _selectedMode,
-                  isExpanded: true,
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppTheme.primaryNavy,
+          child: messages.isEmpty
+              ? _buildEmptyResearchState()
+              : ListView.builder(
+                  controller: _scrollController,
+                  padding: EdgeInsets.only(
+                    top: 80, // Space for credit counter
+                    left: 32,
+                    right: 100, // Space for edge UI
+                    bottom: 120, // Space for input
                   ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.primaryNavy,
-                  ),
-                  dropdownColor: AppTheme.cleanWhite,
-                  borderRadius: BorderRadius.circular(12),
-                  onChanged: _onModeChanged,
-                  items: ChatMode.values.map((mode) {
-                    return DropdownMenuItem<ChatMode>(
-                      value: mode,
-                      child: Row(
-                        children: [
-                          Text(
-                            mode.icon,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(mode.displayName),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    return _buildRichTextMessage(messages[index]);
+                  },
                 ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessagesList(SuperChatState state) {
-    if (state is SuperChatInitial) {
-      return _buildEmptyState();
-    }
-
-    final messages = state is SuperChatLoaded
-        ? state.messages
-        : state is SuperChatProcessing
-            ? state.messages
-            : state is SuperChatError
-                ? state.messages
-                : state is SuperChatQuotaExceeded
-                    ? state.messages
-                    : <dynamic>[];
-
-    if (messages.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: messages.length + (state is SuperChatProcessing ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index < messages.length) {
-          return _buildMessageWithActions(messages[index]);
-        } else {
-          return _buildProcessingIndicator(
-            (state as SuperChatProcessing).processingMessage,
-          );
-        }
+        );
       },
     );
   }
 
-  Widget _buildMessageWithActions(dynamic message) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: MessageBubble(message: message),
-        ),
-        // Save as note button
-        if (!message.isUser)
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8),
-            child: IconButton(
-              onPressed: () => _saveMessageAsNote(message),
-              icon: const Icon(
-                Icons.bookmark_add_outlined,
-                color: AppTheme.primaryNavy,
-                size: 20,
-              ),
-              tooltip: 'Not olarak kaydet',
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(8),
-              style: IconButton.styleFrom(
-                backgroundColor: AppTheme.cleanWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: AppTheme.primaryNavy.withValues(alpha: 0.2),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
+  List<dynamic> _getMessagesFromState(SuperChatState state) {
+    if (state is SuperChatLoaded) return state.messages;
+    if (state is SuperChatProcessing) return state.messages;
+    if (state is SuperChatError) return state.messages;
+    if (state is SuperChatQuotaExceeded) return state.messages;
+    return [];
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyResearchState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.all(48.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: AppTheme.cleanWhite,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    offset: const Offset(0, 4),
-                    blurRadius: 15,
-                    color: const Color(0x0D000000),
-                  ),
-                ],
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryNavy.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_bubble_outline_rounded,
-                  size: 48,
-                  color: AppTheme.primaryNavy,
-                ),
-              ),
+            Icon(
+              Icons.auto_stories_outlined,
+              size: 64,
+              color: const Color(0xFF0A192F).withOpacity(0.3),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'Süper Sohbete Hoş Geldiniz!',
+            const SizedBox(height: 24),
+            Text(
+              'Academic Coach Desk',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.primaryNavy,
-                letterSpacing: -0.3,
+                color: const Color(0xFF0A192F),
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Metin, fotoğraf, PDF veya ses ile soru sorun.\nAI Profesörünüz size yardım etmeye hazır!',
+            Text(
+              'A disciplined space for deep intellectual work.\nBegin your research session below.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: AppTheme.mediumGrey,
-                height: 1.5,
+                color: const Color(0xFF0A192F).withOpacity(0.6),
+                height: 1.6,
+                fontFamily: 'Serif',
               ),
             ),
-            const SizedBox(height: 40),
-            _buildFeatureChip(Icons.camera_alt_rounded, 'Ödev tarama'),
-            const SizedBox(height: 12),
-            _buildFeatureChip(Icons.picture_as_pdf, 'PDF yükleme'),
-            const SizedBox(height: 12),
-            _buildFeatureChip(Icons.edit_rounded, 'Her şeyi sorun'),
-            const SizedBox(height: 12),
-            _buildFeatureChip(Icons.mic_rounded, 'Sesli sorular'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeatureChip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppTheme.cleanWhite,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 2),
-            blurRadius: 8,
-            color: const Color(0x08000000),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryNavy.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: AppTheme.primaryNavy,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryNavy,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProcessingIndicator(String message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppTheme.primaryNavy,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.mediumGrey,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRenameDialog() async {
-    if (_currentConversationId == null) return;
+  Widget _buildRichTextMessage(dynamic message) {
+    final isUser = message.isUser;
     
-    final controller = TextEditingController(
-      text: _currentConversation?.title ?? '',
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Author label
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isUser ? const Color(0xFF00F0FF) : const Color(0xFF0A192F),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isUser ? 'You' : 'Professor',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0A192F).withOpacity(0.5),
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Message content with dynamic sharpness
+          AnimatedOpacity(
+            opacity: _contentSharpness,
+            duration: const Duration(milliseconds: 500),
+            child: Text(
+              message.text,
+              style: TextStyle(
+                fontSize: _determineContentFontSize(message.text),
+                fontWeight: _determineContentWeight(message.text),
+                fontFamily: _determineContentFont(message.text),
+                color: const Color(0xFF0A192F),
+                height: 1.7,
+                letterSpacing: _contentSharpness > 1.5 ? -0.3 : 0,
+              ),
+            ),
+          ),
+          // Bookmark action for professor responses
+          if (!isUser)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: InkWell(
+                onTap: () => _saveMessageAsNote(message),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.bookmark_border_rounded,
+                        size: 16,
+                        color: const Color(0xFF0A192F).withOpacity(0.4),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Save to Notes',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color(0xFF0A192F).withOpacity(0.4),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
+  }
 
-    final newTitle = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cleanWhite,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        title: const Text(
-          'Sohbeti Yeniden Adlandır',
-          style: TextStyle(
-            color: AppTheme.primaryNavy,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Sohbet başlığı',
-            filled: true,
-            fillColor: AppTheme.lightGrey,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.mediumGrey,
-            ),
-            child: const Text(
-              'İptal',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryNavy,
-              foregroundColor: AppTheme.cleanWhite,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
+  double _determineContentFontSize(String text) {
+    // Formulas and mathematical content: larger
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return 18.0;
+    }
+    // Regular text
+    return 16.0;
+  }
+
+  FontWeight _determineContentWeight(String text) {
+    // Formulas: sharper/bolder
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return FontWeight.w600;
+    }
+    return FontWeight.w400;
+  }
+
+  String _determineContentFont(String text) {
+    // Formulas: Sans-serif for clarity
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return 'Sans-serif';
+    }
+    // Philosophical/text content: Serif for reading comfort
+    return 'Serif';
+  }
+
+  // ========================================
+  // Z2 - EDGE UI (Right Side Dock + Credit Counter)
+  // ========================================
+  Widget _buildEdgeUI() {
+    return Positioned(
+      right: 0,
+      top: 0,
+      bottom: 0,
+      child: Column(
+        children: [
+          // Credit Counter (Top Right)
+          _buildCreditCounter(),
+          
+          const SizedBox(height: 40),
+          
+          // Vertical Icon Dock
+          Container(
+            width: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0A192F).withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                bottomLeft: Radius.circular(32),
               ),
             ),
-            child: const Text(
-              'Kaydet',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                _buildEdgeButton(
+                  icon: Icons.dashboard_outlined,
+                  label: 'Dashboard',
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildEdgeButton(
+                  icon: Icons.history_outlined,
+                  label: 'History',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConversationsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildEdgeButton(
+                  icon: Icons.person_outline,
+                  label: 'Profile',
+                  onTap: () {
+                    // Navigate to profile
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
 
-    if (newTitle != null && newTitle.isNotEmpty) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await _conversationService.updateConversation(
-          userId: user.uid,
-          conversationId: _currentConversationId!,
-          title: newTitle,
+  Widget _buildCreditCounter() {
+    return Consumer<SuperChatProvider>(
+      builder: (context, provider, child) {
+        return StreamBuilder(
+          stream: provider.streamQuota(),
+          builder: (context, snapshot) {
+            final quota = snapshot.data ?? provider.currentQuota;
+            final used = quota?.textMessagesUsed ?? 0;
+            final total = quota?.textMessagesLimit ?? 15;
+            
+            return GestureDetector(
+              onTap: () => _showCreditDetails(quota),
+              child: Container(
+                margin: const EdgeInsets.only(top: 48, right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$used',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0A192F),
+                      ),
+                    ),
+                    Text(
+                      ' / $total',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF0A192F).withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
-        await _loadConversation();
-      }
+      },
+    );
+  }
+
+  Widget _buildEdgeButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            size: 24,
+            color: const Color(0xFF0A192F),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showCreditDetails(dynamic quota) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Credit Usage',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF0A192F),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildUsageRow('Text Messages', quota?.textMessagesUsed ?? 0, quota?.textMessagesLimit ?? 15),
+            const SizedBox(height: 12),
+            _buildUsageRow('Voice Minutes', quota?.voiceMinutesUsed?.toInt() ?? 0, quota?.voiceMinutesLimit?.toInt() ?? 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUsageRow(String label, int used, int total) {
+    final percentage = total > 0 ? (used / total).clamp(0.0, 1.0) : 0.0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF0A192F).withOpacity(0.7),
+              ),
+            ),
+            Text(
+              '$used / $total',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0A192F),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: percentage,
+            minHeight: 8,
+            backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ========================================
+  // Z3 - FLOATING RESOURCE DOCK
+  // ========================================
+  Widget _buildResourceDock() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      right: 0,
+      bottom: 100,
+      width: _isResourceDockOpen ? MediaQuery.of(context).size.width * 0.25 : 56,
+      height: _isResourceDockOpen ? 400 : 56,
+      child: Container(
+        margin: const EdgeInsets.only(right: 16, bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: _isResourceDockOpen ? _buildExpandedResourcePanel() : _buildResourceDockButton(),
+      ),
+    );
+  }
+
+  Widget _buildResourceDockButton() {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _isResourceDockOpen = true;
+        });
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A192F),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.attach_file_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedResourcePanel() {
+    return Column(
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: const Color(0xFF0A192F).withOpacity(0.1),
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.folder_outlined,
+                size: 20,
+                color: Color(0xFF0A192F),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Session Resources',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0A192F),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: () {
+                  setState(() {
+                    _isResourceDockOpen = false;
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+        ),
+        // Upload Buttons
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildResourceButton(
+                  icon: Icons.picture_as_pdf_outlined,
+                  label: 'Upload PDF',
+                  onTap: () {
+                    // Handle PDF upload
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildResourceButton(
+                  icon: Icons.image_outlined,
+                  label: 'Upload Image',
+                  onTap: () {
+                    // Handle image upload
+                  },
+                ),
+                const SizedBox(height: 12),
+                _buildResourceButton(
+                  icon: Icons.audiotrack_outlined,
+                  label: 'Upload Audio',
+                  onTap: () {
+                    // Handle audio upload
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResourceButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A192F).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF0A192F).withOpacity(0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: const Color(0xFF0A192F),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF0A192F),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ========================================
+  // Z1 - INPUT CONTROL (Bottom Sliding)
+  // ========================================
+  Widget _buildInputControl() {
+    return Consumer<SuperChatProvider>(
+      builder: (context, provider, child) {
+        final isProcessing = provider.state is SuperChatProcessing;
+        
+        return AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          left: 0,
+          right: 80, // Space for edge UI
+          bottom: 0,
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _inputController,
+                    enabled: !_isDisciplineLocked && !isProcessing,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF0A192F),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: _isDisciplineLocked 
+                          ? 'Input locked - Focus mode active'
+                          : 'Ask your question...',
+                      hintStyle: TextStyle(
+                        color: const Color(0xFF0A192F).withOpacity(0.4),
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    maxLines: 3,
+                    minLines: 1,
+                    onTap: () {
+                      setState(() {
+                        _isInputExpanded = true;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (isProcessing)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A192F)),
+                    ),
+                  )
+                else
+                  IconButton(
+                    onPressed: _isDisciplineLocked ? null : _handleSendMessage,
+                    icon: Icon(
+                      Icons.send_rounded,
+                      color: _isDisciplineLocked
+                          ? const Color(0xFF0A192F).withOpacity(0.2)
+                          : const Color(0xFF00F0FF),
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: _isDisciplineLocked
+                          ? const Color(0xFF0A192F).withOpacity(0.05)
+                          : const Color(0xFF00F0FF).withOpacity(0.1),
+                      padding: const EdgeInsets.all(12),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleSendMessage() async {
+    final text = _inputController.text.trim();
+    if (text.isEmpty) return;
+    
+    _inputController.clear();
+    await _handleSendText(text);
+    
+    // Trigger discipline lock for complex queries (simpler loop detection)
+    if (text.length < 20 || text.split(' ').length < 4) {
+      _triggerDisciplineLock();
     }
   }
 
-  void _showClearConfirmation(SuperChatProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cleanWhite,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+  // ========================================
+  // Z4 - DISCIPLINE LAYER (Cognitive Lock)
+  // ========================================
+  Widget _buildDisciplineLayer() {
+    return Positioned.fill(
+      child: AnimatedOpacity(
+        opacity: _isDisciplineLocked ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 500),
+        child: Container(
+          color: const Color(0xFF0A192F).withOpacity(0.85),
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 48),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.psychology_outlined,
+                    size: 64,
+                    color: Color(0xFF0A192F),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Deep Focus Ritual',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0A192F),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Take a moment to reflect deeply.\nInput will unlock in ${_formatFocusTime(_remainingFocusSeconds)}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: const Color(0xFF0A192F).withOpacity(0.7),
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _remainingFocusSeconds / 180,
+                      minHeight: 8,
+                      backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        title: const Text(
-          'Sohbeti Temizle',
-          style: TextStyle(
-            color: AppTheme.primaryNavy,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        content: const Text(
-          'Tüm mesajlar silinecek. Bu işlem geri alınamaz. Emin misiniz?',
-          style: TextStyle(
-            color: AppTheme.mediumGrey,
-            fontSize: 15,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.mediumGrey,
-            ),
-            child: const Text(
-              'İptal',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              provider.clearMessages();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.errorRed,
-              foregroundColor: AppTheme.cleanWhite,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-            ),
-            child: const Text(
-              'Temizle',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  void _navigateToSubscription() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Abonelik ekranı - Yakında'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: AppTheme.primaryNavy,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
+  String _formatFocusTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes}m ${secs}s';
+  }
+
+  // ========================================
+  // HELPER METHODS FOR SAVING & NOTES
+  // ========================================
+  Future<void> _saveMessageAsNote(dynamic message) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _notesService.saveNote(
+        userId: user.uid,
+        imageUrl: '',
+        solutionText: message.text,
+        question: message.isUser ? message.text : 'Professor Response',
+        subject: 'Chat Note',
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Saved to Notes'),
+              ],
+            ),
+            backgroundColor: Color(0xFF4CAF50),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFE53935),
+          ),
+        );
+      }
+    }
   }
 }
