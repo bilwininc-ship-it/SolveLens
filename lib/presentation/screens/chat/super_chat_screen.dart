@@ -315,7 +315,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             Icon(
               Icons.auto_stories_outlined,
               size: 64,
-              color: const Color(0xFF0A192F).withValues(opacity: 0.3),
+              color: const Color(0xFF0A192F).withOpacity(0.3),
             ),
             const SizedBox(height: 24),
             Text(
@@ -333,7 +333,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: const Color(0xFF0A192F).withValues(opacity: 0.6),
+                color: const Color(0xFF0A192F).withOpacity(0.6),
                 height: 1.6,
                 fontFamily: 'Serif',
               ),
@@ -369,7 +369,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A192F).withValues(opacity: 0.5),
+                  color: const Color(0xFF0A192F).withOpacity(0.5),
                   letterSpacing: 1.2,
                 ),
               ),
@@ -407,14 +407,14 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                       Icon(
                         Icons.bookmark_border_rounded,
                         size: 16,
-                        color: const Color(0xFF0A192F).withValues(opacity: 0.4),
+                        color: const Color(0xFF0A192F).withOpacity(0.4),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         AppStrings.saveToNotes,
                         style: TextStyle(
                           fontSize: 12,
-                          color: const Color(0xFF0A192F).withValues(opacity: 0.4),
+                          color: const Color(0xFF0A192F).withOpacity(0.4),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -473,7 +473,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           Container(
             width: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFF0A192F).withValues(opacity: 0.05),
+              color: const Color(0xFF0A192F).withOpacity(0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(32),
                 bottomLeft: Radius.circular(32),
@@ -562,7 +562,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(opacity: 0.06),
+                color: Colors.black.withOpacity(0.06),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -626,7 +626,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF0A192F).withValues(opacity: 0.7),
+                color: const Color(0xFF0A192F).withOpacity(0.7),
               ),
             ),
             Text(
@@ -645,7 +645,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           child: LinearProgressIndicator(
             value: percentage,
             minHeight: 8,
-            backgroundColor: const Color(0xFF0A192F).withValues(opacity: 0.1),
+            backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
           ),
         ),
@@ -671,7 +671,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(opacity: 0.15),
+              color: Colors.black.withOpacity(0.15),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -715,7 +715,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: const Color(0xFF0A192F).withValues(opacity: 0.1),
+                color: const Color(0xFF0A192F).withOpacity(0.1),
               ),
             ),
           ),
@@ -887,10 +887,10 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A192F).withValues(opacity: 0.05),
+          color: const Color(0xFF0A192F).withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFF0A192F).withValues(opacity: 0.1),
+            color: const Color(0xFF0A192F).withOpacity(0.1),
           ),
         ),
         child: Row(
@@ -937,7 +937,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(opacity: 0.1),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -958,7 +958,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                           ? AppStrings.inputLockedFocusMode
                           : AppStrings.askYourQuestion,
                       hintStyle: TextStyle(
-                        color: const Color(0xFF0A192F).withValues(opacity: 0.4),
+                        color: const Color(0xFF0A192F).withOpacity(0.4),
                         fontSize: 15,
                       ),
                       border: InputBorder.none,
@@ -984,13 +984,13 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     icon: Icon(
                       Icons.send_rounded,
                       color: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withValues(opacity: 0.2)
+                          ? const Color(0xFF0A192F).withOpacity(0.2)
                           : const Color(0xFF00F0FF),
                     ),
                     style: IconButton.styleFrom(
                       backgroundColor: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withValues(opacity: 0.05)
-                          : const Color(0xFF00F0FF).withValues(opacity: 0.1),
+                          ? const Color(0xFF0A192F).withOpacity(0.05)
+                          : const Color(0xFF00F0FF).withOpacity(0.1),
                       padding: const EdgeInsets.all(12),
                     ),
                   ),
@@ -1024,7 +1024,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         opacity: _isDisciplineLocked ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 500),
         child: Container(
-          color: const Color(0xFF0A192F).withValues(opacity: 0.85),
+          color: const Color(0xFF0A192F).withOpacity(0.85),
           child: Center(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 48),
@@ -1056,7 +1056,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
-                      color: const Color(0xFF0A192F).withValues(opacity: 0.7),
+                      color: const Color(0xFF0A192F).withOpacity(0.7),
                       height: 1.6,
                     ),
                   ),
@@ -1066,7 +1066,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     child: LinearProgressIndicator(
                       value: _remainingFocusSeconds / 180,
                       minHeight: 8,
-                      backgroundColor: const Color(0xFF0A192F).withValues(opacity: 0.1),
+                      backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
                     ),
                   ),
