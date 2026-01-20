@@ -50,7 +50,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   // State Variables
   ChatMode _selectedMode = ChatMode.textToText;
   String? _currentConversationId;
-  ConversationModel? _currentConversation;
   
   // Z3 - Resource Dock State
   bool _isResourceDockOpen = false;
@@ -61,8 +60,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   Timer? _disciplineTimer;
   int _remainingFocusSeconds = 0;
   
-  // Z1 - Input Control State
-  bool _isInputExpanded = false;
   
   // Typography Sharpness (Cognitive Depth)
   double _contentSharpness = 1.0; // 1.0 = normal, 2.0 = maximum sharpness
@@ -75,31 +72,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     _selectedMode = widget.initialMode ?? ChatMode.textToText;
     _currentConversationId = widget.conversationId;
     _initializeChatProvider();
-    _loadConversation();
     _startReadingTimer();
-  }
-
-  Future<void> _loadConversation() async {
-    if (_currentConversationId == null) return;
-    
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    try {
-      final conversation = await _conversationService.getConversation(
-        userId: user.uid,
-        conversationId: _currentConversationId!,
-      );
-      
-      if (conversation != null) {
-        setState(() {
-          _currentConversation = conversation;
-          _selectedMode = conversation.mode;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading conversation: $e');
-    }
   }
 
   void _initializeChatProvider() {
@@ -183,12 +156,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     await _saveMessageToConversation(caption ?? 'Image message', true);
   }
 
-  Future<void> _handleSendVoice(String transcribedText, double durationMinutes) async {
-    await _chatProvider.sendVoiceMessage(transcribedText, durationMinutes, mode: _selectedMode);
-    _scrollToBottom();
-    await _saveMessageToConversation(transcribedText, true);
-  }
-
   Future<void> _handleSendPDF(file, fileName, fileSize) async {
     await _chatProvider.sendPDFMessage(file, fileName, fileSize);
     _scrollToBottom();
@@ -249,45 +216,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           ),
         );
       }
-    }
-  }
-
-  void _onModeChanged(ChatMode? newMode) {
-    if (newMode != null && newMode != _selectedMode) {
-      setState(() {
-        _selectedMode = newMode;
-      });
-
-      // Update conversation mode if conversation exists
-      if (_currentConversationId != null) {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          _conversationService.updateConversation(
-            userId: user.uid,
-            conversationId: _currentConversationId!,
-            mode: newMode,
-          );
-        }
-      }
-
-      // Show mode change notification
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Text(newMode.icon, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 12),
-              Text('${AppStrings.modeChanged}${newMode.displayName}'),
-            ],
-          ),
-          backgroundColor: AppTheme.primaryNavy,
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
     }
   }
 
@@ -387,7 +315,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             Icon(
               Icons.auto_stories_outlined,
               size: 64,
-              color: const Color(0xFF0A192F).withOpacity(0.3),
+              color: const Color(0xFF0A192F).withValues(opacity: 0.3),
             ),
             const SizedBox(height: 24),
             Text(
@@ -405,7 +333,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: const Color(0xFF0A192F).withOpacity(0.6),
+                color: const Color(0xFF0A192F).withValues(opacity: 0.6),
                 height: 1.6,
                 fontFamily: 'Serif',
               ),
@@ -441,7 +369,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A192F).withOpacity(0.5),
+                  color: const Color(0xFF0A192F).withValues(opacity: 0.5),
                   letterSpacing: 1.2,
                 ),
               ),
@@ -479,14 +407,14 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                       Icon(
                         Icons.bookmark_border_rounded,
                         size: 16,
-                        color: const Color(0xFF0A192F).withOpacity(0.4),
+                        color: const Color(0xFF0A192F).withValues(opacity: 0.4),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         AppStrings.saveToNotes,
                         style: TextStyle(
                           fontSize: 12,
-                          color: const Color(0xFF0A192F).withOpacity(0.4),
+                          color: const Color(0xFF0A192F).withValues(opacity: 0.4),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -545,7 +473,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           Container(
             width: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFF0A192F).withOpacity(0.05),
+              color: const Color(0xFF0A192F).withValues(opacity: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(32),
                 bottomLeft: Radius.circular(32),
@@ -634,7 +562,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(opacity: 0.06),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -698,7 +626,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF0A192F).withOpacity(0.7),
+                color: const Color(0xFF0A192F).withValues(opacity: 0.7),
               ),
             ),
             Text(
@@ -717,7 +645,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           child: LinearProgressIndicator(
             value: percentage,
             minHeight: 8,
-            backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
+            backgroundColor: const Color(0xFF0A192F).withValues(opacity: 0.1),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
           ),
         ),
@@ -743,7 +671,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(opacity: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -787,7 +715,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: const Color(0xFF0A192F).withOpacity(0.1),
+                color: const Color(0xFF0A192F).withValues(opacity: 0.1),
               ),
             ),
           ),
@@ -863,7 +791,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                         },
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ],
             ),
@@ -959,10 +887,10 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A192F).withOpacity(0.05),
+          color: const Color(0xFF0A192F).withValues(opacity: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFF0A192F).withOpacity(0.1),
+            color: const Color(0xFF0A192F).withValues(opacity: 0.1),
           ),
         ),
         child: Row(
@@ -1009,7 +937,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(opacity: 0.1),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -1030,7 +958,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                           ? AppStrings.inputLockedFocusMode
                           : AppStrings.askYourQuestion,
                       hintStyle: TextStyle(
-                        color: const Color(0xFF0A192F).withOpacity(0.4),
+                        color: const Color(0xFF0A192F).withValues(opacity: 0.4),
                         fontSize: 15,
                       ),
                       border: InputBorder.none,
@@ -1038,11 +966,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     ),
                     maxLines: 3,
                     minLines: 1,
-                    onTap: () {
-                      setState(() {
-                        _isInputExpanded = true;
-                      });
-                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1061,13 +984,13 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     icon: Icon(
                       Icons.send_rounded,
                       color: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withOpacity(0.2)
+                          ? const Color(0xFF0A192F).withValues(opacity: 0.2)
                           : const Color(0xFF00F0FF),
                     ),
                     style: IconButton.styleFrom(
                       backgroundColor: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withOpacity(0.05)
-                          : const Color(0xFF00F0FF).withOpacity(0.1),
+                          ? const Color(0xFF0A192F).withValues(opacity: 0.05)
+                          : const Color(0xFF00F0FF).withValues(opacity: 0.1),
                       padding: const EdgeInsets.all(12),
                     ),
                   ),
@@ -1101,7 +1024,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         opacity: _isDisciplineLocked ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 500),
         child: Container(
-          color: const Color(0xFF0A192F).withOpacity(0.85),
+          color: const Color(0xFF0A192F).withValues(opacity: 0.85),
           child: Center(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 48),
@@ -1133,7 +1056,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
-                      color: const Color(0xFF0A192F).withOpacity(0.7),
+                      color: const Color(0xFF0A192F).withValues(opacity: 0.7),
                       height: 1.6,
                     ),
                   ),
@@ -1143,7 +1066,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     child: LinearProgressIndicator(
                       value: _remainingFocusSeconds / 180,
                       minHeight: 8,
-                      backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
+                      backgroundColor: const Color(0xFF0A192F).withValues(opacity: 0.1),
                       valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
                     ),
                   ),
@@ -1160,48 +1083,5 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
     return '${minutes}m ${secs}s';
-  }
-
-  // ========================================
-  // HELPER METHODS FOR SAVING & NOTES
-  // ========================================
-  Future<void> _saveMessageAsNote(dynamic message) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    try {
-      await _notesService.saveNote(
-        userId: user.uid,
-        imageUrl: '',
-        solutionText: message.text,
-        question: message.isUser ? message.text : 'Professor Response',
-        subject: 'Chat Note',
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Text(AppStrings.savedToNotes),
-              ],
-            ),
-            backgroundColor: Color(0xFF4CAF50),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppStrings.errorPrefix}$e'),
-            backgroundColor: const Color(0xFFE53935),
-          ),
-        );
-      }
-    }
   }
 }
