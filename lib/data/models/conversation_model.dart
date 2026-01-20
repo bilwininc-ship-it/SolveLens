@@ -1,6 +1,7 @@
 // Conversation Model for managing multiple chat sessions
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import '../../core/constants/app_strings.dart';
 
 class ConversationModel extends Equatable {
   final String id;
@@ -102,13 +103,13 @@ extension ChatModeExtension on ChatMode {
   String get displayName {
     switch (this) {
       case ChatMode.textToText:
-        return 'Metin → Metin';
+        return 'Text → Text';
       case ChatMode.voiceToText:
-        return 'Ses → Metin';
+        return AppStrings.voiceToText;
       case ChatMode.textToVoice:
-        return 'Metin → Ses';
+        return AppStrings.textToVoice;
       case ChatMode.liveVoiceChat:
-        return 'Canlı Sesli Sohbet';
+        return AppStrings.liveVoiceChat;
     }
   }
 
@@ -128,13 +129,13 @@ extension ChatModeExtension on ChatMode {
   String get description {
     switch (this) {
       case ChatMode.textToText:
-        return 'Metin yaz, metin al';
+        return 'Text input, text response';
       case ChatMode.voiceToText:
-        return 'Konuş, metin al';
+        return 'Voice input, text response';
       case ChatMode.textToVoice:
-        return 'Yaz, sesli yanıt al';
+        return 'Text input, voice response';
       case ChatMode.liveVoiceChat:
-        return 'Konuş ve sesli yanıt al';
+        return AppStrings.voiceToVoice;
     }
   }
 }

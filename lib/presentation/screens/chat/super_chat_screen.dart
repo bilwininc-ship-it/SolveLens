@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/di/service_locator.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../services/ai/ai_service.dart';
 import '../../../services/voice/voice_service.dart';
 import '../../../services/quota/quota_service.dart';
@@ -231,7 +232,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 12),
-                Text('Not olarak kaydedildi'),
+                Text(AppStrings.savedToNotes),
               ],
             ),
             backgroundColor: AppTheme.successGreen,
@@ -243,7 +244,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text('${AppStrings.errorPrefix}$e'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -276,7 +277,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             children: [
               Text(newMode.icon, style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 12),
-              Text('Mod değiştirildi: ${newMode.displayName}'),
+              Text('${AppStrings.modeChanged}${newMode.displayName}'),
             ],
           ),
           backgroundColor: AppTheme.primaryNavy,
@@ -390,7 +391,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             ),
             const SizedBox(height: 24),
             Text(
-              'Academic Coach Desk',
+              AppStrings.academicCoachDesk,
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -400,7 +401,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             ),
             const SizedBox(height: 12),
             Text(
-              'A disciplined space for deep intellectual work.\nBegin your research session below.',
+              AppStrings.disciplinedSpaceSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -436,7 +437,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               ),
               const SizedBox(width: 8),
               Text(
-                isUser ? 'You' : 'Professor',
+                isUser ? AppStrings.youLabel : AppStrings.professorLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -482,7 +483,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Save to Notes',
+                        AppStrings.saveToNotes,
                         style: TextStyle(
                           fontSize: 12,
                           color: const Color(0xFF0A192F).withOpacity(0.4),
@@ -556,7 +557,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                 const SizedBox(height: 16),
                 _buildEdgeButton(
                   icon: Icons.dashboard_outlined,
-                  label: 'Dashboard',
+                  label: AppStrings.dashboard,
                   onTap: () {
                     Navigator.pop(context);
                   },
@@ -564,7 +565,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                 const SizedBox(height: 12),
                 _buildEdgeButton(
                   icon: Icons.history_outlined,
-                  label: 'History',
+                  label: AppStrings.history,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -577,7 +578,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                 const SizedBox(height: 12),
                 _buildEdgeButton(
                   icon: Icons.person_outline,
-                  label: 'Profile',
+                  label: AppStrings.profile,
                   onTap: () {
                     // Navigate to profile
                   },
@@ -666,7 +667,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Credit Usage',
+              AppStrings.creditUsage,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -674,9 +675,9 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               ),
             ),
             const SizedBox(height: 20),
-            _buildUsageRow('Text Messages', quota?.textMessagesUsed ?? 0, quota?.textMessagesLimit ?? 15),
+            _buildUsageRow(AppStrings.textMessages, quota?.textMessagesUsed ?? 0, quota?.textMessagesLimit ?? 15),
             const SizedBox(height: 12),
-            _buildUsageRow('Voice Minutes', quota?.voiceMinutesUsed?.toInt() ?? 0, quota?.voiceMinutesLimit?.toInt() ?? 30),
+            _buildUsageRow(AppStrings.voiceMinutes, quota?.voiceMinutesUsed?.toInt() ?? 0, quota?.voiceMinutesLimit?.toInt() ?? 30),
           ],
         ),
       ),
@@ -800,7 +801,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Resource Dock',
+                  AppStrings.resourceDock,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -829,13 +830,13 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               children: [
                 _buildResourceButton(
                   icon: Icons.picture_as_pdf_outlined,
-                  label: 'Upload PDF',
+                  label: AppStrings.uploadPDF,
                   onTap: _handlePDFUpload,
                 ),
                 const SizedBox(height: 12),
                 _buildResourceButton(
                   icon: Icons.image_outlined,
-                  label: 'Upload Image',
+                  label: AppStrings.uploadImage,
                   onTap: _handleImageUpload,
                 ),
                 const SizedBox(height: 20),
@@ -900,7 +901,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload PDF: $e'),
+            content: Text('${AppStrings.failedToUploadPDF}$e'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -939,7 +940,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload image: $e'),
+            content: Text('${AppStrings.failedToUploadImage}$e'),
             backgroundColor: AppTheme.errorRed,
           ),
         );
@@ -1026,8 +1027,8 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     ),
                     decoration: InputDecoration(
                       hintText: _isDisciplineLocked 
-                          ? 'Input locked - Focus mode active'
-                          : 'Ask your question...',
+                          ? AppStrings.inputLockedFocusMode
+                          : AppStrings.askYourQuestion,
                       hintStyle: TextStyle(
                         color: const Color(0xFF0A192F).withOpacity(0.4),
                         fontSize: 15,
@@ -1119,7 +1120,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Deep Focus Ritual',
+                    AppStrings.deepFocusRitual,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -1128,7 +1129,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Take a moment to reflect deeply.\nInput will unlock in ${_formatFocusTime(_remainingFocusSeconds)}',
+                    '${AppStrings.focusReflectionMessage}${_formatFocusTime(_remainingFocusSeconds)}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -1184,7 +1185,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 12),
-                Text('Saved to Notes'),
+                Text(AppStrings.savedToNotes),
               ],
             ),
             backgroundColor: Color(0xFF4CAF50),
@@ -1196,7 +1197,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('${AppStrings.errorPrefix}$e'),
             backgroundColor: const Color(0xFFE53935),
           ),
         );
