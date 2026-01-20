@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../services/ai/ai_service.dart';
 import '../../../services/voice/voice_service.dart';
@@ -14,6 +17,9 @@ import '../../providers/super_chat_provider.dart';
 import '../../providers/super_chat_state.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/academic_skeleton.dart';
+import '../../widgets/credit_pulse_counter.dart';
+import '../../widgets/silent_file_upload.dart';
 import 'conversations_list_screen.dart';
 
 class SuperChatScreen extends StatefulWidget {
@@ -47,6 +53,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   
   // Z3 - Resource Dock State
   bool _isResourceDockOpen = false;
+  final List<Map<String, dynamic>> _uploadingFiles = []; // Track uploading files
   
   // Z4 - Discipline Layer State
   bool _isDisciplineLocked = false;
@@ -318,6 +325,10 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     return Consumer<SuperChatProvider>(
       builder: (context, provider, child) {
         final messages = _getMessagesFromState(provider.state);
+        final isProcessing = provider.state is SuperChatProcessing;
+        final processingMessage = isProcessing 
+            ? (provider.state as SuperChatProcessing).processingMessage 
+            : '';
         
         return Container(
           decoration: BoxDecoration(
@@ -332,7 +343,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               },
             ),
           ),
-          child: messages.isEmpty
+          child: messages.isEmpty && !isProcessing
               ? _buildEmptyResearchState()
               : ListView.builder(
                   controller: _scrollController,
@@ -342,9 +353,14 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
                     right: 100, // Space for edge UI
                     bottom: 120, // Space for input
                   ),
-                  itemCount: messages.length,
+                  itemCount: messages.length + (isProcessing ? 1 : 0),
                   itemBuilder: (context, index) {
-                    return _buildRichTextMessage(messages[index]);
+                    if (index < messages.length) {
+                      return _buildRichTextMessage(messages[index]);
+                    } else {
+                      // Show Academic Skeleton when processing
+                      return AcademicSkeleton(message: processingMessage);
+                    }
                   },
                 ),
         );
@@ -585,43 +601,12 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             final used = quota?.textMessagesUsed ?? 0;
             final total = quota?.textMessagesLimit ?? 15;
             
-            return GestureDetector(
-              onTap: () => _showCreditDetails(quota),
-              child: Container(
-                margin: const EdgeInsets.only(top: 48, right: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$used',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0A192F),
-                      ),
-                    ),
-                    Text(
-                      ' / $total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF0A192F).withOpacity(0.5),
-                      ),
-                    ),
-                  ],
-                ),
+            return Container(
+              margin: const EdgeInsets.only(top: 48, right: 16),
+              child: CreditPulseCounter(
+                used: used,
+                total: total,
+                onTap: () => _showCreditDetails(quota),
               ),
             );
           },
@@ -815,7 +800,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Session Resources',
+                  'Resource Dock',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -838,39 +823,128 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         ),
         // Upload Buttons
         Expanded(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 _buildResourceButton(
                   icon: Icons.picture_as_pdf_outlined,
                   label: 'Upload PDF',
-                  onTap: () {
-                    // Handle PDF upload
-                  },
+                  onTap: _handlePDFUpload,
                 ),
                 const SizedBox(height: 12),
                 _buildResourceButton(
                   icon: Icons.image_outlined,
                   label: 'Upload Image',
-                  onTap: () {
-                    // Handle image upload
-                  },
+                  onTap: _handleImageUpload,
                 ),
-                const SizedBox(height: 12),
-                _buildResourceButton(
-                  icon: Icons.audiotrack_outlined,
-                  label: 'Upload Audio',
-                  onTap: () {
-                    // Handle audio upload
-                  },
-                ),
+                const SizedBox(height: 20),
+                
+                // Uploading files list
+                if (_uploadingFiles.isNotEmpty) ...[
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  ..._uploadingFiles.map((fileData) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: SilentFileUpload(
+                        fileName: fileData['name'],
+                        fileSize: fileData['size'],
+                        onComplete: () {
+                          setState(() {
+                            _uploadingFiles.remove(fileData);
+                          });
+                        },
+                        onCancel: () {
+                          setState(() {
+                            _uploadingFiles.remove(fileData);
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ],
               ],
             ),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _handlePDFUpload() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final fileName = result.files.single.name;
+        final fileSize = await file.length();
+
+        setState(() {
+          _uploadingFiles.add({
+            'name': fileName,
+            'size': fileSize,
+            'file': file,
+          });
+        });
+
+        // Send to chat provider
+        await _handleSendPDF(file, fileName, fileSize);
+      }
+    } catch (e) {
+      debugPrint('PDF upload error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload PDF: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleImageUpload() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final file = File(image.path);
+        final fileName = image.name;
+        final fileSize = await file.length();
+
+        setState(() {
+          _uploadingFiles.add({
+            'name': fileName,
+            'size': fileSize,
+            'file': file,
+          });
+        });
+
+        // Send to chat provider
+        await _handleSendImage(file, null);
+      }
+    } catch (e) {
+      debugPrint('Image upload error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload image: $e'),
+            backgroundColor: AppTheme.errorRed,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildResourceButton({

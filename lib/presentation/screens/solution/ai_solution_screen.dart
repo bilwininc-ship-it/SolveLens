@@ -7,6 +7,7 @@ import 'dart:io';
 import '../../providers/solution_provider.dart';
 import '../../providers/solution_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/academic_skeleton.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/notes/notes_service.dart';
 import '../../../core/di/service_locator.dart';
@@ -200,7 +201,12 @@ class _AISolutionScreenState extends State<AISolutionScreen> with TickerProvider
     if (state is SolutionScanning) {
       return _buildLoadingView('Scanning your question...', 0.3);
     } else if (state is SolutionAnalyzing) {
-      return _buildLoadingView('AI Mentor is thinking...', state.progress);
+      // Use Academic Skeleton for AI thinking state
+      return const Center(
+        child: AcademicSkeleton(
+          message: 'Professor is analyzing your question...',
+        ),
+      );
     } else if (state is SolutionSuccess) {
       return _buildSolutionView(state.question.answer);
     } else if (state is SolutionError) {
