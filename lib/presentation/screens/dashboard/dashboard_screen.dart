@@ -1,19 +1,21 @@
-// Main Dashboard Screen - Premium Elite Academic Interface
+// Academic Research Station Dashboard - Elite Premium Interface
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'dart:ui';
 import '../camera/camera_screen.dart';
 import '../notes/notes_screen.dart';
 import '../chat/super_chat_screen.dart';
-import '../../widgets/dashboard_card.dart';
-import '../../widgets/app_drawer.dart';
+import '../../widgets/active_task_card.dart';
+import '../../widgets/grid_menu_card.dart';
+import '../../widgets/recent_activity_card.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/user_provider.dart';
+import '../../providers/solution_provider.dart';
+import '../solution/ai_solution_screen.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../domain/usecases/get_question_history_usecase.dart';
 import 'dart:io';
-import 'package:provider/provider.dart';
-import '../solution/ai_solution_screen.dart';
-import '../../providers/solution_provider.dart';
-import '../../providers/user_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,18 +24,30 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   final GetQuestionHistoryUseCase _getHistoryUseCase = getIt<GetQuestionHistoryUseCase>();
-  int _solvedQuestionsCount = 0;
+  List<Map<String, String>> _recentActivities = [];
   bool _isLoading = true;
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _loadStats();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _animationController.forward();
+    _loadRecentActivities();
   }
 
-  Future<void> _loadStats() async {
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadRecentActivities() async {
     setState(() => _isLoading = true);
 
     try {
@@ -41,63 +55,104 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (user != null) {
         final result = await _getHistoryUseCase(userId: user.uid);
         result.fold(
-          (failure) => setState(() => _solvedQuestionsCount = 0),
-          (questions) => setState(() => _solvedQuestionsCount = questions.length),
+          (failure) {
+            setState(() {
+              _recentActivities = [];
+            });
+          },
+          (questions) {
+            setState(() {
+              _recentActivities = questions.take(5).map((q) {
+                return {
+                  'query': q.question ?? 'No question',
+                  'tag': _getTagFromQuestion(q.question ?? ''),
+                  'time': _getTimeAgo(q.timestamp),
+                };
+              }).toList();
+            });
+          },
         );
       }
     } catch (e) {
-      debugPrint('Stats loading error: $e');
+      debugPrint('Recent activities loading error: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  String _getTagFromQuestion(String question) {
+    final lowercaseQ = question.toLowerCase();
+    if (lowercaseQ.contains('physics') || lowercaseQ.contains('quantum') || lowercaseQ.contains('mechanics')) {
+      return '#Physics';
+    } else if (lowercaseQ.contains('math') || lowercaseQ.contains('calculus') || lowercaseQ.contains('algebra')) {
+      return '#Mathematics';
+    } else if (lowercaseQ.contains('chemistry') || lowercaseQ.contains('molecule')) {
+      return '#Chemistry';
+    } else if (lowercaseQ.contains('biology') || lowercaseQ.contains('cell')) {
+      return '#Biology';
+    }
+    return '#General';
+  }
+
+  String _getTimeAgo(DateTime? timestamp) {
+    if (timestamp == null) return 'Just now';
+    final diff = DateTime.now().difference(timestamp);
+    if (diff.inDays > 1) return '${diff.inDays} days ago';
+    if (diff.inDays == 1) return '1 day ago';
+    if (diff.inHours > 0) return '${diff.inHours} hours ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes} min ago';
+    return 'Just now';
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final userName = user?.displayName ?? 'Student';
+    final userName = user?.displayName ?? 'Researcher';
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: AppTheme.lightGrey, // Premium light grey background #F8FAFC
-      drawer: const AppDrawer(),
+      backgroundColor: AppTheme.ivory, // #F9F9F7
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadStats,
-          color: AppTheme.primaryNavy,
+          onRefresh: _loadRecentActivities,
+          color: AppTheme.cyanNeon,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20), // Reduced padding for better fit
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Premium Header with Menu
-                _buildPremiumHeader(firstName),
-                const SizedBox(height: 28), // Reduced from 32
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Premium Header with Greeting & Credits
+                  _buildPremiumHeader(firstName),
+                  const SizedBox(height: 48),
 
-                // Elegant Dashboard Title
-                _buildDashboardTitle(),
-                const SizedBox(height: 20), // Reduced from 24
-
-                // Premium Stats Card
-                _buildPremiumStatsCard(),
-                const SizedBox(height: 28), // Reduced from 32
-
-                // Features Section Title
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    color: AppTheme.primaryNavy,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
+                  // Active Task Card (Hero Section)
+                  FadeTransition(
+                    opacity: _animationController,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.2),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOut,
+                      )),
+                      child: ActiveTaskCard(
+                        onTap: () => _navigateToSuperChat(),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18), // Reduced from 20
+                  const SizedBox(height: 48),
 
-                // Premium Feature Cards
-                _buildPremiumFeatureCards(),
-              ],
+                  // Grid Menu - The 4 Pillars
+                  _buildGridMenu(),
+                  const SizedBox(height: 64),
+
+                  // Recent Scholarly Activity
+                  _buildRecentActivity(),
+                ],
+              ),
             ),
           ),
         ),
@@ -108,7 +163,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildPremiumHeader(String firstName) {
     final hour = DateTime.now().hour;
     String greeting;
-    
+
     if (hour < 12) {
       greeting = 'Good Morning';
     } else if (hour < 18) {
@@ -118,403 +173,394 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // SolveLens Logo
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.cleanWhite,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                offset: const Offset(0, 2),
-                blurRadius: 8,
-                color: const Color(0x0A000000),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(8),
-          child: const Icon(
-            Icons.school_rounded,
-            color: AppTheme.primaryNavy,
-            size: 32,
-          ),
-        ),
-        const SizedBox(width: 12),
-        
-        // Menu button - Premium Navy
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.cleanWhite,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                offset: const Offset(0, 2),
-                blurRadius: 8,
-                color: const Color(0x0A000000),
-              ),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.menu_rounded, color: AppTheme.primaryNavy, size: 24),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        const SizedBox(width: 16),
-        
-        // Welcome text
+        // Greeting Text
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                greeting,
-                style: const TextStyle(
-                  color: AppTheme.mediumGrey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.2,
+              FadeTransition(
+                opacity: _animationController,
+                child: Text(
+                  '$greeting,',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primaryNavy,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    firstName,
-                    style: const TextStyle(
-                      color: AppTheme.primaryNavy,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                    ),
+              FadeTransition(
+                opacity: _animationController,
+                child: Text(
+                  firstName,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w400,
+                    color: AppTheme.primaryNavy.withOpacity(0.7),
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    '👋',
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ],
+                ),
               ),
             ],
           ),
         ),
-        
-        // Credits Chip - Elite Glassmorphism Design
-        _buildCreditsChip(),
+        // Glassmorphism Credits Chip
+        _buildGlassmorphismCreditsChip(),
       ],
     );
   }
 
-  Widget _buildCreditsChip() {
+  Widget _buildGlassmorphismCreditsChip() {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         final credits = userProvider.remainingCredits;
         final isLoading = userProvider.isLoading;
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // Use compact design for smaller screens
-            final isCompact = constraints.maxWidth < 400;
-            
-            return Container(
-              constraints: const BoxConstraints(
-                maxWidth: 110, // Prevent overflow
+        return FadeTransition(
+          opacity: _animationController,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
               ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 10 : 12, 
-                vertical: 8,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryNavy.withOpacity(0.95),
-                    AppTheme.primaryNavy.withOpacity(0.85),
+              boxShadow: [
+                BoxShadow(
+                  offset: const Offset(0, 0),
+                  blurRadius: 20,
+                  color: AppTheme.cyanNeon.withOpacity(0.3),
+                ),
+                BoxShadow(
+                  offset: const Offset(0, 4),
+                  blurRadius: 12,
+                  color: AppTheme.primaryNavy.withOpacity(0.08),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isLoading ? '...' : '$credits',
+                      style: const TextStyle(
+                        color: AppTheme.primaryNavy,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '/ 15',
+                      style: TextStyle(
+                        color: AppTheme.primaryNavy.withOpacity(0.6),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Credits',
+                      style: TextStyle(
+                        color: AppTheme.primaryNavy,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    offset: const Offset(0, 3),
-                    blurRadius: 10,
-                    color: AppTheme.primaryNavy.withOpacity(0.2),
-                  ),
-                ],
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.15),
-                  width: 0.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppTheme.premiumGold.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.diamond_rounded,
-                      color: AppTheme.premiumGold,
-                      size: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isLoading ? '...' : '$credits',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                            height: 1,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 1.5),
-                        const Text(
-                          'Credits',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.4,
-                            height: 1,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildDashboardTitle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppTheme.cleanWhite,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 4),
-            blurRadius: 15,
-            color: const Color(0x0D000000),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 24,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryNavy,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'Dashboard',
-            style: TextStyle(
-              color: AppTheme.primaryNavy,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumStatsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20), // Reduced from 24
-      decoration: BoxDecoration(
-        color: AppTheme.cleanWhite, // Premium white background
-        borderRadius: BorderRadius.circular(20), // Reduced from 24
-        boxShadow: [
-          // Airy Shadow
-          BoxShadow(
-            offset: const Offset(0, 3),
-            blurRadius: 12,
-            color: const Color(0x0D000000),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildPremiumStatItem(
-            icon: Icons.check_circle_rounded,
-            value: _isLoading ? '...' : '$_solvedQuestionsCount',
-            label: 'Solved',
-            color: AppTheme.primaryNavy,
-          ),
-          Container(
-            height: 45,
-            width: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppTheme.mediumGrey.withOpacity(0.0),
-                  AppTheme.mediumGrey.withOpacity(0.15),
-                  AppTheme.mediumGrey.withOpacity(0.0),
-                ],
-              ),
-            ),
-          ),
-          _buildPremiumStatItem(
-            icon: Icons.local_fire_department_rounded,
-            value: '0',
-            label: 'Streak',
-            color: AppTheme.warningOrange,
-          ),
-          Container(
-            height: 45,
-            width: 1,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppTheme.mediumGrey.withOpacity(0.0),
-                  AppTheme.mediumGrey.withOpacity(0.15),
-                  AppTheme.mediumGrey.withOpacity(0.0),
-                ],
-              ),
-            ),
-          ),
-          _buildPremiumStatItem(
-            icon: Icons.star_rounded,
-            value: '0',
-            label: 'Notes',
-            color: AppTheme.premiumGold,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
+  Widget _buildGridMenu() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(9), // Reduced from 10
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(11), // Reduced from 12
-          ),
-          child: Icon(icon, color: color, size: 22), // Reduced from 26
+        Row(
+          children: [
+            Expanded(
+              child: GridMenuCard(
+                icon: Icons.chat_bubble_rounded,
+                title: 'New Inquiry',
+                description: 'Start a deep research conversation',
+                onTap: () => _navigateToSuperChat(),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: GridMenuCard(
+                icon: Icons.camera_alt_rounded,
+                title: 'Document Scan',
+                description: 'Camera & OCR analysis',
+                onTap: () => _navigateToDocumentScan(),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 10), // Reduced from 12
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppTheme.primaryNavy,
-            fontSize: 22, // Reduced from 24
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 3), // Reduced from 4
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppTheme.mediumGrey,
-            fontSize: 11, // Reduced from 12
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
-          ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: GridMenuCard(
+                icon: Icons.folder_rounded,
+                title: 'Research Vault',
+                description: 'History & saved notes',
+                onTap: () => _navigateToResearchVault(),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: GridMenuCard(
+                icon: Icons.insights_rounded,
+                title: 'Academic Insights',
+                description: 'AI-generated statistics',
+                onTap: () => _showAcademicInsights(),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildPremiumFeatureCards() {
+  Widget _buildRecentActivity() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Card 1: Scan & Solve
-        DashboardCard(
-          icon: Icons.camera_alt_rounded,
-          title: '📸 Scan & Solve',
-          subtitle: 'Take a photo of your question, get instant AI mentor help',
-          iconColor: AppTheme.primaryNavy,
-          onTap: () async {
-            // Navigate to camera and get the captured image
-            final File? capturedImage = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CameraScreen()),
-            );
-
-            // If image was captured, navigate to AI Solution Screen
-            if (capturedImage != null && mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChangeNotifierProvider(
-                    create: (_) => getIt<SolutionProvider>(),
-                    child: AISolutionScreen(imageFile: capturedImage),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Recent Scholarly Activity',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryNavy,
+                letterSpacing: -0.3,
+              ),
+            ),
+            TextButton(
+              onPressed: () => _navigateToResearchVault(),
+              child: Row(
+                children: [
+                  Text(
+                    'View all',
+                    style: TextStyle(
+                      color: AppTheme.primaryNavy.withOpacity(0.6),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppTheme.primaryNavy.withOpacity(0.6),
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(
+                color: AppTheme.cyanNeon,
+              ),
+            ),
+          )
+        else if (_recentActivities.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppTheme.primaryNavy.withOpacity(0.08),
+              ),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    size: 48,
+                    color: AppTheme.primaryNavy.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No recent activity yet',
+                    style: TextStyle(
+                      color: AppTheme.primaryNavy.withOpacity(0.6),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start your first inquiry above',
+                    style: TextStyle(
+                      color: AppTheme.primaryNavy.withOpacity(0.4),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...List.generate(
+            _recentActivities.length,
+            (index) {
+              final activity = _recentActivities[index];
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: Duration(milliseconds: 400 + (index * 80)),
+                curve: Curves.easeOut,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(-20 * (1 - value), 0),
+                      child: child,
+                    ),
+                  );
+                },
+                child: RecentActivityCard(
+                  query: activity['query']!,
+                  tag: activity['tag']!,
+                  time: activity['time']!,
+                  onTap: () => _navigateToResearchVault(),
                 ),
               );
-            }
-          },
-        ),
-        const SizedBox(height: 18), // Reduced from 24
-
-        // Card 2: Super Chat (Unified Interface)
-        DashboardCard(
-          icon: Icons.chat_bubble_rounded,
-          title: '💬 Super Chat',
-          subtitle: 'Text, voice, or photos - chat with your AI Professor',
-          iconColor: AppTheme.primaryNavy,
-          badge: 'NEW',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SuperChatScreen()),
-            );
-          },
-        ),
-        const SizedBox(height: 18), // Reduced from 24
-
-        // Card 3: My Smart Notes
-        DashboardCard(
-          icon: Icons.bookmark_rounded,
-          title: '📝 My Smart Notes',
-          subtitle: 'Quickly access your starred important solutions',
-          iconColor: AppTheme.primaryNavy,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NotesScreen()),
-            );
-          },
-        ),
+            },
+          ),
       ],
+    );
+  }
+
+  // Navigation Methods
+  void _navigateToSuperChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SuperChatScreen()),
+    );
+  }
+
+  Future<void> _navigateToDocumentScan() async {
+    final File? capturedImage = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CameraScreen()),
+    );
+
+    if (capturedImage != null && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChangeNotifierProvider(
+            create: (_) => getIt<SolutionProvider>(),
+            child: AISolutionScreen(imageFile: capturedImage),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _navigateToResearchVault() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotesScreen()),
+    );
+  }
+
+  void _showAcademicInsights() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryNavy.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Icon(
+              Icons.insights_rounded,
+              size: 64,
+              color: AppTheme.cyanNeon,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Academic Insights',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryNavy,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'AI-generated statistics and performance analytics coming soon!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppTheme.primaryNavy.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryNavy,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Got it',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

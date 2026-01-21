@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
-  // Elite Professor Color Palette - Navy & White
-  static const Color primaryNavy = Color(0xFF1E3A8A); // Deep Navy Blue
+  // Elite Professor Color Palette - Navy & White (Academic Research Station)
+  static const Color primaryNavy = Color(0xFF0A192F); // Dark Navy Blue #0A192F
   static const Color navyDark = Color(0xFF1E293B); // Darker Navy
+  static const Color navyGradientEnd = Color(0xFF1A2F4F); // Navy gradient end
+  static const Color cyanNeon = Color(0xFF00F0FF); // Cyan Neon Accent #00F0FF
   static const Color brightBlue = Color(0xFF3B82F6); // Accent Bright Blue
+  static const Color ivory = Color(0xFFF9F9F7); // Ivory Background #F9F9F7
   static const Color cleanWhite = Color(0xFFFFFFFF); // Pure White Background
   static const Color lightGrey = Color(0xFFF8FAFC); // Light Grey Surface
   static const Color mediumGrey = Color(0xFF64748B); // Medium Grey Text
@@ -27,7 +30,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: cleanWhite,
+      scaffoldBackgroundColor: ivory, // Academic Research Station background
       
       // Color Scheme
       colorScheme: const ColorScheme.light(
