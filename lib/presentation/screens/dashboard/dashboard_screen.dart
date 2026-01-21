@@ -26,9 +26,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
   final GetQuestionHistoryUseCase _getHistoryUseCase = getIt<GetQuestionHistoryUseCase>();
-  List<Map<String, String>> _recentActivities = [];
+  List<Map<String, dynamic>> _recentActivities = [];
   bool _isLoading = true;
   late AnimationController _animationController;
+  DateTime? _lastUpdateTime;
 
   @override
   void initState() {
@@ -58,6 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           (failure) {
             setState(() {
               _recentActivities = [];
+              _lastUpdateTime = null;
             });
           },
           (questions) {
@@ -67,8 +69,16 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   'query': q.question ?? 'No question',
                   'tag': _getTagFromQuestion(q.question ?? ''),
                   'time': _getTimeAgo(q.createdAt),
+                  'timestamp': q.createdAt,
                 };
               }).toList();
+              
+              // Set last update time to most recent activity
+              if (_recentActivities.isNotEmpty && _recentActivities[0]['timestamp'] != null) {
+                _lastUpdateTime = _recentActivities[0]['timestamp'] as DateTime;
+              } else {
+                _lastUpdateTime = DateTime.now();
+              }
             });
           },
         );
@@ -104,6 +114,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     return 'Just now';
   }
 
+  String _getLastUpdateText() {
+    if (_lastUpdateTime == null) return 'No recent updates';
+    return 'Last Update: ${_getTimeAgo(_lastUpdateTime)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -111,7 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: AppTheme.ivory, // #F9F9F7
+      backgroundColor: AppTheme.ivory,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadRecentActivities,
@@ -119,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -173,7 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Greeting Text
         Expanded(
@@ -203,11 +218,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     color: AppTheme.primaryNavy.withOpacity(0.7),
                     letterSpacing: -0.5,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(width: 12),
         // Glassmorphism Credits Chip
         _buildGlassmorphismCreditsChip(),
       ],
@@ -223,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         return FadeTransition(
           opacity: _animationController,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.4),
               borderRadius: BorderRadius.circular(16),
@@ -255,26 +273,26 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       isLoading ? '...' : '$credits',
                       style: const TextStyle(
                         color: AppTheme.primaryNavy,
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 3),
                     Text(
                       '/ 15',
                       style: TextStyle(
                         color: AppTheme.primaryNavy.withOpacity(0.6),
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     const Text(
                       'Credits',
                       style: TextStyle(
                         color: AppTheme.primaryNavy,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -294,42 +312,54 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         Row(
           children: [
             Expanded(
-              child: GridMenuCard(
-                icon: Icons.chat_bubble_rounded,
-                title: 'New Inquiry',
-                description: 'Start a deep research conversation',
-                onTap: () => _navigateToSuperChat(),
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: GridMenuCard(
+                  icon: Icons.chat_bubble_rounded,
+                  title: 'New Inquiry',
+                  description: 'Start a deep research conversation',
+                  onTap: () => _navigateToSuperChat(),
+                ),
               ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 16),
             Expanded(
-              child: GridMenuCard(
-                icon: Icons.camera_alt_rounded,
-                title: 'Document Scan',
-                description: 'Camera & OCR analysis',
-                onTap: () => _navigateToDocumentScan(),
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: GridMenuCard(
+                  icon: Icons.camera_alt_rounded,
+                  title: 'Document Scan',
+                  description: 'Camera & OCR analysis',
+                  onTap: () => _navigateToDocumentScan(),
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: GridMenuCard(
-                icon: Icons.folder_rounded,
-                title: 'Research Vault',
-                description: 'History & saved notes',
-                onTap: () => _navigateToResearchVault(),
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: GridMenuCard(
+                  icon: Icons.folder_rounded,
+                  title: 'Research Vault',
+                  description: 'History & saved notes',
+                  onTap: () => _navigateToResearchVault(),
+                ),
               ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 16),
             Expanded(
-              child: GridMenuCard(
-                icon: Icons.insights_rounded,
-                title: 'Academic Insights',
-                description: 'AI-generated statistics',
-                onTap: () => _showAcademicInsights(),
+              child: AspectRatio(
+                aspectRatio: 1.0,
+                child: GridMenuCard(
+                  icon: Icons.insights_rounded,
+                  title: 'Academic Insights',
+                  description: 'AI-generated statistics',
+                  onTap: () => _showAcademicInsights(),
+                ),
               ),
             ),
           ],
@@ -343,20 +373,30 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Recent Scholarly Activity',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primaryNavy,
-                letterSpacing: -0.3,
+            Expanded(
+              child: Text(
+                'Recent Scholarly Activity',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryNavy,
+                  letterSpacing: -0.3,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
+            const SizedBox(width: 8),
             TextButton(
               onPressed: () => _navigateToResearchVault(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'View all',
@@ -366,11 +406,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 2),
                   Icon(
                     Icons.chevron_right_rounded,
                     color: AppTheme.primaryNavy.withOpacity(0.6),
-                    size: 20,
+                    size: 18,
                   ),
                 ],
               ),
@@ -427,31 +467,53 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             ),
           )
         else
-          ...List.generate(
-            _recentActivities.length,
-            (index) {
-              final activity = _recentActivities[index];
-              return TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: Duration(milliseconds: 400 + (index * 80)),
-                curve: Curves.easeOut,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(-20 * (1 - value), 0),
-                      child: child,
+          Column(
+            children: [
+              ...List.generate(
+                _recentActivities.length,
+                (index) {
+                  final activity = _recentActivities[index];
+                  return TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: Duration(milliseconds: 400 + (index * 80)),
+                    curve: Curves.easeOut,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(-20 * (1 - value), 0),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: RecentActivityCard(
+                      query: activity['query']!,
+                      tag: activity['tag']!,
+                      time: activity['time']!,
+                      onTap: () => _navigateToResearchVault(),
                     ),
                   );
                 },
-                child: RecentActivityCard(
-                  query: activity['query']!,
-                  tag: activity['tag']!,
-                  time: activity['time']!,
-                  onTap: () => _navigateToResearchVault(),
+              ),
+              const SizedBox(height: 20),
+              // Dynamic Last Update - Wrapped to prevent overflow
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width - 40,
                 ),
-              );
-            },
+                child: Text(
+                  _getLastUpdateText(),
+                  style: TextStyle(
+                    color: AppTheme.primaryNavy.withOpacity(0.4),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ],
           ),
       ],
     );

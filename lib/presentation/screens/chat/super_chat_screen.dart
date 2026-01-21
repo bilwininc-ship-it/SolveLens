@@ -1,4 +1,5 @@
 // Academic Coach Desk - Layered Research Interface (Z0-Z4 Architecture)
+// MOBILE OPTIMIZED VERSION
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -53,16 +54,15 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   
   // Z3 - Resource Dock State
   bool _isResourceDockOpen = false;
-  final List<Map<String, dynamic>> _uploadingFiles = []; // Track uploading files
+  final List<Map<String, dynamic>> _uploadingFiles = [];
   
   // Z4 - Discipline Layer State
   bool _isDisciplineLocked = false;
   Timer? _disciplineTimer;
   int _remainingFocusSeconds = 0;
   
-  
   // Typography Sharpness (Cognitive Depth)
-  double _contentSharpness = 1.0; // 1.0 = normal, 2.0 = maximum sharpness
+  double _contentSharpness = 1.0;
   Timer? _readingTimer;
   int _readingTimeSeconds = 0;
 
@@ -96,7 +96,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     _readingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       setState(() {
         _readingTimeSeconds += 10;
-        // Gradually increase sharpness based on reading time (max at 5 minutes)
         _contentSharpness = 1.0 + (_readingTimeSeconds / 300).clamp(0.0, 1.0);
       });
     });
@@ -105,7 +104,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   void _triggerDisciplineLock() {
     setState(() {
       _isDisciplineLocked = true;
-      _remainingFocusSeconds = 180; // 3 minutes
+      _remainingFocusSeconds = 180;
     });
 
     _disciplineTimer?.cancel();
@@ -224,24 +223,26 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     return ChangeNotifierProvider<SuperChatProvider>.value(
       value: _chatProvider,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF9F9F7), // Ivory Research Surface
-        body: Stack(
-          children: [
-            // Z0 - Research Surface (Main Content Area)
-            _buildResearchSurface(),
-            
-            // Z2 - Edge UI (Right Side Vertical Dock + Credit Counter)
-            _buildEdgeUI(),
-            
-            // Z3 - Floating Resource Dock (Bottom-Right Expandable Panel)
-            _buildResourceDock(),
-            
-            // Z1 - Input Control (Bottom Sliding Input)
-            _buildInputControl(),
-            
-            // Z4 - Discipline Layer (Cognitive Lock Overlay)
-            if (_isDisciplineLocked) _buildDisciplineLayer(),
-          ],
+        backgroundColor: const Color(0xFFF9F9F7),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              // Z0 - Research Surface (Main Content Area)
+              _buildResearchSurface(),
+              
+              // Z2 - Top Bar (Credit Counter + Menu)
+              _buildTopBar(),
+              
+              // Z3 - Floating Resource Dock (Bottom Sheet Style)
+              if (_isResourceDockOpen) _buildResourceDock(),
+              
+              // Z1 - Input Control (Bottom Fixed)
+              _buildInputControl(),
+              
+              // Z4 - Discipline Layer (Cognitive Lock Overlay)
+              if (_isDisciplineLocked) _buildDisciplineLayer(),
+            ],
+          ),
         ),
       ),
     );
@@ -261,35 +262,35 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF9F9F7), // Ivory
-            // Subtle paper texture effect
+            color: const Color(0xFFF9F9F7),
             image: DecorationImage(
               image: const AssetImage('assets/images/paper_texture.png'),
               fit: BoxFit.cover,
               opacity: 0.03,
-              onError: (exception, stackTrace) {
-                // Gracefully handle missing texture
-              },
+              onError: (exception, stackTrace) {},
             ),
           ),
           child: messages.isEmpty && !isProcessing
               ? _buildEmptyResearchState()
-              : ListView.builder(
-                  controller: _scrollController,
-                  padding: EdgeInsets.only(
-                    top: 80, // Space for credit counter
-                    left: 32,
-                    right: 100, // Space for edge UI
-                    bottom: 120, // Space for input
-                  ),
-                  itemCount: messages.length + (isProcessing ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index < messages.length) {
-                      return _buildRichTextMessage(messages[index]);
-                    } else {
-                      // Show Academic Skeleton when processing
-                      return AcademicSkeleton(message: processingMessage);
-                    }
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.only(
+                        top: 70, // Space for top bar
+                        left: constraints.maxWidth * 0.04,
+                        right: constraints.maxWidth * 0.04,
+                        bottom: 100, // Space for input
+                      ),
+                      itemCount: messages.length + (isProcessing ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < messages.length) {
+                          return _buildRichTextMessage(messages[index]);
+                        } else {
+                          return AcademicSkeleton(message: processingMessage);
+                        }
+                      },
+                    );
                   },
                 ),
         );
@@ -306,36 +307,215 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   }
 
   Widget _buildEmptyResearchState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(48.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.auto_stories_outlined,
-              size: 64,
-              color: const Color(0xFF0A192F).withOpacity(0.3),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: constraints.maxWidth * 0.08,
+              vertical: 24,
             ),
-            const SizedBox(height: 24),
-            Text(
-              AppStrings.academicCoachDesk,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0A192F),
-                letterSpacing: -0.5,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.auto_stories_outlined,
+                  size: constraints.maxWidth * 0.15,
+                  color: const Color(0xFF0A192F).withOpacity(0.3),
+                ),
+                SizedBox(height: constraints.maxHeight * 0.03),
+                Text(
+                  AppStrings.academicCoachDesk,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: constraints.maxWidth * 0.065,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0A192F),
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: constraints.maxHeight * 0.015),
+                Text(
+                  AppStrings.disciplinedSpaceSubtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: constraints.maxWidth * 0.04,
+                    color: const Color(0xFF0A192F).withOpacity(0.6),
+                    height: 1.6,
+                    fontFamily: 'Serif',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRichTextMessage(dynamic message) {
+    final isUser = message.isUser;
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: constraints.maxWidth * 0.06),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Author label
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isUser ? const Color(0xFF00F0FF) : const Color(0xFF0A192F),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isUser ? AppStrings.youLabel : AppStrings.professorLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0A192F).withOpacity(0.5),
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Message content with dynamic sharpness
+              AnimatedOpacity(
+                opacity: _contentSharpness,
+                duration: const Duration(milliseconds: 500),
+                child: Text(
+                  message.text,
+                  style: TextStyle(
+                    fontSize: _determineContentFontSize(message.text, constraints),
+                    fontWeight: _determineContentWeight(message.text),
+                    fontFamily: _determineContentFont(message.text),
+                    color: const Color(0xFF0A192F),
+                    height: 1.7,
+                    letterSpacing: _contentSharpness > 1.5 ? -0.3 : 0,
+                  ),
+                ),
+              ),
+              // Bookmark action for professor responses
+              if (!isUser)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: InkWell(
+                    onTap: () => _saveMessageAsNote(message),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.bookmark_border_rounded,
+                            size: 16,
+                            color: const Color(0xFF0A192F).withOpacity(0.4),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            AppStrings.saveToNotes,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: const Color(0xFF0A192F).withOpacity(0.4),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  double _determineContentFontSize(String text, BoxConstraints constraints) {
+    final baseFontSize = constraints.maxWidth * 0.04;
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return baseFontSize * 1.1;
+    }
+    return baseFontSize;
+  }
+
+  FontWeight _determineContentWeight(String text) {
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return FontWeight.w600;
+    }
+    return FontWeight.w400;
+  }
+
+  String _determineContentFont(String text) {
+    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
+      return 'Sans-serif';
+    }
+    return 'Serif';
+  }
+
+  // ========================================
+  // Z2 - TOP BAR (Credit Counter + Menu)
+  // ========================================
+  Widget _buildTopBar() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.95),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Menu Button
+            IconButton(
+              onPressed: () => _showMenuBottomSheet(),
+              icon: const Icon(Icons.menu, color: Color(0xFF0A192F)),
+              iconSize: 24,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.disciplinedSpaceSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: const Color(0xFF0A192F).withOpacity(0.6),
-                height: 1.6,
-                fontFamily: 'Serif',
+            const Spacer(),
+            // Credit Counter
+            _buildCompactCreditCounter(),
+            const SizedBox(width: 8),
+            // Attach Button
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isResourceDockOpen = !_isResourceDockOpen;
+                });
+              },
+              icon: Icon(
+                _isResourceDockOpen ? Icons.close : Icons.attach_file_rounded,
+                color: const Color(0xFF0A192F),
+              ),
+              iconSize: 22,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
               ),
             ),
           ],
@@ -344,183 +524,7 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildRichTextMessage(dynamic message) {
-    final isUser = message.isUser;
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Author label
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isUser ? const Color(0xFF00F0FF) : const Color(0xFF0A192F),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isUser ? AppStrings.youLabel : AppStrings.professorLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0A192F).withOpacity(0.5),
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Message content with dynamic sharpness
-          AnimatedOpacity(
-            opacity: _contentSharpness,
-            duration: const Duration(milliseconds: 500),
-            child: Text(
-              message.text,
-              style: TextStyle(
-                fontSize: _determineContentFontSize(message.text),
-                fontWeight: _determineContentWeight(message.text),
-                fontFamily: _determineContentFont(message.text),
-                color: const Color(0xFF0A192F),
-                height: 1.7,
-                letterSpacing: _contentSharpness > 1.5 ? -0.3 : 0,
-              ),
-            ),
-          ),
-          // Bookmark action for professor responses
-          if (!isUser)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: InkWell(
-                onTap: () => _saveMessageAsNote(message),
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.bookmark_border_rounded,
-                        size: 16,
-                        color: const Color(0xFF0A192F).withOpacity(0.4),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        AppStrings.saveToNotes,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: const Color(0xFF0A192F).withOpacity(0.4),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  double _determineContentFontSize(String text) {
-    // Formulas and mathematical content: larger
-    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
-      return 18.0;
-    }
-    // Regular text
-    return 16.0;
-  }
-
-  FontWeight _determineContentWeight(String text) {
-    // Formulas: sharper/bolder
-    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
-      return FontWeight.w600;
-    }
-    return FontWeight.w400;
-  }
-
-  String _determineContentFont(String text) {
-    // Formulas: Sans-serif for clarity
-    if (text.contains(RegExp(r'[\d+\-*/=]|\\[[(]'))) {
-      return 'Sans-serif';
-    }
-    // Philosophical/text content: Serif for reading comfort
-    return 'Serif';
-  }
-
-  // ========================================
-  // Z2 - EDGE UI (Right Side Dock + Credit Counter)
-  // ========================================
-  Widget _buildEdgeUI() {
-    return Positioned(
-      right: 0,
-      top: 0,
-      bottom: 0,
-      child: Column(
-        children: [
-          // Credit Counter (Top Right)
-          _buildCreditCounter(),
-          
-          const SizedBox(height: 40),
-          
-          // Vertical Icon Dock
-          Container(
-            width: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0A192F).withOpacity(0.05),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                bottomLeft: Radius.circular(32),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                _buildEdgeButton(
-                  icon: Icons.dashboard_outlined,
-                  label: AppStrings.dashboard,
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildEdgeButton(
-                  icon: Icons.history_outlined,
-                  label: AppStrings.history,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ConversationsListScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildEdgeButton(
-                  icon: Icons.person_outline,
-                  label: AppStrings.profile,
-                  onTap: () {
-                    // Navigate to profile
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditCounter() {
+  Widget _buildCompactCreditCounter() {
     return Consumer<SuperChatProvider>(
       builder: (context, provider, child) {
         return StreamBuilder(
@@ -530,12 +534,38 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
             final used = quota?.textMessagesUsed ?? 0;
             final total = quota?.textMessagesLimit ?? 15;
             
-            return Container(
-              margin: const EdgeInsets.only(top: 48, right: 16),
-              child: CreditPulseCounter(
-                used: used,
-                total: total,
-                onTap: () => _showCreditDetails(quota),
+            return InkWell(
+              onTap: () => _showCreditDetails(quota),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00F0FF).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF00F0FF).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.electric_bolt,
+                      size: 16,
+                      color: const Color(0xFF00F0FF),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$used/$total',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0A192F),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -544,35 +574,85 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildEdgeButton({
+  void _showMenuBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildMenuButton(
+              icon: Icons.dashboard_outlined,
+              label: AppStrings.dashboard,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildMenuButton(
+              icon: Icons.history_outlined,
+              label: AppStrings.history,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConversationsListScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildMenuButton(
+              icon: Icons.person_outline,
+              label: AppStrings.profile,
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) {
-    return Tooltip(
-      message: label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A192F).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: const Color(0xFF0A192F)),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF0A192F),
               ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            size: 24,
-            color: const Color(0xFF0A192F),
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -594,12 +674,12 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               AppStrings.creditUsage,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF0A192F),
+                color: Color(0xFF0A192F),
               ),
             ),
             const SizedBox(height: 20),
@@ -654,150 +734,123 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   }
 
   // ========================================
-  // Z3 - FLOATING RESOURCE DOCK
+  // Z3 - FLOATING RESOURCE DOCK (Bottom Sheet)
   // ========================================
   Widget _buildResourceDock() {
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+    return Positioned(
+      bottom: 0,
+      left: 0,
       right: 0,
-      bottom: 100,
-      width: _isResourceDockOpen ? MediaQuery.of(context).size.width * 0.25 : 56,
-      height: _isResourceDockOpen ? 400 : 56,
-      child: Container(
-        margin: const EdgeInsets.only(right: 16, bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: _isResourceDockOpen ? _buildExpandedResourcePanel() : _buildResourceDockButton(),
-      ),
-    );
-  }
-
-  Widget _buildResourceDockButton() {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _isResourceDockOpen = true;
-        });
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF0A192F),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.attach_file_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExpandedResourcePanel() {
-    return Column(
-      children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: const Color(0xFF0A192F).withOpacity(0.1),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _isResourceDockOpen = false;
+          });
+        },
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+          child: GestureDetector(
+            onTap: () {}, // Prevent closing when tapping inside
+            child: Container(
+              margin: EdgeInsets.only(
+                top: MediaQuery.of(context).size.height * 0.3,
               ),
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.folder_outlined,
-                size: 20,
-                color: Color(0xFF0A192F),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  AppStrings.resourceDock,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0A192F),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag Handle
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A192F).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: () {
-                  setState(() {
-                    _isResourceDockOpen = false;
-                  });
-                },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-        ),
-        // Upload Buttons
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _buildResourceButton(
-                  icon: Icons.picture_as_pdf_outlined,
-                  label: AppStrings.uploadPDF,
-                  onTap: _handlePDFUpload,
-                ),
-                const SizedBox(height: 12),
-                _buildResourceButton(
-                  icon: Icons.image_outlined,
-                  label: AppStrings.uploadImage,
-                  onTap: _handleImageUpload,
-                ),
-                const SizedBox(height: 20),
-                
-                // Uploading files list
-                if (_uploadingFiles.isNotEmpty) ...[
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  ..._uploadingFiles.map((fileData) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: SilentFileUpload(
-                        fileName: fileData['name'],
-                        fileSize: fileData['size'],
-                        onComplete: () {
-                          setState(() {
-                            _uploadingFiles.remove(fileData);
-                          });
-                        },
-                        onCancel: () {
-                          setState(() {
-                            _uploadingFiles.remove(fileData);
-                          });
-                        },
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.folder_outlined,
+                          size: 22,
+                          color: Color(0xFF0A192F),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          AppStrings.resourceDock,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0A192F),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Upload Buttons
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          _buildResourceButton(
+                            icon: Icons.picture_as_pdf_outlined,
+                            label: AppStrings.uploadPDF,
+                            onTap: _handlePDFUpload,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildResourceButton(
+                            icon: Icons.image_outlined,
+                            label: AppStrings.uploadImage,
+                            onTap: _handleImageUpload,
+                          ),
+                          
+                          // Uploading files list
+                          if (_uploadingFiles.isNotEmpty) ...[
+                            const SizedBox(height: 20),
+                            const Divider(),
+                            const SizedBox(height: 12),
+                            ..._uploadingFiles.map((fileData) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: SilentFileUpload(
+                                  fileName: fileData['name'],
+                                  fileSize: fileData['size'],
+                                  onComplete: () {
+                                    setState(() {
+                                      _uploadingFiles.remove(fileData);
+                                    });
+                                  },
+                                  onCancel: () {
+                                    setState(() {
+                                      _uploadingFiles.remove(fileData);
+                                    });
+                                  },
+                                ),
+                              );
+                            }),
+                          ],
+                        ],
                       ),
-                    );
-                  }),
+                    ),
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -821,7 +874,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           });
         });
 
-        // Send to chat provider
         await _handleSendPDF(file, fileName, fileSize);
       }
     } catch (e) {
@@ -860,7 +912,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
           });
         });
 
-        // Send to chat provider
         await _handleSendImage(file, null);
       }
     } catch (e) {
@@ -895,16 +946,12 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF0A192F),
-            ),
+            Icon(icon, size: 22, color: const Color(0xFF0A192F)),
             const SizedBox(width: 12),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF0A192F),
               ),
@@ -916,82 +963,91 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
   }
 
   // ========================================
-  // Z1 - INPUT CONTROL (Bottom Sliding)
+  // Z1 - INPUT CONTROL (Bottom Fixed)
   // ========================================
   Widget _buildInputControl() {
     return Consumer<SuperChatProvider>(
       builder: (context, provider, child) {
         final isProcessing = provider.state is SuperChatProcessing;
         
-        return AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+        return Positioned(
           left: 0,
-          right: 80, // Space for edge UI
+          right: 0,
           bottom: 0,
           child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 16,
+                  blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _inputController,
-                    enabled: !_isDisciplineLocked && !isProcessing,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF0A192F),
-                    ),
-                    decoration: InputDecoration(
-                      hintText: _isDisciplineLocked 
-                          ? AppStrings.inputLockedFocusMode
-                          : AppStrings.askYourQuestion,
-                      hintStyle: TextStyle(
-                        color: const Color(0xFF0A192F).withOpacity(0.4),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: TextField(
+                      controller: _inputController,
+                      enabled: !_isDisciplineLocked && !isProcessing,
+                      style: const TextStyle(
                         fontSize: 15,
+                        color: Color(0xFF0A192F),
                       ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: InputDecoration(
+                        hintText: _isDisciplineLocked 
+                            ? AppStrings.inputLockedFocusMode
+                            : AppStrings.askYourQuestion,
+                        hintStyle: TextStyle(
+                          color: const Color(0xFF0A192F).withOpacity(0.4),
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                      maxLines: 5,
+                      minLines: 1,
                     ),
-                    maxLines: 3,
-                    minLines: 1,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 if (isProcessing)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
+                  Container(
+                    width: 40,
+                    height: 40,
+                    padding: const EdgeInsets.all(8),
+                    child: const CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A192F)),
                     ),
                   )
                 else
-                  IconButton(
-                    onPressed: _isDisciplineLocked ? null : _handleSendMessage,
-                    icon: Icon(
-                      Icons.send_rounded,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
                       color: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withOpacity(0.2)
+                          ? const Color(0xFF0A192F).withOpacity(0.1)
                           : const Color(0xFF00F0FF),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: _isDisciplineLocked
-                          ? const Color(0xFF0A192F).withOpacity(0.05)
-                          : const Color(0xFF00F0FF).withOpacity(0.1),
-                      padding: const EdgeInsets.all(12),
+                    child: IconButton(
+                      onPressed: _isDisciplineLocked ? null : _handleSendMessage,
+                      icon: Icon(
+                        Icons.send_rounded,
+                        color: _isDisciplineLocked
+                            ? const Color(0xFF0A192F).withOpacity(0.3)
+                            : Colors.white,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
                     ),
                   ),
               ],
@@ -1009,7 +1065,6 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
     _inputController.clear();
     await _handleSendText(text);
     
-    // Trigger discipline lock for complex queries (simpler loop detection)
     if (text.length < 20 || text.split(' ').length < 4) {
       _triggerDisciplineLock();
     }
@@ -1026,52 +1081,57 @@ class _SuperChatScreenState extends State<SuperChatScreen> with TickerProviderSt
         child: Container(
           color: const Color(0xFF0A192F).withOpacity(0.85),
           child: Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 48),
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.psychology_outlined,
-                    size: 64,
-                    color: Color(0xFF0A192F),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.08),
+                  padding: EdgeInsets.all(constraints.maxWidth * 0.08),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    AppStrings.deepFocusRitual,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0A192F),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.psychology_outlined,
+                        size: constraints.maxWidth * 0.15,
+                        color: const Color(0xFF0A192F),
+                      ),
+                      SizedBox(height: constraints.maxHeight * 0.03),
+                      Text(
+                        AppStrings.deepFocusRitual,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: constraints.maxWidth * 0.055,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0A192F),
+                        ),
+                      ),
+                      SizedBox(height: constraints.maxHeight * 0.015),
+                      Text(
+                        '${AppStrings.focusReflectionMessage}${_formatFocusTime(_remainingFocusSeconds)}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: constraints.maxWidth * 0.04,
+                          color: const Color(0xFF0A192F).withOpacity(0.7),
+                          height: 1.6,
+                        ),
+                      ),
+                      SizedBox(height: constraints.maxHeight * 0.03),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: _remainingFocusSeconds / 180,
+                          minHeight: 8,
+                          backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${AppStrings.focusReflectionMessage}${_formatFocusTime(_remainingFocusSeconds)}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: const Color(0xFF0A192F).withOpacity(0.7),
-                      height: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: _remainingFocusSeconds / 180,
-                      minHeight: 8,
-                      backgroundColor: const Color(0xFF0A192F).withOpacity(0.1),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00F0FF)),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),
