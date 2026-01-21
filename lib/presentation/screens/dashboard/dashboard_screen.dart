@@ -66,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 return {
                   'query': q.question ?? 'No question',
                   'tag': _getTagFromQuestion(q.question ?? ''),
-                  'time': _getTimeAgo(q.timestamp),
+                  'time': _getTimeAgo(q.createdAt),
                 };
               }).toList();
             });
