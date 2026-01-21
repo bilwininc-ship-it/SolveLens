@@ -2,6 +2,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../services/ai/ai_service.dart';
 import '../../services/payment/payment_service.dart';
 import '../../services/user/user_service.dart';
@@ -23,29 +24,57 @@ final getIt = GetIt.instance;
 
 /// Initializes all dependencies
 Future<void> setupServiceLocator() async {
-  // External dependencies
-  getIt.registerLazySingleton<FirebaseFirestore>(
-    () => FirebaseFirestore.instance,
-  );
+  try {
+    // External dependencies
+    getIt.registerLazySingleton<FirebaseFirestore>(
+      () => FirebaseFirestore.instance,
+    );
 
-  // Firebase Realtime Database
-  getIt.registerLazySingleton<FirebaseDatabase>(
-    () => FirebaseDatabase.instance,
-  );
+    // Firebase Realtime Database
+    getIt.registerLazySingleton<FirebaseDatabase>(
+      () => FirebaseDatabase.instance,
+    );
 
-  // Remote Config Service
-  final remoteConfigService = RemoteConfigService();
-  await remoteConfigService.initialize();
-  getIt.registerLazySingleton<RemoteConfigService>(
-    () => remoteConfigService,
-  );
+    // Remote Config Service - with error handling for web
+    RemoteConfigService? remoteConfigService;
+    try {
+      remoteConfigService = RemoteConfigService();
+      await remoteConfigService.initialize();
+      getIt.registerLazySingleton<RemoteConfigService>(
+        () => remoteConfigService!,
+      );
+      print('✅ Remote Config initialized successfully');
+    } catch (e) {
+      print('⚠️ Remote Config initialization failed (non-critical): $e');
+      // Register a dummy service for web compatibility
+      getIt.registerLazySingleton<RemoteConfigService>(
+        () => RemoteConfigService(),
+      );
+    }
 
-  // Payment Service
-  final paymentService = PaymentService();
-  await paymentService.initialize();
-  getIt.registerLazySingleton<PaymentService>(
-    () => paymentService,
-  );
+    // Payment Service - only for mobile platforms
+    if (!kIsWeb) {
+      try {
+        final paymentService = PaymentService();
+        await paymentService.initialize();
+        getIt.registerLazySingleton<PaymentService>(
+          () => paymentService,
+        );
+        print('✅ Payment Service initialized successfully');
+      } catch (e) {
+        print('⚠️ Payment Service initialization failed: $e');
+        // Register a dummy payment service for web
+        getIt.registerLazySingleton<PaymentService>(
+          () => PaymentService(),
+        );
+      }
+    } else {
+      // Web platform - register dummy payment service
+      getIt.registerLazySingleton<PaymentService>(
+        () => PaymentService(),
+      );
+      print('ℹ️ Payment Service skipped for web platform');
+    }
 
   // Device Service (for anti-fraud)
   getIt.registerLazySingleton<DeviceService>(
@@ -62,9 +91,16 @@ Future<void> setupServiceLocator() async {
 
   // AI Service (with Remote Config key, Gemini 2.5 Flash, and Firebase Database)
   // API key is fetched from Firebase Remote Config for security
+  String geminiApiKey = '';
+  try {
+    geminiApiKey = getIt<RemoteConfigService>().getGeminiApiKey('');
+  } catch (e) {
+    print('⚠️ Could not fetch Gemini API key from Remote Config: $e');
+  }
+  
   getIt.registerLazySingleton<AIService>(
     () => AIService(
-      remoteConfigService.getGeminiApiKey(''), // Empty fallback - key must be in Remote Config
+      geminiApiKey,
       getIt<FirebaseDatabase>(),
     ),
   );
@@ -122,4 +158,11 @@ Future<void> setupServiceLocator() async {
       userService: getIt<UserService>(),
     ),
   );
+  
+  print('✅ Service Locator setup completed successfully');
+  } catch (e) {
+    print('❌ Service Locator setup error: $e');
+    print('Stack trace: ${StackTrace.current}');
+    rethrow;
+  }
 }

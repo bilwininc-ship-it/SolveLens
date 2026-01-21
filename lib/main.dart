@@ -43,10 +43,13 @@ void main() async {
   
   // Initialize Service Locator (DI)
   try {
+    print('🔄 Initializing Service Locator...');
     await setupServiceLocator();
     print('✅ Service Locator initialized successfully');
-  } catch (e) {
+  } catch (e, stackTrace) {
     print('❌ Service Locator initialization error: $e');
+    print('Stack trace: $stackTrace');
+    // Continue anyway - some features may not work but app should still launch
   }
   
   runApp(const SolveLensApp());
