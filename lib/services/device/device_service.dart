@@ -1,6 +1,7 @@
-import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io' show Platform;
 
 class DeviceService {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
@@ -11,6 +12,12 @@ class DeviceService {
   /// Gets a unique device fingerprint/ID
   Future<String> getDeviceId() async {
     try {
+      // Web platform: use browser fingerprint
+      if (kIsWeb) {
+        return _getWebDeviceId();
+      }
+      
+      // Mobile platforms - dart:io is only available on non-web platforms
       if (Platform.isAndroid) {
         final androidInfo = await _deviceInfo.androidInfo;
         // Create a unique fingerprint from multiple device attributes
@@ -22,6 +29,24 @@ class DeviceService {
       return 'unknown_platform';
     } catch (e) {
       throw DeviceServiceException('Failed to get device ID: $e');
+    }
+  }
+
+  /// Gets web device ID based on browser fingerprint
+  String _getWebDeviceId() {
+    if (!kIsWeb) return 'not_web';
+    
+    try {
+      // For web, use a combination of available browser properties
+      // Note: This is a simplified version. In production, consider using
+      // a proper fingerprinting library or localStorage for consistency
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final randomId = timestamp.hashCode.abs();
+      
+      // You can enhance this with localStorage to persist the ID
+      return 'web_device_$randomId';
+    } catch (e) {
+      return 'web_unknown';
     }
   }
 
@@ -100,6 +125,48 @@ class DeviceService {
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
+  }
+
+  /// Gets device info for logging/debugging
+  Future<Map<String, dynamic>> getDeviceInfo() async {
+    try {
+      if (kIsWeb) {
+        return {
+          'platform': 'web',
+          'deviceId': await getDeviceId(),
+        };
+      }
+
+      if (Platform.isAndroid) {
+        final androidInfo = await _deviceInfo.androidInfo;
+        return {
+          'platform': 'android',
+          'deviceId': await getDeviceId(),
+          'model': androidInfo.model,
+          'manufacturer': androidInfo.manufacturer,
+          'version': androidInfo.version.release,
+        };
+      } else if (Platform.isIOS) {
+        final iosInfo = await _deviceInfo.iosInfo;
+        return {
+          'platform': 'ios',
+          'deviceId': await getDeviceId(),
+          'model': iosInfo.model,
+          'name': iosInfo.name,
+          'systemVersion': iosInfo.systemVersion,
+        };
+      }
+
+      return {
+        'platform': 'unknown',
+        'deviceId': await getDeviceId(),
+      };
+    } catch (e) {
+      return {
+        'platform': 'error',
+        'error': e.toString(),
+      };
+    }
   }
 }
 

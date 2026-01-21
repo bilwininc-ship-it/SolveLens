@@ -317,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 child: GridMenuCard(
                   icon: Icons.chat_bubble_rounded,
                   title: 'New Inquiry',
-                  description: 'Start a deep research conversation',
+                  description: '',
                   onTap: () => _navigateToSuperChat(),
                 ),
               ),
@@ -329,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 child: GridMenuCard(
                   icon: Icons.camera_alt_rounded,
                   title: 'Document Scan',
-                  description: 'Camera & OCR analysis',
+                  description: '',
                   onTap: () => _navigateToDocumentScan(),
                 ),
               ),
@@ -345,7 +345,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 child: GridMenuCard(
                   icon: Icons.folder_rounded,
                   title: 'Research Vault',
-                  description: 'History & saved notes',
+                  description: '',
                   onTap: () => _navigateToResearchVault(),
                 ),
               ),
@@ -357,7 +357,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 child: GridMenuCard(
                   icon: Icons.insights_rounded,
                   title: 'Academic Insights',
-                  description: 'AI-generated statistics',
+                  description: '',
                   onTap: () => _showAcademicInsights(),
                 ),
               ),
