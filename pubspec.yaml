@@ -1,0 +1,57 @@
+name: solvelens
+description: SolveLens - AI Sports Analyst. Upload bulletin images and get AI-powered sports statistics analysis.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase Core & Services
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.14.0
+  firebase_analytics: ^10.8.0
+  firebase_crashlytics: ^3.4.9
+  firebase_remote_config: ^4.3.8
+  firebase_messaging: ^14.7.10
+  
+  # Google AI & Ads
+  google_generative_ai: ^0.2.2
+  google_mobile_ads: ^4.0.0
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Image & File Handling
+  image_picker: ^1.0.7
+  file_picker: ^6.1.1
+  
+  # Network & HTTP
+  http: ^1.2.0
+  
+  # Utilities
+  intl: ^0.18.1
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.2.3
+  
+  # UI Components
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+  
+  # Assets
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
