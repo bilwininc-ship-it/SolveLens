@@ -1,0 +1,174 @@
+Agent, yeni projemiz "SolveLens - AI Sports Analyst" için lider geliştirici sensin.
+
+PROJE ÖZETİ:
+Kullanıcıların bülten resimlerini yükleyip, Gemini AI + API-Football verileriyle analiz aldığı %100 İngilizce, Flutter tabanlı bir "Sports Statistics" uygulaması yapıyoruz.
+
+SENİN GÖREVİN (PHASE 1 - Project Foundation & Identity):
+
+Proje yapısını Clean Architecture (Feature-based) olarak kur.
+
+lib/core/constants/app_colors.dart: Navy (#0A192F), Cyan Neon (#00F0FF), Ivory (#F9F9F7) renk paletini tanımla.
+
+lib/core/theme/app_theme.dart: Elite, minimalist ve Material 3 destekli Dark Theme oluştur. Butonlar küçük ve 8px yuvarlak köşeli olmalı.
+
+main.dart: Uygulamanın Chrome Web ve Android'de taşma (overflow) yapmadan çalışmasını sağlayacak LayoutBuilder iskeletini kur.
+
+pubspec.yaml dosyasını şu paketlerle hazırla: firebase_core, firebase_auth, cloud_firestore, firebase_analytics, firebase_crashlytics, google_generative_ai, google_mobile_ads, provider, image_picker, http, intl.
+
+KURAL: Sadece Bölüm 1'e odaklan. Kodları eksiksiz, dosya yollarıyla birlikte ver. Web uyumluluğunu unutma. Başla!
+
+
+
+🏛️ SolveLens: Master Development Roadmap (20 Phases)
+BÖLÜM 1: Proje Temeli ve "Elite" Görsel Kimlik
+Agent Görevi: - app_colors.dart: Navy (#0A192F), Cyan Neon (#00F0FF), Ivory (#F9F9F7) ve Dark Grey (#1E1E1E) paletini kur.
+
+app_theme.dart: Küçük, keskin köşeli (rounded 8px) butonlar, ince fontlar (Inter/Sans-serif).
+
+main.dart: Web (Chrome) ve Android ayırımı için LayoutBuilder iskeletini oluştur. Ekran asla taşmamalı.
+
+BÖLÜM 2: Firebase & Cloud Altyapısı (Güvenlik Odaklı)
+Agent Görevi:
+
+Firebase Auth, Firestore ve Analytics entegrasyonu.
+
+Security Rules: Firestore'da kullanıcıların sadece kendi kredisini ve geçmişini görmesini sağlayan kuralları yaz.
+
+Logger Service: Uygulama içindeki her adımı (giriş yaptı, resim yükledi) Firebase Analytics'e gönderen sistemi kur.
+
+BÖLÜM 3: Gelişmiş Auth UI - Giriş & Kayıt
+Agent Görevi:
+
+E-posta/Şifre ve Google Sign-In.
+
+Validasyon: Şifre 6 karakterden azsa buton pasif kalsın. Email formatı yanlışsa "Invalid Email" uyarısı (elit küçük bir text ile).
+
+Hata Yönetimi: "Wrong password" veya "User not found" hatalarını kullanıcıya şık bir SnackBar ile bildir.
+
+BÖLÜM 4: Şifremi Unuttum & Destek Maili
+Agent Görevi:
+
+Şifre sıfırlama ekranı.
+
+Giriş ekranının altına "Need Help? Contact: bilwininc@gmail.com" butonu. Tıklandığında direkt mail uygulamasını açsın.
+
+BÖLÜM 5: Onboarding (Öğretici Ekranlar)
+Agent Görevi:
+
+Uygulamaya ilk kez giren kullanıcıya 3 sayfalık bir "How it works?" slider'ı göster.
+
+Sayfa 1: Upload Bulletin Image. Sayfa 2: AI Analyzes Statistics. Sayfa 3: Get High-Accuracy Results.
+
+Bu ekran bir kez görüldüğünde isFirstTime flag'ini Firestore'da true yap.
+
+BÖLÜM 6: Dashboard - Üst Panel & Dinamik Duyurular
+Agent Görevi:
+
+Üstte "Hello, [Name]" ve sağda "Credits: 3" gösteren elit bir bar.
+
+Firebase Remote Config ile "Duyuru Paneli" yap. Sen Firebase'den yazı yazınca dashboard'da bir kayan yazı (Marquee) olarak görünsün.
+
+BÖLÜM 7: Bakım Modu & Zorunlu Güncelleme
+Agent Görevi:
+
+Uygulama açılışında Remote Config'i kontrol et. is_maintenance true ise uygulamayı kilitleyip "We are under maintenance" ekranını göster.
+
+app_version senin belirlediğinden düşükse "Please update from Google Play" uyarısı ve linki çıkart.
+
+BÖLÜM 8: Push Notifications (FCM) & İzin Yönetimi
+Agent Görevi:
+
+Firebase Cloud Messaging kurulumu.
+
+Ayarlar ekranına "Receive Notifications" switch'i ekle. Kullanıcı kapatırsa bildirim gitmesin.
+
+BÖLÜM 9: Ödüllü Reklam (AdMob Rewarded)
+Agent Görevi:
+
+Günde 1 kez izlenebilir reklam butonu.
+
+Kullanıcı izleyince Firestore'da credits +1 artsın ve last_ad_watch_date bugün olarak işaretlensin. Tekrar izlemek isterse "Come back tomorrow" uyarısı ver.
+
+BÖLÜM 10: Image Picker & Web/Mobile Uyumluluk
+Agent Görevi:
+
+"Analyze New Bulletin" butonu.
+
+Galeriye erişim. Chrome'da file_picker, Android'de image_picker kullanacak şekilde hibrit yapı kur. Seçilen resmi ekranda küçük bir önizleme olarak göster.
+
+BÖLÜM 11: Gemini OCR - Maç Ayıklama Servisi
+Agent Görevi:
+
+Gemini 1.5 Flash'a resmi gönder. Sadece şu JSON'ı al: [{ "home": "Team A", "away": "Team B", "date": "2024-05-20" }].
+
+Ekranda "Extracting matches..." animasyonu dönsün.
+
+BÖLÜM 12: Football API - Veri Toplama
+Agent Görevi:
+
+Gemini'den gelen takımları API-Football'da ara.
+
+Takımların son 5 maçlık galibiyet/mağlubiyet serisini ve sakat oyuncu listesini çek.
+
+BÖLÜM 13: Nihai AI Analizi (Prediction)
+Agent Görevi:
+
+API verilerini Gemini'ye ver. "Bu veriler ışığında MS, Alt/Üst ve KG Var yüzdelerini hesapla" de.
+
+Sonucu AnalysisResultScreen üzerinde elit bir şekilde göster.
+
+BÖLÜM 14: Kredi Düşme & History (Geçmiş)
+Agent Görevi:
+
+Analiz tamamlanınca kredisini -1 düşür.
+
+Analiz sonucunu (sadece metin olarak) history koleksiyonuna kaydet.
+
+BÖLÜM 15: Google Play Satın Alma UI (IAP)
+Agent Görevi:
+
+Satın alma sayfası. Google Play'den fiyatları çek (Dinamik fiyatlandırma).
+
+"15 Analysis/Day - Monthly" paketi için şık bir kart tasarımı.
+
+BÖLÜM 16: Sunucu Taraflı Satın Alma Onayı (Cloud Functions)
+Agent Görevi:
+
+Satın alma sonrası dekontu Firebase Cloud Functions'a gönder.
+
+Function, Google Cloud API ile dekontu doğrulasın. Hileli ise krediyi verme, başarılıysa isPremium: true yap.
+
+BÖLÜM 17: History Screen (Geçmiş Analizler)
+Agent Görevi:
+
+Kullanıcının geçmişte yaptığı analizleri listeleyen ekran. Tıklayınca eski analizi tekrar görebilsin.
+
+BÖLÜM 18: Profil & Ayarlar
+Agent Görevi:
+
+E-posta değiştirme (Opsiyonel), Logout butonu.
+
+"Rate Us" butonu (Link Firebase Remote Config'den gelecek).
+
+BÖLÜM 19: Hesap Silme & Gizlilik Politikası
+Agent Görevi:
+
+"Delete Account" butonu (Google Play kuralı). Onay alınca her şeyi sil.
+
+Gizlilik politikası ve kullanım şartlarını gösteren bir WebView veya Markdown ekranı.
+
+BÖLÜM 20: Final Optimization & Store Assets
+Agent Görevi:
+
+Tüm ekranların "Overflow" kontrolleri.
+
+App Icon ve Splash Screen (Açılış ekranı) ayarları.
+
+Uygulamanın Chrome Web'de son canlı testi.
+
+💡 Nasıl İlerleyeceksin?
+Şu an senin elinde projenin "Anayasası" var. İlk Agent'a şu mesajla başlıyorsun:
+
+"Agent, SolveLens projesine başlıyoruz. Senin görevi BÖLÜM 1: Proje Temeli ve Görsel Kimlik. Bu bölüm bittiğinde bana dosya yollarını ve kodları eksiksiz ver. Başka bölüme geçme."
+
+Bu şekilde 20 adımı tamamladığımızda, elinde hem Web'de test ettiğin hem de Google Play'e yüklemeye hazır, hilesiz ve profesyonel bir uygulama olaca
