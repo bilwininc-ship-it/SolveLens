@@ -1,28 +1,54 @@
+/// Form Validators - English Messages
 class Validators {
+  /// Email validator
   static String? email(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email gerekli';
+      return 'Email is required';
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      return 'Geçerli bir email girin';
+      return 'Invalid email';
     }
     return null;
   }
 
+  /// Password validator (minimum 6 characters)
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Şifre gerekli';
+      return 'Password is required';
     }
     if (value.length < 6) {
-      return 'Şifre en az 6 karakter olmalı';
+      return 'Password must be at least 6 characters';
     }
     return null;
   }
 
-  static String? required(String? value, {String fieldName = 'Bu alan'}) {
+  /// Confirm password validator
+  static String? confirmPassword(String? value, String password) {
     if (value == null || value.isEmpty) {
-      return '$fieldName gerekli';
+      return 'Please confirm your password';
+    }
+    if (value != password) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  /// Required field validator
+  static String? required(String? value, {String fieldName = 'This field'}) {
+    if (value == null || value.isEmpty) {
+      return '$fieldName is required';
+    }
+    return null;
+  }
+
+  /// Name validator
+  static String? name(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Name is required';
+    }
+    if (value.length < 2) {
+      return 'Name must be at least 2 characters';
     }
     return null;
   }

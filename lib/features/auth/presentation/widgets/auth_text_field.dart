@@ -5,6 +5,9 @@ class AuthTextField extends StatelessWidget {
   final String label;
   final bool obscureText;
   final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
+  final Widget? suffixIcon;
+  final String? hintText;
 
   const AuthTextField({
     super.key,
@@ -12,6 +15,9 @@ class AuthTextField extends StatelessWidget {
     required this.label,
     this.obscureText = false,
     this.validator,
+    this.keyboardType,
+    this.suffixIcon,
+    this.hintText,
   });
 
   @override
@@ -20,7 +26,12 @@ class AuthTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       validator: validator,
-      decoration: InputDecoration(labelText: label),
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        suffixIcon: suffixIcon,
+      ),
     );
   }
 }
