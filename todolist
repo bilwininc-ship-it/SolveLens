@@ -1,174 +1,205 @@
-Agent, yeni projemiz "SolveLens - AI Sports Analyst" için lider geliştirici sensin.
+🏛️ SolveLens: Master Development Roadmap (A-Z)
 
-PROJE ÖZETİ:
-Kullanıcıların bülten resimlerini yükleyip, Gemini AI + API-Football verileriyle analiz aldığı %100 İngilizce, Flutter tabanlı bir "Sports Statistics" uygulaması yapıyoruz.
+Bu doküman, SolveLens projesinin sıfırdan markete kadar olan tüm teknik ve ticari adımlarını içeren ana rehberdir. Uygulama %100 İngilizce, Flutter tabanlı ve "Elite" tasarım diline (#0A192F Navy) sahip bir "Sports Statistics" ürünüdür.
 
-SENİN GÖREVİN (PHASE 1 - Project Foundation & Identity):
+📑 PROJECT VISION & RULES
 
-Proje yapısını Clean Architecture (Feature-based) olarak kur.
+Core Purpose: Analyze football bulletins via Image OCR (Gemini) + Real-time Stats (API-Football).
 
-lib/core/constants/app_colors.dart: Navy (#0A192F), Cyan Neon (#00F0FF), Ivory (#F9F9F7) renk paletini tanımla.
+Compliance: Never use gambling terms. Use "Analysis", "Statistics", and "Predictions".
 
-lib/core/theme/app_theme.dart: Elite, minimalist ve Material 3 destekli Dark Theme oluştur. Butonlar küçük ve 8px yuvarlak köşeli olmalı.
+Design: 8px rounded buttons, minimal layout, no overflow (LayoutBuilder).
 
-main.dart: Uygulamanın Chrome Web ve Android'de taşma (overflow) yapmadan çalışmasını sağlayacak LayoutBuilder iskeletini kur.
+Target: High-value global users ($20/month subscription).
 
-pubspec.yaml dosyasını şu paketlerle hazırla: firebase_core, firebase_auth, cloud_firestore, firebase_analytics, firebase_crashlytics, google_generative_ai, google_mobile_ads, provider, image_picker, http, intl.
+🟢 PHASE 1: FOUNDATION & ELITE IDENTITY (COMPLETED)
 
-KURAL: Sadece Bölüm 1'e odaklan. Kodları eksiksiz, dosya yollarıyla birlikte ver. Web uyumluluğunu unutma. Başla!
+Foundation: Clean Architecture (Feature-based) setup.
 
+Elite Theme: Navy (#0A192F), Cyan Neon (#00F0FF), Ivory (#F9F9F7), and Dark Grey (#1E1E1E).
 
+Responsive UI: LayoutBuilder integration for Chrome Web & Android.
 
-🏛️ SolveLens: Master Development Roadmap (20 Phases)
-BÖLÜM 1: Proje Temeli ve "Elite" Görsel Kimlik
-Agent Görevi: - app_colors.dart: Navy (#0A192F), Cyan Neon (#00F0FF), Ivory (#F9F9F7) ve Dark Grey (#1E1E1E) paletini kur.
+Environment: pubspec.yaml with Firebase, Gemini, Ads, and Provider.
 
-app_theme.dart: Küçük, keskin köşeli (rounded 8px) butonlar, ince fontlar (Inter/Sans-serif).
+🔵 PHASE 2: FIREBASE & SECURITY INFRASTRUCTURE
 
-main.dart: Web (Chrome) ve Android ayırımı için LayoutBuilder iskeletini oluştur. Ekran asla taşmamalı.
+Agent Task:
 
-BÖLÜM 2: Firebase & Cloud Altyapısı (Güvenlik Odaklı)
-Agent Görevi:
+Initialization: Setup FirebaseService with error handling.
 
-Firebase Auth, Firestore ve Analytics entegrasyonu.
+Data Model: Create UserModel with credits (3), isPremium, and createdAt.
 
-Security Rules: Firestore'da kullanıcıların sadece kendi kredisini ve geçmişini görmesini sağlayan kuralları yaz.
+Security: Define Firestore Rules (Users only access their own UID data).
 
-Logger Service: Uygulama içindeki her adımı (giriş yaptı, resim yükledi) Firebase Analytics'e gönderen sistemi kur.
+Logging: Centralized LoggerService and Crashlytics (guard for Web).
 
-BÖLÜM 3: Gelişmiş Auth UI - Giriş & Kayıt
-Agent Görevi:
+🟡 PHASE 3: AUTHENTICATION UI & LOGIC
 
-E-posta/Şifre ve Google Sign-In.
+Agent Task:
 
-Validasyon: Şifre 6 karakterden azsa buton pasif kalsın. Email formatı yanlışsa "Invalid Email" uyarısı (elit küçük bir text ile).
+UI: Login, Register, and Password Reset screens.
 
-Hata Yönetimi: "Wrong password" veya "User not found" hatalarını kullanıcıya şık bir SnackBar ile bildir.
+Validation: 6+ char passwords, email format check (Disable button if invalid).
 
-BÖLÜM 4: Şifremi Unuttum & Destek Maili
-Agent Görevi:
+Error Handling: Elegant SnackBars for Firebase errors (User not found, Wrong password).
 
-Şifre sıfırlama ekranı.
+Logic: Email/Password & Google Sign-In integration via AuthProvider.
 
-Giriş ekranının altına "Need Help? Contact: bilwininc@gmail.com" butonu. Tıklandığında direkt mail uygulamasını açsın.
+🟠 PHASE 4: SUPPORT & RESET SYSTEM
 
-BÖLÜM 5: Onboarding (Öğretici Ekranlar)
-Agent Görevi:
+Agent Task:
 
-Uygulamaya ilk kez giren kullanıcıya 3 sayfalık bir "How it works?" slider'ı göster.
+Reset: Implementation of the password reset email flow.
 
-Sayfa 1: Upload Bulletin Image. Sayfa 2: AI Analyzes Statistics. Sayfa 3: Get High-Accuracy Results.
+Support: "Need Help?" button linking to bilwininc@gmail.com using url_launcher.
 
-Bu ekran bir kez görüldüğünde isFirstTime flag'ini Firestore'da true yap.
+UX: Success messages after email requests.
 
-BÖLÜM 6: Dashboard - Üst Panel & Dinamik Duyurular
-Agent Görevi:
+🟣 PHASE 5: ONBOARDING (USER TUTORIAL)
 
-Üstte "Hello, [Name]" ve sağda "Credits: 3" gösteren elit bir bar.
+Agent Task:
 
-Firebase Remote Config ile "Duyuru Paneli" yap. Sen Firebase'den yazı yazınca dashboard'da bir kayan yazı (Marquee) olarak görünsün.
+UI: 3-page minimalist slider explaining: 1. Scan 2. Analyze 3. Results.
 
-BÖLÜM 7: Bakım Modu & Zorunlu Güncelleme
-Agent Görevi:
+Logic: isFirstTime flag in Firestore. Show only on first launch.
 
-Uygulama açılışında Remote Config'i kontrol et. is_maintenance true ise uygulamayı kilitleyip "We are under maintenance" ekranını göster.
+Design: Next/Skip buttons with 8px rounded style.
 
-app_version senin belirlediğinden düşükse "Please update from Google Play" uyarısı ve linki çıkart.
+💎 PHASE 6: MARKETING ENGINE & CONVERSION TRACKING
 
-BÖLÜM 8: Push Notifications (FCM) & İzin Yönetimi
-Agent Görevi:
+Agent Task:
 
-Firebase Cloud Messaging kurulumu.
+Events: Setup purchase_success, start_analysis, and ad_complete analytics events.
 
-Ayarlar ekranına "Receive Notifications" switch'i ekle. Kullanıcı kapatırsa bildirim gitmesin.
+Ads Optimization: Integration logic to notify Google Ads of in-app purchases ($20 value).
 
-BÖLÜM 9: Ödüllü Reklam (AdMob Rewarded)
-Agent Görevi:
+Attribution: Track user properties to identify "High-Value" users for ad targeting.
 
-Günde 1 kez izlenebilir reklam butonu.
+📱 PHASE 7: DASHBOARD - DYNAMIC CONTROL
 
-Kullanıcı izleyince Firestore'da credits +1 artsın ve last_ad_watch_date bugün olarak işaretlensin. Tekrar izlemek isterse "Come back tomorrow" uyarısı ver.
+Agent Task:
 
-BÖLÜM 10: Image Picker & Web/Mobile Uyumluluk
-Agent Görevi:
+Header: "Hello [Name]" & "Credits: [X]" display.
 
-"Analyze New Bulletin" butonu.
+Announcements: Marquee (Scrolling text) banner using Firebase Remote Config.
 
-Galeriye erişim. Chrome'da file_picker, Android'de image_picker kullanacak şekilde hibrit yapı kur. Seçilen resmi ekranda küçük bir önizleme olarak göster.
+Actions: Primary "New Analysis" button.
 
-BÖLÜM 11: Gemini OCR - Maç Ayıklama Servisi
-Agent Görevi:
+⚙️ PHASE 8: MAINTENANCE & UPDATE LOGIC
 
-Gemini 1.5 Flash'a resmi gönder. Sadece şu JSON'ı al: [{ "home": "Team A", "away": "Team B", "date": "2024-05-20" }].
+Agent Task:
 
-Ekranda "Extracting matches..." animasyonu dönsün.
+Lock System: Remote Config is_maintenance check to lock the app.
 
-BÖLÜM 12: Football API - Veri Toplama
-Agent Görevi:
+Version Guard: Force update dialog if app_version < min_version.
 
-Gemini'den gelen takımları API-Football'da ara.
+🔔 PHASE 9: PUSH NOTIFICATIONS (FCM)
 
-Takımların son 5 maçlık galibiyet/mağlubiyet serisini ve sakat oyuncu listesini çek.
+Agent Task:
 
-BÖLÜM 13: Nihai AI Analizi (Prediction)
-Agent Görevi:
+Integration: Setup Firebase Cloud Messaging for Web & Android.
 
-API verilerini Gemini'ye ver. "Bu veriler ışığında MS, Alt/Üst ve KG Var yüzdelerini hesapla" de.
+Settings: In-app switch to enable/disable notifications.
 
-Sonucu AnalysisResultScreen üzerinde elit bir şekilde göster.
+📺 PHASE 10: REWARDED ADS (DAILY CREDIT)
 
-BÖLÜM 14: Kredi Düşme & History (Geçmiş)
-Agent Görevi:
+Agent Task:
 
-Analiz tamamlanınca kredisini -1 düşür.
+Monetization: google_mobile_ads Rewarded Ad setup.
 
-Analiz sonucunu (sadece metin olarak) history koleksiyonuna kaydet.
+Limit: 24-hour cooldown logic stored in Firestore last_ad_watch.
 
-BÖLÜM 15: Google Play Satın Alma UI (IAP)
-Agent Görevi:
+📸 PHASE 11: IMAGE PICKER & PREVIEW
 
-Satın alma sayfası. Google Play'den fiyatları çek (Dinamik fiyatlandırma).
+Agent Task:
 
-"15 Analysis/Day - Monthly" paketi için şık bir kart tasarımı.
+Hybrid: file_picker for Web, image_picker for Android.
 
-BÖLÜM 16: Sunucu Taraflı Satın Alma Onayı (Cloud Functions)
-Agent Görevi:
+UI: Centered preview of the selected bulletin image before analysis.
 
-Satın alma sonrası dekontu Firebase Cloud Functions'a gönder.
+🧠 PHASE 12: GEMINI OCR - MATCH EXTRACTION
 
-Function, Google Cloud API ile dekontu doğrulasın. Hileli ise krediyi verme, başarılıysa isPremium: true yap.
+Agent Task:
 
-BÖLÜM 17: History Screen (Geçmiş Analizler)
-Agent Görevi:
+Vision Logic: Send image to Gemini 1.5 Flash.
 
-Kullanıcının geçmişte yaptığı analizleri listeleyen ekran. Tıklayınca eski analizi tekrar görebilsin.
+Parser: Extract match list as clean JSON: [{ "home": "X", "away": "Y", "date": "Z" }].
 
-BÖLÜM 18: Profil & Ayarlar
-Agent Görevi:
+📊 PHASE 13: FOOTBALL API - DATA FETCHING
 
-E-posta değiştirme (Opsiyonel), Logout butonu.
+Agent Task:
 
-"Rate Us" butonu (Link Firebase Remote Config'den gelecek).
+Query: Search extracted teams on API-Football (RapidAPI).
 
-BÖLÜM 19: Hesap Silme & Gizlilik Politikası
-Agent Görevi:
+Data: Fetch Form (Last 5 matches), League Standings, and Injuries.
 
-"Delete Account" butonu (Google Play kuralı). Onay alınca her şeyi sil.
+🎯 PHASE 14: AI PREDICTION LOGIC
 
-Gizlilik politikası ve kullanım şartlarını gösteren bir WebView veya Markdown ekranı.
+Agent Task:
 
-BÖLÜM 20: Final Optimization & Store Assets
-Agent Görevi:
+Analysis: Feed Stats + Bulletin Odds to Gemini.
 
-Tüm ekranların "Overflow" kontrolleri.
+Output: Calculate MS (1X2), Over/Under 2.5, and BTTS percentages.
 
-App Icon ve Splash Screen (Açılış ekranı) ayarları.
+💳 PHASE 15: CREDIT DEDUCTION & HISTORY LOGIC
 
-Uygulamanın Chrome Web'de son canlı testi.
+Agent Task:
 
-💡 Nasıl İlerleyeceksin?
-Şu an senin elinde projenin "Anayasası" var. İlk Agent'a şu mesajla başlıyorsun:
+Transaction: Deduct 1 credit only after successful analysis.
 
-"Agent, SolveLens projesine başlıyoruz. Senin görevi BÖLÜM 1: Proje Temeli ve Görsel Kimlik. Bu bölüm bittiğinde bana dosya yollarını ve kodları eksiksiz ver. Başka bölüme geçme."
+Storage: Save result text (no images) to history collection.
 
-Bu şekilde 20 adımı tamamladığımızda, elinde hem Web'de test ettiğin hem de Google Play'e yüklemeye hazır, hilesiz ve profesyonel bir uygulama olaca
+💰 PHASE 16: GOOGLE PLAY IAP (SUBSCRIPTIONS)
+
+Agent Task:
+
+UI: Professional "Go Premium" screen.
+
+IAP: Fetch dynamic pricing from Google Play Console ($19.99/month).
+
+🔒 PHASE 17: SERVER-SIDE VERIFICATION
+
+Agent Task:
+
+Cloud Function: Validate purchase receipts via Google Cloud API.
+
+Fraud: Prevent fake/refunded purchases from granting credits.
+
+📜 PHASE 18: HISTORY & DETAIL SCREENS
+
+Agent Task:
+
+Listing: List previous analysis results.
+
+Detail: View stored prediction percentages from past matches.
+
+👤 PHASE 19: PROFILE & SETTINGS
+
+Agent Task:
+
+Management: Edit Display Name, Logout, and App Settings.
+
+Rate Us: Redirect to Play Store via Remote Config link.
+
+⚖️ PHASE 20: ACCOUNT DELETION & LEGAL
+
+Agent Task:
+
+Compliance: "Delete Account" button with full data wipe.
+
+Terms: Privacy Policy & Terms of Service via Markdown/WebView.
+
+🏁 PHASE 21: FINAL OPTIMIZATION & STORE ASSETS
+
+Agent Task:
+
+Audit: Final overflow checks on all screen sizes.
+
+Assets: Splash screen and App Icon generation.
+
+Store: Preparing store screenshots for Google Play.
+
+💡 Mimarın Notu (Ticari Başarı İçin):
+
+Bu projenin başarısı "Doğruluk" ve "Hız" üzerine kuruludur. Kullanıcıyı bekletirken (OCR/API aşamaları) mutlaka elit animasyonlar kullanarak "Profesör analiz yapıyor" hissini verin.
