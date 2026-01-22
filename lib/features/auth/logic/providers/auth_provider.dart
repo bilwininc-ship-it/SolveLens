@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../services/firebase/firebase_service.dart';
 import '../../../../core/utils/logger.dart';
 
@@ -8,17 +9,25 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   User? _currentUser;
+  bool _isFirstTime = true;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
+  bool get isFirstTime => _isFirstTime;
 
   AuthProvider() {
     // Listen to auth state changes
-    FirebaseService.auth.authStateChanges().listen((User? user) {
+    FirebaseService.auth.authStateChanges().listen((User? user) async {
       _currentUser = user;
+      
+      // Check if user is first time
+      if (user != null) {
+        await checkFirstTimeUser();
+      }
+      
       notifyListeners();
     });
   }
@@ -92,6 +101,23 @@ class AuthProvider extends ChangeNotifier {
       }
 
       _currentUser = credential.user;
+      
+      // Create user document with isFirstTime flag
+      if (_currentUser != null) {
+        await FirebaseService.firestore
+            .collection('users')
+            .doc(_currentUser!.uid)
+            .set({
+          'email': _currentUser!.email,
+          'displayName': displayName ?? '',
+          'isFirstTime': true,
+          'credits': 3,
+          'createdAt': DateTime.now(),
+          'lastLoginAt': DateTime.now(),
+        });
+        _isFirstTime = true;
+      }
+      
       Logger.log('Sign up successful: ${_currentUser?.email}');
       _setLoading(false);
       return true;
@@ -144,6 +170,64 @@ class AuthProvider extends ChangeNotifier {
       _setError('Failed to send reset email. Please try again.');
       Logger.error('Password reset failed', error: e);
       return false;
+    }
+  }
+
+  /// Check if user is first time
+  Future<void> checkFirstTimeUser() async {
+    if (_currentUser == null) return;
+
+    try {
+      final userDoc = await FirebaseService.firestore
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data();
+        _isFirstTime = data?['isFirstTime'] ?? false;
+      } else {
+        // If user document doesn't exist, create it
+        await FirebaseService.firestore
+            .collection('users')
+            .doc(_currentUser!.uid)
+            .set({
+          'email': _currentUser!.email,
+          'displayName': _currentUser!.displayName ?? '',
+          'isFirstTime': true,
+          'credits': 3,
+          'createdAt': DateTime.now(),
+          'lastLoginAt': DateTime.now(),
+        });
+        _isFirstTime = true;
+      }
+      
+      notifyListeners();
+      Logger.log('First time check: $_isFirstTime for user ${_currentUser?.email}');
+    } catch (e) {
+      Logger.error('Failed to check first time user', error: e);
+      _isFirstTime = false;
+    }
+  }
+
+  /// Complete onboarding
+  Future<void> completeOnboarding() async {
+    if (_currentUser == null) return;
+
+    try {
+      await FirebaseService.firestore
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'isFirstTime': false,
+        'onboardingCompletedAt': DateTime.now(),
+      });
+
+      _isFirstTime = false;
+      notifyListeners();
+      Logger.log('Onboarding completed for user: ${_currentUser?.email}');
+    } catch (e) {
+      Logger.error('Failed to complete onboarding', error: e);
     }
   }
 

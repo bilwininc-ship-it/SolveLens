@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/email_launcher.dart';
 import '../../logic/providers/auth_provider.dart';
 import '../widgets/auth_text_field.dart';
 import 'register_screen.dart';
@@ -100,6 +101,18 @@ class _LoginScreenState extends State<LoginScreen> {
       context,
       MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
     );
+  }
+
+  Future<void> _launchSupportEmail() async {
+    final authProvider = context.read<AuthProvider>();
+    final userUid = authProvider.currentUser?.uid ?? 'anonymous';
+    
+    try {
+      await EmailLauncher.launchSupport(userUid: userUid);
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar('Could not open email client. Please email us at bilwininc@gmail.com');
+    }
   }
 
   @override
@@ -323,6 +336,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Support Button
+                    OutlinedButton.icon(
+                      onPressed: _launchSupportEmail,
+                      icon: const Icon(Icons.email_outlined, size: 18),
+                      label: const Text('Need Help? Contact Support'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: AppColors.greyDark, width: 1),
+                        foregroundColor: AppColors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                   ],
                 ),

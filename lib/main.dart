@@ -11,6 +11,7 @@ import 'core/constants/app_colors.dart';
 import 'features/auth/logic/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 
 // Service imports
 import 'services/firebase/firebase_service.dart';
@@ -73,10 +74,19 @@ class ResponsiveLayout extends StatelessWidget {
         
         return Consumer<AuthProvider>(
           builder: (context, authProvider, _) {
-            // Main content with SingleChildScrollView to prevent overflow
-            final content = authProvider.isAuthenticated
-                ? const DashboardScreen()
-                : const LoginScreen();
+            // Determine which screen to show
+            Widget content;
+            
+            if (!authProvider.isAuthenticated) {
+              // Not logged in - show login screen
+              content = const LoginScreen();
+            } else if (authProvider.isFirstTime) {
+              // First time user - show onboarding
+              content = const OnboardingScreen();
+            } else {
+              // Regular user - show dashboard
+              content = const DashboardScreen();
+            }
             
             // Wrap in SafeArea and Scaffold for proper layout handling
             return Scaffold(
