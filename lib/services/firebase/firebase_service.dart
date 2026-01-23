@@ -181,6 +181,7 @@ class FirebaseService {
         'lastLoginAt': FieldValue.serverTimestamp(),
         'isFirstTime': true,
         'notificationsEnabled': true,
+        'last_ad_claim_at': null, // For rewarded ad cooldown tracking
       });
       Logger.log('User document created: ${user.uid}');
     } catch (e) {

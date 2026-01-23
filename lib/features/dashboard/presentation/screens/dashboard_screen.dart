@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../services/remote_config/remote_config_service.dart';
 import '../../../../services/analytics/analytics_service.dart';
+import '../../../../services/ads/ads_service.dart';
+import '../../../../services/credit_timer/credit_timer_logic.dart';
 import '../widgets/announcement_banner.dart';
 
 /// Dashboard Screen - Main control center for SolveLens
@@ -20,12 +24,35 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _showAnnouncement = true;
+  Timer? _countdownTimer;
+  Duration _remainingTime = Duration.zero;
+  bool _isLoadingAd = false;
 
   @override
   void initState() {
     super.initState();
     // Log screen view for analytics
     AnalyticsService.logScreenView('dashboard');
+    
+    // Start countdown timer for rewarded ads
+    _startCountdownTimer();
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Start countdown timer that updates every minute
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // Timer will trigger rebuild to update countdown
+        });
+      }
+    });
   }
 
   @override
@@ -85,6 +112,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                               // Primary Action Button
                               _buildPrimaryActionButton(),
+
+                              const SizedBox(height: 24),
+
+                              // Rewarded Ad Credit Button (Mobile only)
+                              if (!kIsWeb) _buildRewardedAdButton(user),
 
                               const SizedBox(height: 32),
 
@@ -520,6 +552,274 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  /// Elite Rewarded Ad Button - Watch & Get +1 Free Credit
+  /// 
+  /// Features:
+  /// - 24-hour cooldown enforcement
+  /// - Real-time countdown timer
+  /// - Cyan Neon gradient when available
+  /// - Disabled grey state with countdown
+  /// - Mobile only (hidden on Web)
+  Widget _buildRewardedAdButton(User user) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>?;
+        final lastAdClaimAt = data?['last_ad_claim_at'] as Timestamp?;
+        final isPremium = data?['isPremium'] ?? false;
+
+        // Premium users don't need free credits from ads
+        if (isPremium) {
+          return const SizedBox.shrink();
+        }
+
+        final canClaim = CreditTimerLogic.canClaimCredit(lastAdClaimAt);
+        final remainingTime = CreditTimerLogic.getRemainingTime(lastAdClaimAt);
+        final formattedTime = CreditTimerLogic.formatRemainingTime(remainingTime);
+
+        return Container(
+          height: 140,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: canClaim
+                  ? [
+                      AppColors.cyanNeon.withOpacity(0.2),
+                      AppColors.info.withOpacity(0.1),
+                    ]
+                  : [
+                      AppColors.grey.withOpacity(0.1),
+                      AppColors.navyLight.withOpacity(0.1),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: canClaim
+                  ? AppColors.cyanNeon.withOpacity(0.4)
+                  : AppColors.grey.withOpacity(0.2),
+              width: 1.5,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const Key('rewarded-ad-button'),
+              onTap: canClaim && !_isLoadingAd
+                  ? () => _handleRewardedAdClick(user.uid)
+                  : null,
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    // Icon Section
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: canClaim
+                            ? const LinearGradient(
+                                colors: [AppColors.cyanNeon, AppColors.info],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : LinearGradient(
+                                colors: [
+                                  AppColors.grey.withOpacity(0.3),
+                                  AppColors.greyDark.withOpacity(0.3),
+                                ],
+                              ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: canClaim
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.cyanNeon.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: Icon(
+                        canClaim ? Icons.play_circle_filled : Icons.schedule,
+                        color: canClaim ? AppColors.navy : AppColors.grey,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Text Section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Watch & Get +1 Free Credit',
+                            key: const Key('rewarded-ad-title'),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: canClaim
+                                      ? AppColors.ivory
+                                      : AppColors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            canClaim
+                                ? _isLoadingAd
+                                    ? 'Loading ad...'
+                                    : 'Tap to watch a short video'
+                                : 'Available in $formattedTime',
+                            key: const Key('rewarded-ad-subtitle'),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.grey,
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Arrow Icon
+                    if (canClaim && !_isLoadingAd)
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: AppColors.cyanNeon,
+                        size: 20,
+                      )
+                    else if (_isLoadingAd)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.cyanNeon,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Handle rewarded ad click
+  /// 
+  /// Flow:
+  /// 1. Check if ad is ready
+  /// 2. Show rewarded ad
+  /// 3. On reward: +1 credit, update timestamp, log analytics
+  /// 4. Show success message
+  Future<void> _handleRewardedAdClick(String userId) async {
+    // Check if ad is ready
+    if (!AdsService.isRewardedAdReady) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ad is not ready yet. Please try again in a moment.'),
+          backgroundColor: AppColors.warning,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingAd = true;
+    });
+
+    try {
+      // Show rewarded ad
+      await AdsService.showRewardedAd(
+        userId: userId,
+        onRewarded: (creditsEarned) async {
+          try {
+            // Complete ad claim: +1 credit & update timestamp
+            await CreditTimerLogic.completeAdClaim(userId);
+
+            // Log analytics
+            await AnalyticsService.logRewardedAdWatched(
+              userId: userId,
+              creditsEarned: creditsEarned,
+            );
+
+            // Show success message
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: AppColors.navy,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '+$creditsEarned Credit Earned! 🎉',
+                        style: const TextStyle(
+                          color: AppColors.navy,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: AppColors.cyanNeon,
+                  duration: const Duration(seconds: 3),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to update credits: $e'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          }
+        },
+        onAdClosed: () {
+          if (mounted) {
+            setState(() {
+              _isLoadingAd = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAd = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to show ad: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   // Helper methods
