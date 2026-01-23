@@ -12,10 +12,18 @@ import 'features/auth/logic/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'features/maintenance/presentation/screens/update_required_screen.dart';
 
 // Service imports
 import 'services/firebase/firebase_service.dart';
 import 'services/ads/ads_service.dart';
+import 'services/analytics/analytics_service.dart';
+import 'services/remote_config/remote_config_service.dart';
+import 'core/utils/logger.dart';
+
+// App version - Update this with each release
+const String currentAppVersion = '1.0.0';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +31,22 @@ void main() async {
   // Firebase Initialize
   await FirebaseService.initialize();
   
-  // Ads Initialize (Only for Mobile)
+  // Initialize Remote Config (PHASE 8: Maintenance & Version Control)
+  await RemoteConfigService.initialize();
+  
+  // Initialize Logger with Firebase services
+  Logger.initialize(
+    analytics: FirebaseService.analytics,
+    crashlytics: FirebaseService.crashlytics,
+  );
+  
+  // Initialize Analytics Service (Marketing Engine)
+  AnalyticsService.initialize(
+    analytics: FirebaseService.analytics,
+    crashlytics: FirebaseService.crashlytics,
+  );
+  
+  // Ads Initialize (Only for Mobile - Skip on Web)
   if (!kIsWeb) {
     await AdsService.initialize();
   }
@@ -52,6 +75,7 @@ class SolveLensApp extends StatelessWidget {
 
 /// Responsive Layout with LayoutBuilder
 /// Prevents overflow on both Chrome Web and Android
+/// PHASE 8: Includes Maintenance & Version Guard Logic
 class ResponsiveLayout extends StatelessWidget {
   const ResponsiveLayout({super.key});
 
@@ -71,6 +95,23 @@ class ResponsiveLayout extends StatelessWidget {
         // Debug info (optional, can be removed in production)
         debugPrint('SolveLens Layout: width=$width, height=$height, '
             'isMobile=$isMobile, isTablet=$isTablet, isDesktop=$isDesktop, kIsWeb=$kIsWeb');
+        
+        // ==================== PHASE 8: APP GUARDS ====================
+        
+        // Guard 1: Check Maintenance Mode
+        if (RemoteConfigService.isMaintenanceMode) {
+          return const MaintenanceScreen();
+        }
+        
+        // Guard 2: Check Version Requirement
+        if (RemoteConfigService.isUpdateRequired(currentAppVersion)) {
+          return UpdateRequiredScreen(
+            currentVersion: currentAppVersion,
+            minimumVersion: RemoteConfigService.minimumVersion,
+          );
+        }
+        
+        // ==================== NORMAL APP FLOW ====================
         
         return Consumer<AuthProvider>(
           builder: (context, authProvider, _) {
