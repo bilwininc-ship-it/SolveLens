@@ -11,6 +11,8 @@ import '../../logic/providers/analysis_provider.dart';
 import '../../data/models/match_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../services/firebase/firebase_service.dart';
+import '../../logic/prediction_engine.dart';
+import 'analysis_result_screen.dart';
 
 /// Analysis Screen - PHASE 11 & 12
 /// Hybrid Image Picker + Gemini OCR Match Extraction
@@ -376,84 +378,118 @@ class _AnalysisScreenContent extends StatelessWidget {
     );
   }
 
-  /// Individual Match Card
+  /// Individual Match Card (Clickable)
   Widget _buildMatchCard(BuildContext context, MatchModel match, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.cyanNeon.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Match Number
-          Text(
-            'Match ${index + 1}',
-            style: TextStyle(
-              color: AppColors.grey,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    
+    return InkWell(
+      onTap: () => _analyzeMatch(context, match, authProvider),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.navyLight,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.cyanNeon.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Match Number & Analyze Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Match ${index + 1}',
+                  style: const TextStyle(
+                    color: AppColors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.cyanNeon.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.cyanNeon.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.auto_awesome, color: AppColors.cyanNeon, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Analyze',
+                        style: TextStyle(
+                          color: AppColors.cyanNeon,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          // Teams
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  match.home,
-                  style: const TextStyle(
-                    color: AppColors.ivory,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            // Teams
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    match.home,
+                    style: const TextStyle(
+                      color: AppColors.ivory,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  'VS',
-                  style: TextStyle(
-                    color: AppColors.cyanNeon,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    'VS',
+                    style: TextStyle(
+                      color: AppColors.cyanNeon,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    match.away,
+                    style: const TextStyle(
+                      color: AppColors.ivory,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Date
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.calendar_today, color: AppColors.grey, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  match.date,
+                  style: const TextStyle(
+                    color: AppColors.grey,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  match.away,
-                  style: const TextStyle(
-                    color: AppColors.ivory,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Date
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.calendar_today, color: AppColors.grey, size: 14),
-              const SizedBox(width: 6),
-              Text(
-                match.date,
-                style: const TextStyle(
-                  color: AppColors.grey,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -570,5 +606,158 @@ class _AnalysisScreenContent extends StatelessWidget {
       // Error message is already set in provider
       // No need to show additional snackbar
     }
+  }
+
+  /// Analyze match with AI prediction - PHASE 13 & 14
+  Future<void> _analyzeMatch(
+    BuildContext context,
+    MatchModel match,
+    AuthProvider authProvider,
+  ) async {
+    // Check credits first
+    try {
+      final userId = authProvider.currentUser?.uid;
+      if (userId == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please log in to use this feature'),
+              backgroundColor: AppColors.error,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      final userDoc = await FirebaseService.firestore
+          .collection('users')
+          .doc(userId)
+          .get();
+      
+      final credits = userDoc.get('credits') ?? 0;
+      
+      if (credits < 1) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Insufficient credits. Please purchase more credits.'),
+              backgroundColor: AppColors.error,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check API keys
+      if (AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE') {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please configure Gemini API Key in app_constants.dart'),
+              backgroundColor: AppColors.error,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show loading dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _buildLoadingDialog(),
+        );
+      }
+
+      // Generate prediction
+      final predictionEngine = PredictionEngine();
+      final prediction = await predictionEngine.predictMatch(match);
+
+      // Deduct credit
+      await FirebaseService.firestore
+          .collection('users')
+          .doc(userId)
+          .update({
+        'credits': FieldValue.increment(-1),
+      });
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Navigate to result screen
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AnalysisResultScreen(prediction: prediction),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if open
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Analysis failed: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Loading dialog for AI analysis
+  Widget _buildLoadingDialog() {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.navyLight,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.cyanNeon.withOpacity(0.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.cyanNeon),
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'AI is calculating win probabilities...',
+              style: TextStyle(
+                color: AppColors.cyanNeon,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Analyzing team statistics and form',
+              style: TextStyle(
+                color: AppColors.grey,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
