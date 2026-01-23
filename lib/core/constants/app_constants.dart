@@ -1,12 +1,21 @@
-// App Constants
+/// SolveLens App Constants
+/// Contains API keys and configuration values
 class AppConstants {
+  // Gemini AI API Key
+  // TODO: Add your Gemini API key here
+  // Get it from: https://makersuite.google.com/app/apikey
+  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY_HERE';
+  
+  // App Configuration
   static const String appName = 'SolveLens';
   static const String appVersion = '1.0.0';
   
-  // API Keys (Use environment variables in production)
-  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY';
-  static const String footballApiKey = 'YOUR_FOOTBALL_API_KEY';
+  // Analysis Configuration
+  static const int defaultCredits = 3;
+  static const int creditCostPerAnalysis = 1;
   
-  // URLs
-  static const String footballApiBaseUrl = 'https://v3.football.api-sports.io';
+  // Remote Config Keys (for future use)
+  static const String rcMaintenanceMode = 'is_maintenance';
+  static const String rcMinVersion = 'min_version';
+  static const String rcAnnouncementText = 'announcement_text';
 }

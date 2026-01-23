@@ -9,6 +9,7 @@ import '../../../../services/analytics/analytics_service.dart';
 import '../../../../services/ads/ads_service.dart';
 import '../../../../services/credit_timer/credit_timer_logic.dart';
 import '../widgets/announcement_banner.dart';
+import '../../../analysis/presentation/screens/analysis_screen.dart';
 
 /// Dashboard Screen - Main control center for SolveLens
 /// Features:
@@ -303,11 +304,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to analysis screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Analysis feature coming soon!'),
-                backgroundColor: AppColors.info,
+            // Navigate to Analysis Screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AnalysisScreen(),
               ),
             );
           },

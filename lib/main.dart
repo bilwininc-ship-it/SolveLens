@@ -14,6 +14,7 @@ import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'features/maintenance/presentation/screens/maintenance_screen.dart';
 import 'features/maintenance/presentation/screens/update_required_screen.dart';
+import 'features/analysis/logic/providers/analysis_provider.dart';
 
 // Service imports
 import 'services/firebase/firebase_service.dart';
@@ -70,6 +71,7 @@ class SolveLensApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AnalysisProvider()),
       ],
       child: MaterialApp(
         title: 'SolveLens - AI Sports Analyst',
