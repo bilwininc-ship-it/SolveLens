@@ -20,6 +20,8 @@ import 'services/firebase/firebase_service.dart';
 import 'services/ads/ads_service.dart';
 import 'services/analytics/analytics_service.dart';
 import 'services/remote_config/remote_config_service.dart';
+import 'services/notifications/notification_service.dart';
+import 'services/notifications/foreground_notification_handler.dart';
 import 'core/utils/logger.dart';
 
 // App version - Update this with each release
@@ -51,6 +53,12 @@ void main() async {
     await AdsService.initialize();
   }
   
+  // Initialize Notification Service (PHASE 9: Push Notifications)
+  // Mobile only - Web has limited FCM support
+  if (!kIsWeb) {
+    await NotificationService.initialize();
+  }
+  
   runApp(const SolveLensApp());
 }
 
@@ -67,7 +75,11 @@ class SolveLensApp extends StatelessWidget {
         title: 'SolveLens - AI Sports Analyst',
         theme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
-        home: const ResponsiveLayout(),
+        home: kIsWeb 
+            ? const ResponsiveLayout()
+            : const ForegroundNotificationHandler(
+                child: ResponsiveLayout(),
+              ),
       ),
     );
   }
